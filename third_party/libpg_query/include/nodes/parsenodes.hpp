@@ -1234,12 +1234,26 @@ typedef struct PGPivotStmt {
 typedef struct PGPredictExpr {
     PGNodeTag type;
     PGNode *source;      /* the source subtree */
+    PGNode *opt_source;  /* the optional source subtree */
+	int model_type;
     char *model_name;    /* path to the model */
-    PGList *input_set;  /* The input set required by the model */
+    PGNode *input_feat;  /* The input set required by the model */
+    PGNode *opt_feat;  /* The input set required by the model */
     PGList *result_set;  /* The result set produced by the model */
     PGAlias *alias;      /* table alias & optional column aliases */
     int location;        /* token location, or -1 if unknown */
 } PGPredictExpr;
+
+/*
+ * ----------------------
+ *      Predict Features Expression
+ * ----------------------
+ */
+typedef struct PGPredictFeatExpr {
+	PGNodeTag type;
+    PGList *input_set;		/* The input set required by the model */
+    PGList *exclude_set;  	/* The column set excluded from the model */
+} PGPredictFeatExpr;
 
 /* ----------------------
  *		Select Statement

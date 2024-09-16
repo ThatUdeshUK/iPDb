@@ -18,6 +18,7 @@ void ONNXPredictor::Config(const ClientConfig &client_config) {
 }
 
 void ONNXPredictor::Load(const std::string &model_path, PredictStats &stats) {
+	std::cout << "Model Loaded" << std::endl;
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 #endif
@@ -47,7 +48,7 @@ void ONNXPredictor::Load(const std::string &model_path, PredictStats &stats) {
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	stats.load = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-//    std::cout << "Load @run: " << stats.load << std::endl;
+   std::cout << "Load @run: " << stats.load << std::endl;
 #endif
 }
 
@@ -279,13 +280,15 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 #if MOVE_METHOD == COL_FIRST_COPY
 		int cols = input_mask.size();
 		std::vector<float> input_data(num_rows * cols);
+		int input_idx = 0;
 		for (auto &idx : input_mask) {
 			float *start = (float *)input.data[idx].GetData();
 
-			float *dest = input_data.data() + idx;
+			float *dest = input_data.data() + input_idx;
 			for (int i = 0; i < num_rows; ++i) {
 				*(dest + i * cols) = *(start + i + frow);
 			}
+			input_idx++;
 		}
 #endif
 		std::vector<float> output_data(num_rows * output_size, 0);
@@ -360,5 +363,37 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 		stats.move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 #endif
 	}
+}
+
+void ONNXPredictor::PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
+							   int64_t num_nodes, int64_t num_edges, int64_t feature_size, int64_t edge_size,
+							   int64_t output_size, PredictStats &stats) {
+#if OPT_TIMING
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+#endif
+
+	std::array<int64_t, 2> nodes_shape_ {num_nodes, feature_size};
+	std::array<int64_t, 2> edges_shape_ {edge_size, num_edges};
+	std::array<int64_t, 2> output_shape_ {num_nodes, output_size};
+
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+	vector<Ort::Value> inputs;
+	inputs.push_back(Ort::Value::CreateTensor<float>(memory_info, nodes.data(), nodes.size(),
+	                                                           nodes_shape_.data(), nodes_shape_.size()));
+	inputs.push_back(Ort::Value::CreateTensor<int64_t>(memory_info, edges.data(), edges.size(),
+	                                                           edges_shape_.data(), edges_shape_.size()));
+
+	auto outputs = Ort::Value::CreateTensor<float>(memory_info, output.data(), output.size(),
+	                                                           output_shape_.data(), output_shape_.size());
+
+	const char *input_names[] = {"node_attr", "edge_index"};
+	const char *output_names[] = {"logits"};
+
+	Ort::RunOptions run_options;
+	session.Run(run_options, input_names, inputs.data(), 2, output_names, &outputs, 1);
+#if OPT_TIMING
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	stats.predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+#endif
 }
 } // namespace duckdb

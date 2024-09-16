@@ -14,13 +14,18 @@
 namespace duckdb {
 
 struct BoundPredictInfo {
+    uint8_t model_type;
     string model_name;
     //! The set of types
     vector<LogicalType> types;
     //! Input mask for feature column
     vector<idx_t> input_mask;
+    //! Input mask for (optional) edges columns for GNN
+    vector<idx_t> opt_mask;
     //! Result set names
     vector<string> result_set_names;
+    //! Input set types
+    vector<LogicalType> input_set_types;
     //! Result set types
     vector<LogicalType> result_set_types;
 
@@ -37,10 +42,12 @@ public:
 	}
 
     idx_t bind_index;
-    //! The binder used to bind the child of the pivot
+    //! The binder used to bind the child of the predict
     shared_ptr<Binder> child_binder;
+    //! The binder used to bind the optional child for predict
+	shared_ptr<Binder> opt_binder;
 	//! The child node of the Predict
-	unique_ptr<BoundTableRef> child;
+	vector<unique_ptr<BoundTableRef>> children;
     //! The bound predict info
     BoundPredictInfo bound_predict;
 };

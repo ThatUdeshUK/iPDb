@@ -21,7 +21,7 @@ public:
 	static constexpr const LogicalOperatorType TYPE = LogicalOperatorType::LOGICAL_PREDICT;
 
 public:
-    LogicalPredict(idx_t predict_idx, unique_ptr<LogicalOperator> plan, BoundPredictInfo info);
+    LogicalPredict(idx_t predict_idx, BoundPredictInfo info);
 
     idx_t predict_index;
     BoundPredictInfo bound_predict;

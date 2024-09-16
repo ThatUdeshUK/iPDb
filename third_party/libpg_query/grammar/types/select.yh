@@ -133,3 +133,5 @@
 %type <boolean> opt_include_nulls
 
 %type <list> result_col_list with_result_col_list
+%type <node> opt_feat_col_list
+%type <ival> model_type_value

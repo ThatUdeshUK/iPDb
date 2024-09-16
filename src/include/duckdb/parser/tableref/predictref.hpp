@@ -24,12 +24,22 @@ public:
 
 	//! The source table of the predict
 	unique_ptr<TableRef> source;
+	//! The (optional) source table of the predict
+	unique_ptr<TableRef> opt_source;
+	//! The model type 
+	uint8_t model_type;
 	//! The model name for the predict
 	string model_name;
     //! Aliases for the column names
     vector<string> column_name_alias;
     //! Input set names
     vector<string> input_set_names;
+	//! Exclude set names
+    vector<string> exclude_set_names;
+	//! (Optional) Input set names
+    vector<string> opt_set_names;
+	//! (Optional) Exclude set names
+    vector<string> exclude_opt_set_names;
 	    //! Result set names
     vector<string> result_set_names;
     //! Result set types

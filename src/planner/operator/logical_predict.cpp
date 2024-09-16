@@ -6,10 +6,8 @@ namespace duckdb {
 LogicalPredict::LogicalPredict() : LogicalOperator(LogicalOperatorType::LOGICAL_PIVOT) {
 }
 
-LogicalPredict::LogicalPredict(idx_t predict_idx, unique_ptr<LogicalOperator> plan, BoundPredictInfo info_p)
+LogicalPredict::LogicalPredict(idx_t predict_idx, BoundPredictInfo info_p)
         : LogicalOperator(LogicalOperatorType::LOGICAL_PREDICT), predict_index(predict_idx), bound_predict(std::move(info_p)) {
-    D_ASSERT(plan);
-    children.push_back(std::move(plan));
 }
 
 vector<ColumnBinding> LogicalPredict::GetColumnBindings() {

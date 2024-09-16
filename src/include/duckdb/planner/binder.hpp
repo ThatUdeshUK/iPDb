@@ -329,7 +329,6 @@ private:
 	unique_ptr<BoundTableRef> Bind(ShowRef &ref);
     unique_ptr<BoundTableRef> Bind(PredictRef &expr);
 
-    unique_ptr<SelectNode> BindPredict(PredictRef &expr);
     unique_ptr<BoundTableRef> BindBoundPredict(PredictRef &expr);
 
 	unique_ptr<SelectNode> BindPivot(PivotRef &expr, vector<unique_ptr<ParsedExpression>> all_columns);

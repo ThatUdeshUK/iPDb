@@ -40,11 +40,6 @@ void TorchPredictor::PredictVector(std::vector<float> &input, std::vector<float>
 
     at::Tensor out = model.forward(inputs).toTensor();
 
-//    auto out = my_output.slice(/*dim=*/1, /*start=*/0, /*end=*/output_size);
-//    std::vector<float> v(out.data_ptr<float>(), out.data_ptr<float>() + out.numel());
-
-//    torch::Tensor my_mean = at::mean(my_input);
-
     output.insert(output.end(), out.data_ptr<float>(), out.data_ptr<float>() + out.numel());
 }
 

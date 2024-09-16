@@ -9,10 +9,8 @@
 #include "duckdb_onnx.hpp"
 #endif
 
-#define CHUNK_PRED 0
+#define CHUNK_PRED 1
 // #define VEC_PRED 0
-// #define LM_PRED 0
-#define LM_CHUNK_PRED 1
 
 namespace duckdb {
 class PredictState : public OperatorState {
@@ -58,11 +56,7 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
 
     auto stats = make_uniq<PredictStats>();
     auto p = InitPredictor();
-#if LM_CHUNK_PRED
-    p->task = PredictorTask::PREDICT_LLM_TASK;
-#elif CHUNK_PRED
-    p->task = PredictorTask::PREDICT_TABULAR_TASK;
-#endif
+    p->task = static_cast<PredictorTask>(model_type);
     p->Config(client_config);
     p->Load(model_name, *stats);
     return make_uniq<PredictState>(context, std::move(p), *stats);
@@ -80,7 +74,11 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 
     auto &predictor = *state.predictor.get();
 #if CHUNK_PRED
-    predictor.PredictChunk(input, predictions, (int) input.size(), this->input_mask, (int) result_set_types.size(), state.stats);
+    if (predictor.task == PREDICT_TABULAR_TASK) {
+        predictor.PredictChunk(input, predictions, (int) input.size(), this->input_mask, (int) result_set_types.size(), state.stats);
+    } else if (predictor.task == PREDICT_LLM_TASK) {
+        predictor.PredictLMChunk(input, predictions, (int) input.size(), this->input_mask, (int) result_set_types.size(), state.stats);
+    }
 #elif VEC_PRED
     std::vector<float> inputs;
     std::vector<float> outputs;
@@ -98,43 +96,43 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
     }
     inputs.clear();
     outputs.clear();
-#elif LM_PRED
-    int output_size = (int) result_set_types.size();
-    std::string input_str;
-    std::vector<float> outputs;
-
-    for (idx_t row_idx = 0; row_idx < input.size(); row_idx++) {
-        input_str = StringValue::Get(input.GetValue(0, row_idx));
-
-        predictor.PredictLM(input_str, outputs, output_size);
-        idx_t res_idx = 0;
-        for(const float& i : outputs) {
-            predictions.SetValue(res_idx, row_idx, Value(i));
-            res_idx++;
-        }
-
-        outputs.clear();
-    }
-#elif LM_CHUNK_PRED
-    predictor.PredictLMChunk(input, predictions, (int) input.size(), this->input_mask, (int) result_set_types.size(), state.stats);
 #else
-    int output_size = (int) result_set_types.size();
-    std::vector<float> inputs;
-    std::vector<float> outputs;
+    if (predictor.task == PREDICT_TABULAR_TASK) {
+        int output_size = (int) result_set_types.size();
+        std::vector<float> inputs;
+        std::vector<float> outputs;
 
-    for (idx_t row_idx = 0; row_idx < input.size(); row_idx++) {
-        for (idx_t col_idx = 0; col_idx < input.ColumnCount(); col_idx++) {
-            inputs.push_back(FloatValue::Get(input.GetValue(col_idx, row_idx)));
-        }
-        predictor.Predict(inputs, outputs, output_size);
-        idx_t res_idx = 0;
-        for(const float& i : outputs) {
-            predictions.SetValue(res_idx, row_idx, Value(i));
-            res_idx++;
-        }
+        for (idx_t row_idx = 0; row_idx < input.size(); row_idx++) {
+            for (idx_t col_idx = 0; col_idx < input.ColumnCount(); col_idx++) {
+                inputs.push_back(FloatValue::Get(input.GetValue(col_idx, row_idx)));
+            }
+            predictor.Predict(inputs, outputs, output_size);
+            idx_t res_idx = 0;
+            for(const float& i : outputs) {
+                predictions.SetValue(res_idx, row_idx, Value(i));
+                res_idx++;
+            }
 
-        inputs.clear();
-        outputs.clear();
+            inputs.clear();
+            outputs.clear();
+        }
+    } else if (predictor.task == PREDICT_LLM_TASK) {
+        int output_size = (int) result_set_types.size();
+        std::string input_str;
+        std::vector<float> outputs;
+
+        for (idx_t row_idx = 0; row_idx < input.size(); row_idx++) {
+            input_str = StringValue::Get(input.GetValue(0, row_idx));
+
+            predictor.PredictLM(input_str, outputs, output_size);
+            idx_t res_idx = 0;
+            for(const float& i : outputs) {
+                predictions.SetValue(res_idx, row_idx, Value(i));
+                res_idx++;
+            }
+
+            outputs.clear();
+        }
     }
 #endif
 
