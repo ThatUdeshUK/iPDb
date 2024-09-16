@@ -14,7 +14,10 @@
 namespace duckdb {
 
 ModelData::ModelData(CreateModelInfo &info)
-    : model_path(info.model_path), model_type(info.model_type), out_names(info.out_names), out_types(info.out_types) {
+    : model_path(info.model_path), model_type(info.model_type), rel_name(info.rel_name),
+	input_set_names(info.input_set_names), exclude_set_names(info.exclude_set_names), opt_rel_name(info.opt_rel_name),
+	opt_set_names(info.opt_set_names), exclude_opt_set_names(info.exclude_opt_set_names), out_names(info.out_names), 
+	out_types(info.out_types), options(info.options) {
 }
 
 ModelCatalogEntry::ModelCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateModelInfo &info)
@@ -53,8 +56,15 @@ unique_ptr<CreateInfo> ModelCatalogEntry::GetInfo() const {
 	result->name = name;
 	result->model_path = model_data.model_path;
 	result->model_type = model_data.model_type;
+	result->rel_name = model_data.rel_name;
+	result->input_set_names = model_data.input_set_names;
+	result->exclude_set_names = model_data.exclude_set_names;
+	result->opt_rel_name = model_data.opt_rel_name;
+	result->opt_set_names = model_data.opt_set_names;
+	result->exclude_opt_set_names = model_data.exclude_opt_set_names;
 	result->out_names = model_data.out_names;
 	result->out_types = model_data.out_types;
+	result->options = model_data.options;
 	result->dependencies = dependencies;
 	result->comment = comment;
 	result->tags = tags;
@@ -78,6 +88,7 @@ string ModelCatalogEntry::ToSQL() const {
 	}
 	ss << " MODEL " << name;
 	ss << " PATH '" << model_data.model_path;
+	//TODO: add attach on expresion
 	ss << "' OUTPUT(...); ";
 	return ss.str();
 }

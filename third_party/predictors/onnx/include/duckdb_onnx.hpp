@@ -19,7 +19,7 @@
 #define MOVE_METHOD COL_FIRST_COPY
 #define MOVE_REV_METHOD COL_FIRST_COPY
 
-#define DYNAMIC_TOKEN_SIZE 0
+#define DYNAMIC_TOKEN_SIZE 1
 
 #define OPT_TIMING 1
 
@@ -33,7 +33,7 @@ public:
     int inter_tc;
 
 public:
-    void Config(const ClientConfig &config) override;
+    void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
     void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) override;
     void PredictChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;

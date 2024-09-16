@@ -16,8 +16,15 @@ unique_ptr<CreateInfo> CreateModelInfo::Copy() const {
 	result->schema = schema;
 	result->model_type = model_type;
 	result->model_path = model_path;
+	result->rel_name = rel_name;
+	result->input_set_names = input_set_names;
+	result->exclude_set_names = exclude_set_names;
+	result->opt_rel_name = opt_rel_name;
+	result->opt_set_names = opt_set_names;
+	result->exclude_opt_set_names = exclude_opt_set_names;
 	result->out_names = out_names;
 	result->out_types = out_types;
+	result->options = options;
 	return std::move(result);
 }
 
@@ -46,6 +53,7 @@ string CreateModelInfo::ToString() const {
 	}
 	ss << QualifierToString(temporary ? "" : catalog, schema, name);
 	ss << " PATH '" << model_path;
+	//TODO: - add model on expression here
 	ss << "' OUTPUT(...); ";
 	return ss.str();
 }

@@ -1100,43 +1100,24 @@ table_ref:	relation_expr opt_alias_clause opt_tablesample_clause
 					n->location = @2;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' qualified_name ',' table_ref opt_feat_col_list ')' opt_alias_clause
+			| PREDICT '(' qualified_name ',' table_ref ')' opt_alias_clause
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
 					n->source = $5;
 					n->model_name = $3;
-					n->input_feat = $6;
-					n->alias = $8;
+					n->alias = $7;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' qualified_name ',' table_ref opt_feat_col_list ',' table_ref opt_feat_col_list ')' opt_alias_clause
+			| PREDICT '(' qualified_name ',' table_ref ',' table_ref ')' opt_alias_clause
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
 					n->source = $5;
 					n->model_name = $3;
-					n->input_feat = $6;
-					n->opt_source = $8;
-					n->opt_feat = $9;
+					n->opt_source = $7;
 					n->has_opt = 1;
-					n->alias = $11;
+					n->alias = $9;
 					$$ = (PGNode *) n;
 				}
-		;
-
-opt_feat_col_list:
-			FEATURES '(' name_list_opt_comma ')'
-				{
-					PGPredictFeatExpr *n = makeNode(PGPredictFeatExpr);
-					n->input_set = $3;
-					$$ = (PGNode *) n;
-				}
-			| FEATURES '*' opt_except_list
-				{
-					PGPredictFeatExpr *n = makeNode(PGPredictFeatExpr);
-					n->exclude_set = $3;
-					$$ = (PGNode *) n;
-				}
-			| /* empty */						{ $$ = NULL; }	
 		;
 
 opt_pivot_group_by:

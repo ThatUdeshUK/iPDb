@@ -30,14 +30,6 @@ public:
 	string model_name;
     //! Aliases for the column names
     vector<string> column_name_alias;
-    //! Input set names
-    vector<string> input_set_names;
-	//! Exclude set names
-    vector<string> exclude_set_names;
-	//! (Optional) Input set names
-    vector<string> opt_set_names;
-	//! (Optional) Exclude set names
-    vector<string> exclude_opt_set_names;
 
 public:
 	string ToString() const override;

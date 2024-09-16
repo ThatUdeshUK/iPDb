@@ -172,8 +172,15 @@ void CreateModelInfo::Serialize(Serializer &serializer) const {
 	serializer.WritePropertyWithDefault<string>(200, "name", name);
 	serializer.WritePropertyWithDefault<uint8_t>(201, "model_type", model_type);
 	serializer.WritePropertyWithDefault<string>(202, "model_path", model_path);
-	serializer.WritePropertyWithDefault<vector<string>>(203, "out_names", out_names);
-	serializer.WritePropertyWithDefault<vector<LogicalType>>(204, "out_types", out_types);
+	serializer.WritePropertyWithDefault<string>(203, "rel_name", rel_name);
+	serializer.WritePropertyWithDefault<vector<string>>(204, "input_set_names", input_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(205, "exclude_set_names", exclude_set_names);
+	serializer.WritePropertyWithDefault<string>(206, "opt_rel_name", opt_rel_name);
+	serializer.WritePropertyWithDefault<vector<string>>(207, "opt_set_names", opt_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(208, "exclude_opt_set_names", exclude_opt_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(209, "out_names", out_names);
+	serializer.WritePropertyWithDefault<vector<LogicalType>>(210, "out_types", out_types);
+	serializer.WritePropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", options);
 }
 
 unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
@@ -181,8 +188,15 @@ unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) 
 	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
 	deserializer.ReadPropertyWithDefault<uint8_t>(201, "model_type", result->model_type);
 	deserializer.ReadPropertyWithDefault<string>(202, "model_path", result->model_path);
-	deserializer.ReadPropertyWithDefault<vector<string>>(203, "out_names", result->out_names);
-	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(204, "out_types", result->out_types);
+	deserializer.ReadPropertyWithDefault<string>(203, "rel_name", result->rel_name);
+	deserializer.ReadPropertyWithDefault<vector<string>>(204, "input_set_names", result->input_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(205, "exclude_set_names", result->exclude_set_names);
+	deserializer.ReadPropertyWithDefault<string>(206, "opt_rel_name", result->opt_rel_name);
+	deserializer.ReadPropertyWithDefault<vector<string>>(207, "opt_set_names", result->opt_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(208, "exclude_opt_set_names", result->exclude_opt_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(209, "out_names", result->out_names);
+	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(210, "out_types", result->out_types);
+	deserializer.ReadPropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", result->options);
 	return std::move(result);
 }
 

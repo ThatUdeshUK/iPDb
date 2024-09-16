@@ -12,27 +12,6 @@
 #endif
 
 namespace duckdb {
-// class PredictGNNOperatorState : public OperatorState {
-// public:
-//     explicit PredictGNNOperatorState() {
-//     }
-
-//     PredictStats stats;
-
-// public:
-//     void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
-//         // std::cout << "Finanlize: " << std::endl;
-//         std::cout << "Load @run: " << stats.load << std::endl;
-//         std::cout << "Move @run: " << stats.move << std::endl;
-//         std::cout << "Predict @run: " << stats.predict << std::endl;
-//         std::cout << "Move Rev @run: " << stats.move_rev << std::endl;
-
-//         std::map<std::string, long> stats_map{{"load", stats.load}, {"move", stats.move}, {"predict", stats.predict}, {"move_rev", stats.move_rev}, {"correct", stats.correct}, {"total", stats.total}};
-
-//         context.thread.profiler.Flush(op, stats_map, "predict");
-//     }
-// };
-
 class PredictGNNGlobalState : public GlobalSinkState {
 public:
 	PredictGNNGlobalState(ClientContext &context, BufferManager &buffer_manager_p, unique_ptr<Predictor> p, const vector<LogicalType> &node_types, unique_ptr<PredictStats> s) :
@@ -91,8 +70,9 @@ unique_ptr<GlobalSourceState> PhysicalGNNPredict::GetGlobalSourceState(ClientCon
 }
 
 SourceResultType PhysicalGNNPredict::GetData(ExecutionContext &context, DataChunk &chunk, OperatorSourceInput &input) const {
+#ifdef DEBUG
 	std::cout << "-------- GNNPredict GetData()" << std::endl;
-
+#endif
 	auto &source = input.global_state.Cast<PredictGNNSourceState>();
 	auto &sink = sink_state->Cast<PredictGNNGlobalState>();
 
@@ -125,15 +105,7 @@ SourceResultType PhysicalGNNPredict::GetData(ExecutionContext &context, DataChun
     chunk.Fuse(predictions);
 
 	return source.frow < num_nodes ? SourceResultType::HAVE_MORE_OUTPUT : SourceResultType::FINISHED;
-	// return chunk.size() == 0 ? SourceResultType::FINISHED : SourceResultType::HAVE_MORE_OUTPUT;
 }
-
-//===--------------------------------------------------------------------===//
-// Operator
-//===--------------------------------------------------------------------===//
-// unique_ptr<OperatorState> PhysicalGNNPredict::GetOperatorState(ExecutionContext &context) const {
-//     return make_uniq<PredictGNNOperatorState>();
-// }
 
 void PhysicalGNNPredict::BuildPipelines(Pipeline &current, MetaPipeline &meta_pipeline) {
     this->op_state.reset();
@@ -142,12 +114,6 @@ void PhysicalGNNPredict::BuildPipelines(Pipeline &current, MetaPipeline &meta_pi
 	// 'current' is the probe pipeline: add this operator
 	auto &state = meta_pipeline.GetState();
 	state.SetPipelineSource(current, *this);
-	// state.AddPipelineOperator(current, *this);
-
-	// save the last added pipeline to set up dependencies later (in case we need to add a child pipeline)
-	// vector<shared_ptr<Pipeline>> pipelines_so_far;
-	// meta_pipeline.GetPipelines(pipelines_so_far, false);
-	// auto &last_pipeline = *pipelines_so_far.back();
 
     // on the RHS (build side), we construct a child MetaPipeline with this operator as its sink
     auto &child_meta_pipeline = meta_pipeline.CreateChildMetaPipeline(current, *this);
@@ -155,20 +121,6 @@ void PhysicalGNNPredict::BuildPipelines(Pipeline &current, MetaPipeline &meta_pi
 
 	auto &child_meta_pipeline2 = meta_pipeline.CreateChildMetaPipeline(current, *this);
     child_meta_pipeline2.Build(*this->children[0]);
-
-	// continue building the current pipeline on the LHS (probe side)
-	// this->children[0]->BuildPipelines(current, meta_pipeline);
-
-	// // Join can become a source operator if it's RIGHT/OUTER, or if the hash join goes out-of-core
-	// bool add_child_pipeline = false;
-	// auto &join_op = op.Cast<PhysicalJoin>();
-	// if (join_op.IsSource()) {
-	// 	add_child_pipeline = true;
-	// }
-
-	// if (add_child_pipeline) {
-	// meta_pipeline.CreateChildPipeline(current, *this, last_pipeline);
-	// }
 }
 
 vector<const_reference<PhysicalOperator>> PhysicalGNNPredict::GetSources() const {
@@ -193,7 +145,7 @@ unique_ptr<GlobalSinkState> PhysicalGNNPredict::GetGlobalSinkState(ClientContext
 #if defined(ENABLE_PREDICT)
     auto p = make_uniq<ONNXPredictor>();
     p->task = static_cast<PredictorTask>(model_type);
-    p->Config(client_config);
+    p->Config(client_config, options);
     p->Load(model_path, stats);
 #else
 	auto p = nullptr;
@@ -202,7 +154,9 @@ unique_ptr<GlobalSinkState> PhysicalGNNPredict::GetGlobalSinkState(ClientContext
 }
 
 SinkResultType PhysicalGNNPredict::Sink(ExecutionContext &context, DataChunk &chunk, OperatorSinkInput &input) const {
+#ifdef DEBUG
 	std::cout << "-------- GNNPredict Sink() -> " << context.pipeline->GetSource()->estimated_cardinality << std::endl;
+#endif
 	// append to the local sink state
 	auto &sink = input.local_state.Cast<PredictGNNLocalState>();
 	idx_t ec = context.pipeline->GetSource()->estimated_cardinality;
@@ -285,10 +239,12 @@ SinkFinalizeType PhysicalGNNPredict::Finalize(Pipeline &pipeline, Event &event, 
 	predictor.PredictGNN(gstate.node_data, gstate.edge_data, gstate.output, num_nodes, num_edges, feature_size, 
 						 edge_size, out_size, gstate.stats);
 
+#ifdef DEBUG
 	std::cout << "Load @run: " << gstate.stats->load << std::endl;
 	std::cout << "Move @run: " << gstate.stats->move << std::endl;
 	std::cout << "Predict @run: " << gstate.stats->predict << std::endl;
 	std::cout << "Move Rev @run: " << gstate.stats->move_rev << std::endl;
+#endif
 
 	return SinkFinalizeType::READY;
 }

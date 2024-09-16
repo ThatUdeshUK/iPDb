@@ -53,8 +53,29 @@ static unique_ptr<FunctionData> DuckDBModelsBind(ClientContext &context, TableFu
 	names.emplace_back("model_path");
 	return_types.emplace_back(LogicalType::VARCHAR);
 
+	names.emplace_back("rel_name");
+	return_types.emplace_back(LogicalType::VARCHAR);
+
+	names.emplace_back("input_set_count");
+	return_types.emplace_back(LogicalType::BIGINT);
+
+	names.emplace_back("exclude_set_count");
+	return_types.emplace_back(LogicalType::BIGINT);
+
+	names.emplace_back("opt_rel_name");
+	return_types.emplace_back(LogicalType::VARCHAR);
+
+	names.emplace_back("opt_set_count");
+	return_types.emplace_back(LogicalType::BIGINT);
+
+	names.emplace_back("exclude_opt_set_count");
+	return_types.emplace_back(LogicalType::BIGINT);
+
 	names.emplace_back("output_count");
 	return_types.emplace_back(LogicalType::BIGINT);
+
+	names.emplace_back("options");
+	return_types.emplace_back(LogicalType::MAP(LogicalType::VARCHAR, LogicalType::VARCHAR));
 
 	names.emplace_back("sql");
 	return_types.emplace_back(LogicalType::VARCHAR);
@@ -111,8 +132,28 @@ void DuckDBModelsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 		output.SetValue(col++, count, Value::UTINYINT(model_data.model_type));
 		// model_path, VARCHAR
 		output.SetValue(col++, count, Value(model_data.model_path));
+		// rel_name, VARCHAR
+		output.SetValue(col++, count, Value(model_data.rel_name));
+		// input_set_count, LogicalType::BIGINT
+		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.input_set_names.size())));
+		// exclude_set_count, LogicalType::BIGINT
+		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.exclude_set_names.size())));
+		// opt_rel_name, VARCHAR
+		output.SetValue(col++, count, Value(model_data.opt_rel_name));
+		// opt_set_count, LogicalType::BIGINT
+		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.opt_set_names.size())));
+		// exclude_opt_set_count, LogicalType::BIGINT
+		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.exclude_opt_set_names.size())));
 		// output_count, LogicalType::BIGINT
 		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.out_types.size())));
+		// options MAP(VARCHAR, VARCHAR)
+		unordered_map<string, string> option_out;
+		for (const auto &element : model_data.options) {
+			stringstream ss;
+			ss << element.second;
+			option_out.insert({element.first, ss.str()});
+		}
+		output.SetValue(col++, count, Value::MAP(option_out));
 		// sql, LogicalType::VARCHAR
 		output.SetValue(col++, count, Value(model.ToSQL()));
 

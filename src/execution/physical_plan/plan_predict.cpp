@@ -13,6 +13,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &o
 		predict->model_path = std::move(op.bound_predict.model_path);
 		predict->input_mask = std::move(op.bound_predict.input_mask);
 		predict->result_set_types = std::move(op.bound_predict.result_set_types);
+		predict->options = std::move(op.bound_predict.options);
 		return std::move(predict);
 	} else {
 		D_ASSERT(op.children.size() == 2);
@@ -31,6 +32,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &o
 		predict->edge_mask = std::move(op.bound_predict.opt_mask);
 		predict->node_types = std::move(op.bound_predict.input_set_types);
 		predict->result_set_types = std::move(op.bound_predict.result_set_types);
+		predict->options = std::move(op.bound_predict.options);
 		return std::move(predict);
 	}
 }

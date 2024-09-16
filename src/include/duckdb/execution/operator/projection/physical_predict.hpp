@@ -44,7 +44,7 @@ public:
     bool success;
     std::string error_message;
 public:
-    virtual void Config(const ClientConfig &config) {};
+    virtual void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) {};
     virtual void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {};
     virtual void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) {};
     virtual void PredictLM(std::string &input, std::vector<float> &output, int output_size) {};
@@ -67,6 +67,7 @@ public:
 
     std::vector<idx_t> input_mask;
     std::vector<LogicalType> result_set_types;
+    case_insensitive_map_t<Value> options;
 
 public:
     string GetName() const override;
@@ -101,6 +102,7 @@ public:
     vector<idx_t> edge_mask;
     vector<LogicalType> node_types;
     vector<LogicalType> result_set_types;
+    case_insensitive_map_t<Value> options;
 
 public:
     void BuildPipelines(Pipeline &current, MetaPipeline &meta_pipeline) override;

@@ -9,12 +9,12 @@ namespace duckdb {
 ONNXPredictor::ONNXPredictor() : Predictor() {
 }
 
-void ONNXPredictor::Config(const ClientConfig &client_config) {
-    this->batch_size = client_config.ml_batch_size;
-    this->llm_max_tokens = client_config.llm_max_tokens;
-	this->execution_mode = client_config.onnx_execution_mode;
-	this->intra_tc = client_config.onnx_intra_tc;
-	this->inter_tc = client_config.onnx_inter_tc;
+void ONNXPredictor::Config(const ClientConfig &client_config, const case_insensitive_map_t<Value> &options) {
+    this->batch_size = (options.find("batch_size") != options.end()) ? IntegerValue::Get(options.at("batch_size")) : client_config.ml_batch_size;
+    this->llm_max_tokens = (options.find("llm_max_tokens") != options.end()) ? IntegerValue::Get(options.at("llm_max_tokens")) : client_config.llm_max_tokens;
+    this->execution_mode = (options.find("onnx_execution_mode") != options.end()) ? IntegerValue::Get(options.at("onnx_execution_mode")) : client_config.onnx_execution_mode;
+    this->intra_tc = (options.find("onnx_intra_tc") != options.end()) ? IntegerValue::Get(options.at("onnx_intra_tc")) : client_config.onnx_intra_tc;
+    this->inter_tc = (options.find("onnx_inter_tc") != options.end()) ? IntegerValue::Get(options.at("onnx_inter_tc")) : client_config.onnx_inter_tc;
 }
 
 void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {
@@ -48,7 +48,6 @@ void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats>
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	stats->load = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-//    std::cout << "Load @run: " << stats->load << std::endl;
 #endif
 }
 

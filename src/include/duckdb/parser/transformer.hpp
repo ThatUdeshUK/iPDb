@@ -37,6 +37,7 @@ struct GroupingExpressionMap;
 class OnConflictInfo;
 class UpdateSetInfo;
 class MacroFunction;
+class ModelOnInfo;
 struct ParserOptions;
 struct PivotColumn;
 struct PivotColumnEntry;
@@ -146,6 +147,9 @@ private:
 	unique_ptr<SQLStatement> TransformDrop(duckdb_libpgquery::PGDropStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGInsertStmt node into a InsertStatement
 	unique_ptr<InsertStatement> TransformInsert(duckdb_libpgquery::PGInsertStmt &stmt);
+
+	//! Transform a Postgres duckdb_libpgquery::T_PGModelOn node into a ModelOnInfo
+	unique_ptr<ModelOnInfo> TransformModelOn(duckdb_libpgquery::PGModelOn &stmt);
 
 	//! Transform a Postgres duckdb_libpgquery::T_PGOnConflictClause node into a OnConflictInfo
 	unique_ptr<OnConflictInfo> TransformOnConflictClause(duckdb_libpgquery::PGOnConflictClause *node,

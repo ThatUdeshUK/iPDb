@@ -33,6 +33,9 @@ bool PredictRef::Equals(const TableRef &other_p) const {
 unique_ptr<TableRef> PredictRef::Copy() {
 	auto copy = make_uniq<PredictRef>();
 	copy->source = source->Copy();
+	if (opt_source) {
+		copy->opt_source = opt_source->Copy();
+	}
 	copy->model_name = model_name;
 	copy->alias = alias;
 	return std::move(copy);

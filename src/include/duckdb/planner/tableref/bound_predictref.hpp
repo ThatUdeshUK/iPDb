@@ -30,6 +30,8 @@ struct BoundPredictInfo {
     vector<LogicalType> input_set_types;
     //! Result set types
     vector<LogicalType> result_set_types;
+    //! Options
+    case_insensitive_map_t<Value> options;
 
     void Serialize(Serializer &serializer) const;
     static BoundPredictInfo Deserialize(Deserializer &deserializer);

@@ -1785,12 +1785,22 @@ typedef struct PGAlterSeqStmt {
  * ----------------------
  */
 
+typedef struct PGModelOn {
+	PGNodeTag type;
+	PGRangeVar *rel_name; /* name of the the model/view */
+    PGRangeVar *opt_name;  /* the optional source subtree */
+    PGNode *rel_feat;  /* The input set required by the model */
+    PGNode *opt_feat;  /* The input set required by the model */
+} PGModelOn;
+
 typedef struct PGCreateModelStmt {
 	PGNodeTag type;
 	PGRangeVar *model; /* the model to create */
 	int model_type; /* the model to create */
 	char *model_path; /* the path to the model */
+	PGNode *model_on; /* entity model attached to */
 	PGList *result_set;  /* The result set produced by the model */
+	PGList *options;	/* The map of options */
 	PGOid ownerId; /* ID of owner, or InvalidOid for default */
 	bool for_identity;
 	PGOnCreateConflict onconflict;        /* what to do on create conflict */

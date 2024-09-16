@@ -22,11 +22,13 @@ public:
 
 public:
     void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
+#ifdef DEBUG
         std::cout << "Load @run: " << stats->load << std::endl;
         std::cout << "Move @run: " << stats->move << std::endl;
         std::cout << "Predict @run: " << stats->predict << std::endl;
         std::cout << "Move Rev @run: " << stats->move_rev << std::endl;
-
+        std::cout << "Batch Size: " << predictor->batch_size << std::endl;
+#endif
         std::map<std::string, long> stats_map{{"load", stats->load}, {"move", stats->move}, {"predict", stats->predict}, {"move_rev", stats->move_rev}, {"correct", stats->correct}, {"total", stats->total}};
 
         context.thread.profiler.Flush(op, stats_map);
@@ -54,7 +56,7 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
     auto stats = make_uniq<PredictStats>();
     auto p = InitPredictor();
     p->task = static_cast<PredictorTask>(model_type);
-    p->Config(client_config);
+    p->Config(client_config, options);
     p->Load(model_path, stats);
     return make_uniq<PredictState>(context, std::move(p), std::move(stats));
 }
@@ -135,18 +137,12 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 
     int positives = 0;
     auto lhs = (float *) input.data[1].GetData();
-    // auto rhs = (float *) predictions.data[predictions.ColumnCount() - 1].GetData();
-
+    
     auto neg = (float *) predictions.data[0].GetData();
     auto pos = (float *) predictions.data[1].GetData();
 
     for (size_t i = 0; i < input.size(); i++) {
-        // std::cout << "label: " << *lhs << std::endl;
-        // std::cout << "pred: " << *rhs << std::endl;
-        // std::cout << "match: " << (*lhs == static_cast<int>(*rhs)) << std::endl;
-        // std::cout << "------" << std::endl;
         if ((*pos > *neg && *lhs > 0) || (*pos < *neg && *lhs < 1)) {
-        // if (*lhs == static_cast<int>(*rhs)) {
             positives++;
         }
         lhs++;
@@ -157,7 +153,6 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 
     state.stats->correct += positives;
     state.stats->total += input.size();
-    // std::cout << "Pos = " << positives << ", Total = " << input.size() << ", Accuracy = " << positives * 1.0 / input.size() << std::endl;
         
     chunk.Fuse(predictions);
 	return OperatorResultType::NEED_MORE_INPUT;

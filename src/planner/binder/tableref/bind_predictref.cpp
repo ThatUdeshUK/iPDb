@@ -35,6 +35,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     auto stored_model_data = stored_model.GetData();
     result->bound_predict.model_type = stored_model_data.model_type;
     result->bound_predict.model_path = stored_model_data.model_path;
+    result->bound_predict.options = stored_model_data.options;
 
     result->bind_index = GenerateTableIndex();
     result->child_binder = Binder::CreateBinder(context, this);
@@ -46,8 +47,8 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     vector<LogicalType> types(input_types);
 
     vector<idx_t> input_mask;
-    if (ref.input_set_names.size() > 0) {
-        for(const std::string& input_col : ref.input_set_names) {
+    if (stored_model_data.input_set_names.size() > 0) {
+        for(const std::string& input_col : stored_model_data.input_set_names) {
             bool feature_found = false;
             for (auto it = names.begin(); it != names.end(); ++it) {
                 int index = std::distance(names.begin(), it);
@@ -61,10 +62,10 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
                 throw BinderException("Input tabel should contain the BY feature columns");
             }
         }
-    } else if (ref.exclude_set_names.size() > 0) {
+    } else if (stored_model_data.exclude_set_names.size() > 0) {
         for (auto it = names.begin(); it != names.end(); ++it) {
             bool exclude_found = false;
-            for(const std::string& exclude_col : ref.exclude_set_names) {
+            for(const std::string& exclude_col : stored_model_data.exclude_set_names) {
                 if (exclude_col == *it) {
                     exclude_found = true;
                     break;
@@ -92,8 +93,8 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
         result->opt_binder->bind_context.GetTypesAndNames(opt_names, opt_types);
 
         vector<idx_t> opt_mask;
-        if (ref.opt_set_names.size() > 0) {
-            for(const std::string& input_col : ref.opt_set_names) {
+        if (stored_model_data.opt_set_names.size() > 0) {
+            for(const std::string& input_col : stored_model_data.opt_set_names) {
                 bool feature_found = false;
                 for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
                     int index = std::distance(opt_names.begin(), it);
@@ -107,10 +108,10 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
                     throw BinderException("Input tabel should contain the BY feature columns");
                 }
             }
-        } else if (ref.exclude_opt_set_names.size() > 0) {
+        } else if (stored_model_data.exclude_opt_set_names.size() > 0) {
             for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
                 bool exclude_found = false;
-                for(const std::string& exclude_col : ref.exclude_opt_set_names) {
+                for(const std::string& exclude_col : stored_model_data.exclude_opt_set_names) {
                     if (exclude_col == *it) {
                         exclude_found = true;
                         break;

@@ -22,10 +22,27 @@ struct CreateModelInfo : public CreateInfo {
 	uint8_t model_type;
 	//! The path of the stored model
 	string model_path;
+	
+	//! The relation attached to
+	string rel_name;
+	//! Input set names
+    vector<string> input_set_names;
+	//! Exclude set names
+    vector<string> exclude_set_names;
+
+	//! The relation attached to
+	string opt_rel_name;
+	//! Input set names
+    vector<string> opt_set_names;
+	//! Exclude set names
+    vector<string> exclude_opt_set_names;
+
 	//! Output set names
     vector<string> out_names;
     //! Output set types
     vector<LogicalType> out_types;
+
+	case_insensitive_map_t<Value> options;
 
 public:
 	unique_ptr<CreateInfo> Copy() const override;
