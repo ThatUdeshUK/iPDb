@@ -293,3 +293,17 @@ int FullTokenizer::tokenizeToIds(const std::string& text, long* input_ids, long*
     }
     return i;
 }
+
+std::vector<long> FullTokenizer::tokenizeToIds(const std::string& text, int size) const {
+    std::vector<long> out;
+    int i = 0;
+    for (auto& token : mBasicTokenizer.tokenize(text)) {
+        for (auto& subToken : mWordpieceTokenizer.tokenize(token)) {
+            out.push_back((*mVocab)[subToken]);
+            i++;
+            if (i == size)
+                return std::move(out);
+        }
+    }
+    return std::move(out);
+}

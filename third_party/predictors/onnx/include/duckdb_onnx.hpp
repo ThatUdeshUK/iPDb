@@ -19,6 +19,8 @@
 #define MOVE_METHOD COL_FIRST_COPY
 #define MOVE_REV_METHOD COL_FIRST_COPY
 
+#define DYNAMIC_TOKEN_SIZE 1
+
 #define OPT_TIMING 1
 
 namespace duckdb {
@@ -42,5 +44,6 @@ private:
     FullTokenizer tokenizer;
     
     void Preprocess(const std::string &text, long* input_ids, long* mask, int offset, int max_length) const;
+    void Preprocess(const std::vector<long> &text, long* input_ids, long* mask, int offset, int max_length) const;
 };
 } // namespace duckdb

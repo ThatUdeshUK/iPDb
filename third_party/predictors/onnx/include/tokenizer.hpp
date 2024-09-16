@@ -56,6 +56,7 @@ public:
     std::vector<long> convertTokensToIds(const std::vector<std::wstring>& text) const;
     long convertTokenToId(const std::wstring& token) const;
     int tokenizeToIds(const std::string& text, long* input_ids, long* mask, int size, int start = 0) const;
+    std::vector<long> tokenizeToIds(const std::string& text, int size) const;
 private:
     std::shared_ptr<Vocab> mVocab;
     InvVocab mInvVocab;

@@ -89,6 +89,30 @@ void ONNXPredictor::Preprocess(const std::string &text, long *input_ids, long *m
 	}
 }
 
+void ONNXPredictor::Preprocess(const std::vector<long> &ids, long *input_ids, long *mask, int offset, int max_length) const {
+	long start_id = tokenizer.convertTokenToId(L"[CLS]");
+	long end_id = tokenizer.convertTokenToId(L"[SEP]");
+
+	auto ids_start = input_ids + offset;
+	auto mask_start = mask + offset;
+	*(ids_start) = start_id;
+	*(mask_start) = 1;
+
+    int i = 1;
+	for (auto& subToken : ids) {
+		*(input_ids + i) = subToken;
+		*(mask + i) = 1;
+		i++;
+	}
+
+	if (i == max_length)
+		*(ids_start + i - 1) = end_id;
+	else {
+		*(ids_start + i) = end_id;
+		*(mask_start + i) = 1;
+	}
+}
+
 void ONNXPredictor::PredictLM(std::string &input, std::vector<float> &output, int output_size) {
 	long pad_id = tokenizer.convertTokenToId(L"[PAD]");
 
@@ -132,14 +156,36 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		int lrow = std::min(frow + batch_size, rows);
 		int num_rows = lrow - frow;
 
+		#if DYNAMIC_TOKEN_SIZE
+		int batch_llm_max_tokens = 0;
+		std::vector<std::vector<long>> all_token_ids;
+		for (int i = frow; i < lrow; ++i) {
+			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
+			auto token_ids = tokenizer.tokenizeToIds(input_str, 512);
+			int i_count = std::min((int) token_ids.size() + 2, 512);
+			if (i_count > batch_llm_max_tokens) {
+				batch_llm_max_tokens = i_count;
+			}
+			all_token_ids.push_back(token_ids);
+		}
+		llm_max_tokens = batch_llm_max_tokens;
+		#endif
+
 		std::vector<long> input_ids(num_rows * llm_max_tokens);
 		std::vector<long> masks(num_rows * llm_max_tokens);
 
+		#if DYNAMIC_TOKEN_SIZE
+		for (int i = frow; i < lrow; ++i) {
+			int offset = (i - frow) * llm_max_tokens;
+			Preprocess(all_token_ids[i], input_ids.data(), masks.data(), offset, llm_max_tokens);
+		}
+		#else
 		for (int i = frow; i < lrow; ++i) {
 			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
 			int offset = (i - frow) * llm_max_tokens;
 			Preprocess(input_str, input_ids.data(), masks.data(), offset, llm_max_tokens);
 		}
+		#endif
 
 		std::array<int64_t, 2> inputs_shape_ {num_rows, llm_max_tokens};
 		std::array<int64_t, 2> output_shape_ {num_rows, output_size};

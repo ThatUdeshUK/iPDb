@@ -9,10 +9,10 @@
 #include "duckdb_onnx.hpp"
 #endif
 
-#define CHUNK_PRED 1
+#define CHUNK_PRED 0
 // #define VEC_PRED 0
 // #define LM_PRED 0
-#define LM_CHUNK_PRED 0
+#define LM_CHUNK_PRED 1
 
 namespace duckdb {
 class PredictState : public OperatorState {
@@ -26,6 +26,7 @@ public:
 
 public:
     void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
+        // std::cout << "Finanlize: " << std::endl;
         std::cout << "Load @run: " << stats.load << std::endl;
         std::cout << "Move @run: " << stats.move << std::endl;
         std::cout << "Predict @run: " << stats.predict << std::endl;
@@ -138,19 +139,25 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 #endif
 
     int positives = 0;
-    auto lhs = (long *) input.data[input.ColumnCount() - 1].GetData();
-    auto rhs = (float *) predictions.data[predictions.ColumnCount() - 1].GetData();
+    auto lhs = (float *) input.data[1].GetData();
+    // auto rhs = (float *) predictions.data[predictions.ColumnCount() - 1].GetData();
+
+    auto neg = (float *) predictions.data[0].GetData();
+    auto pos = (float *) predictions.data[1].GetData();
 
     for (size_t i = 0; i < input.size(); i++) {
         // std::cout << "label: " << *lhs << std::endl;
         // std::cout << "pred: " << *rhs << std::endl;
         // std::cout << "match: " << (*lhs == static_cast<int>(*rhs)) << std::endl;
         // std::cout << "------" << std::endl;
-        if (*lhs == static_cast<int>(*rhs)) {
+        if ((*pos > *neg && *lhs > 0) || (*pos < *neg && *lhs < 1)) {
+        // if (*lhs == static_cast<int>(*rhs)) {
             positives++;
         }
         lhs++;
-        rhs++;
+        // rhs++;
+        neg++;
+        pos++;
     }
 
     state.stats.correct += positives;

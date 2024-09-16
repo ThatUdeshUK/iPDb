@@ -141,7 +141,7 @@ struct ClientConfig {
 
 	//! If HTTP logging is enabled or not.
 	bool enable_http_logging = false;
-	//! The file to save query HTTP logging information to, instead of printing it to the console
+	//! The file to save query HTTP logging conda install -n mldb ipykernel --update-deps --force-reinstallinformation to, instead of printing it to the console
 	//! (empty = print to console)
 	string http_logging_output;
 
@@ -155,7 +155,7 @@ struct ClientConfig {
 	idx_t onnx_execution_mode = 0;
 
 	//! Intra thread count for ONNX Runtime
-	idx_t onnx_intra_tc = 2;
+	idx_t onnx_intra_tc = 16;
 
 	//! Inter thread count for ONNX Runtime
 	idx_t onnx_inter_tc = 512;
