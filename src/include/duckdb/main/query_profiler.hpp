@@ -43,6 +43,7 @@ struct OperatorInformation {
 	idx_t elements_returned;
 	idx_t result_set_size;
 	string name;
+	string append_extra_info;
 
 	void AddTime(double n_time) {
 		time += n_time;
@@ -70,6 +71,7 @@ public:
 
 	//! Adds the timings in the OperatorProfiler (tree) to the QueryProfiler (tree).
 	DUCKDB_API void Flush(const PhysicalOperator &phys_op);
+	DUCKDB_API void Flush(const PhysicalOperator &phys_op, std::map<std::string, long> &stats_map);
 	DUCKDB_API OperatorInformation &GetOperatorInfo(const PhysicalOperator &phys_op);
 
 	~OperatorProfiler() {

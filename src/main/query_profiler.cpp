@@ -380,6 +380,19 @@ void OperatorProfiler::Flush(const PhysicalOperator &phys_op) {
 	operator_timing.name = phys_op.GetName();
 }
 
+void OperatorProfiler::Flush(const PhysicalOperator &phys_op, std::map<std::string, long> &stats_map) {
+    auto entry = timings.find(phys_op);
+    if (entry == timings.end()) {
+        return;
+    }
+    auto &operator_timing = timings.find(phys_op)->second;
+    operator_timing.append_extra_info = "";
+    for (const auto& x: stats_map) {
+        operator_timing.append_extra_info += "|" + x.first + ":" + std::to_string(x.second);
+    }
+	operator_timing.name = phys_op.GetName();
+}
+
 void QueryProfiler::Flush(OperatorProfiler &profiler) {
 	lock_guard<mutex> guard(flush_lock);
 	if (!IsEnabled() || !running) {
