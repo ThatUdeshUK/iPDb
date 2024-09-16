@@ -15,22 +15,19 @@
 namespace duckdb {
 class PredictState : public OperatorState {
 public:
-    explicit PredictState(ExecutionContext &context, unique_ptr<Predictor> p, PredictStats stats) : predictor(std::move(p)) {
-        this->stats = stats;
-    }
+    explicit PredictState(ExecutionContext &context, unique_ptr<Predictor> p, unique_ptr<PredictStats> s) : predictor(std::move(p)), stats(std::move(s)) {}
 
     unique_ptr<Predictor> predictor;
-    PredictStats stats;
+    unique_ptr<PredictStats> stats;
 
 public:
     void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
-        // std::cout << "Finanlize: " << std::endl;
-        std::cout << "Load @run: " << stats.load << std::endl;
-        std::cout << "Move @run: " << stats.move << std::endl;
-        std::cout << "Predict @run: " << stats.predict << std::endl;
-        std::cout << "Move Rev @run: " << stats.move_rev << std::endl;
+        std::cout << "Load @run: " << stats->load << std::endl;
+        std::cout << "Move @run: " << stats->move << std::endl;
+        std::cout << "Predict @run: " << stats->predict << std::endl;
+        std::cout << "Move Rev @run: " << stats->move_rev << std::endl;
 
-        std::map<std::string, long> stats_map{{"load", stats.load}, {"move", stats.move}, {"predict", stats.predict}, {"move_rev", stats.move_rev}, {"correct", stats.correct}, {"total", stats.total}};
+        std::map<std::string, long> stats_map{{"load", stats->load}, {"move", stats->move}, {"predict", stats->predict}, {"move_rev", stats->move_rev}, {"correct", stats->correct}, {"total", stats->total}};
 
         context.thread.profiler.Flush(op, stats_map);
     }
@@ -58,8 +55,8 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
     auto p = InitPredictor();
     p->task = static_cast<PredictorTask>(model_type);
     p->Config(client_config);
-    p->Load(model_name, *stats);
-    return make_uniq<PredictState>(context, std::move(p), *stats);
+    p->Load(model_name, stats);
+    return make_uniq<PredictState>(context, std::move(p), std::move(stats));
 }
 
 OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk &input, DataChunk &chunk,
@@ -158,8 +155,8 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
         pos++;
     }
 
-    state.stats.correct += positives;
-    state.stats.total += input.size();
+    state.stats->correct += positives;
+    state.stats->total += input.size();
     // std::cout << "Pos = " << positives << ", Total = " << input.size() << ", Accuracy = " << positives * 1.0 / input.size() << std::endl;
         
     chunk.Fuse(predictions);

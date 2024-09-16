@@ -3,7 +3,7 @@
 
 namespace duckdb {
 
-LogicalPredict::LogicalPredict() : LogicalOperator(LogicalOperatorType::LOGICAL_PIVOT) {
+LogicalPredict::LogicalPredict() : LogicalOperator(LogicalOperatorType::LOGICAL_PREDICT) {
 }
 
 LogicalPredict::LogicalPredict(idx_t predict_idx, BoundPredictInfo info_p)

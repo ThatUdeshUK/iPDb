@@ -9,7 +9,8 @@ namespace duckdb {
 unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     auto result = make_uniq<BoundPredictRef>();
     result->bound_predict.model_type = ref.model_type;
-    result->bound_predict.model_name = ref.model_name;
+    result->bound_predict.model_name = std::move(ref.model_name);
+
     result->bind_index = GenerateTableIndex();
     result->child_binder = Binder::CreateBinder(context, this);
     result->children.push_back(result->child_binder->Bind(*ref.source));
@@ -55,7 +56,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
             input_mask.push_back(i);
         }
     }
-    result->bound_predict.input_mask = input_mask;
+    result->bound_predict.input_mask = std::move(input_mask);
 
     if (ref.model_type == 2) {
         vector<string> opt_names;
@@ -101,11 +102,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
                 opt_mask.push_back(i);
             }
         }
-
-        // names.insert(names.end(), std::make_move_iterator(opt_names.begin()), std::make_move_iterator(opt_names.end()));
-        // types.insert(types.end(), std::make_move_iterator(opt_types.begin()), std::make_move_iterator(opt_types.end()));
-        
-        result->bound_predict.opt_mask = opt_mask;
+        result->bound_predict.opt_mask = std::move(opt_mask);
     }
 
     vector<string> result_names = ref.result_set_names;
@@ -115,14 +112,13 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     types.insert(types.end(), std::make_move_iterator(result_types.begin()), std::make_move_iterator(result_types.end()));
 
     result->bound_predict.types = types;
-    result->bound_predict.result_set_names = std::move(ref.result_set_names);
     result->bound_predict.input_set_types = std::move(input_types);
+    result->bound_predict.result_set_names = std::move(ref.result_set_names);
     result->bound_predict.result_set_types = std::move(ref.result_set_types);
 
     auto subquery_alias = ref.alias.empty() ? "__unnamed_predict" : ref.alias;
     bind_context.AddGenericBinding(result->bind_index, subquery_alias, names, types);
     MoveCorrelatedExpressions(*result->child_binder);
-    // MoveCorrelatedExpressions(*result->opt_binder);
     return std::move(result);
 }
 

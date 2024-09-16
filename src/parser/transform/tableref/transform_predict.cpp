@@ -6,7 +6,7 @@ namespace duckdb {
 unique_ptr<TableRef> Transformer::TransformPredict(duckdb_libpgquery::PGPredictExpr &root) {
 	auto result = make_uniq<PredictRef>();
     result->model_type = root.model_type;
-    result->model_name = root.model_name;
+    result->model_name.assign(root.model_name);
 
 	result->source = TransformTableRefNode(*root.source);
     if (result->model_type == 2) {

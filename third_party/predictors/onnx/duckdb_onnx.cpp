@@ -17,7 +17,7 @@ void ONNXPredictor::Config(const ClientConfig &client_config) {
 	this->inter_tc = client_config.onnx_inter_tc;
 }
 
-void ONNXPredictor::Load(const std::string &model_path, PredictStats &stats) {
+void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {
 	std::cout << "Model Loaded" << std::endl;
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -47,8 +47,8 @@ void ONNXPredictor::Load(const std::string &model_path, PredictStats &stats) {
 	session = std::move(session_tmp);
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	stats.load = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-   std::cout << "Load @run: " << stats.load << std::endl;
+	stats->load = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+   std::cout << "Load @run: " << stats->load << std::endl;
 #endif
 }
 
@@ -143,7 +143,7 @@ void ONNXPredictor::PredictLM(std::string &input, std::vector<float> &output, in
 }
 
 void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, 
-								   int output_size, PredictStats &stats) {
+								   int output_size, unique_ptr<PredictStats> &stats) {
 	int rounds = rows / batch_size;
 	if (rows % batch_size != 0)
 		rounds++;
@@ -207,7 +207,7 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 
 		#if OPT_TIMING
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-		stats.move += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->move += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
 		begin = std::chrono::steady_clock::now();
 		#endif
@@ -217,7 +217,7 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 
 		#if OPT_TIMING
 		end = std::chrono::steady_clock::now();
-		stats.predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
 		begin = std::chrono::steady_clock::now();
 		#endif
@@ -235,13 +235,13 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		
 		#if OPT_TIMING
 		end = std::chrono::steady_clock::now();
-		stats.move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 		#endif
 	}
 }
 
 void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
-								 int output_size, PredictStats &stats) {
+								 int output_size, unique_ptr<PredictStats> &stats) {
  	int rounds = rows / batch_size;
 	if (rows % batch_size != 0)
 		rounds++;
@@ -304,7 +304,7 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 
 #if OPT_TIMING
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-		stats.move += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->move += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
 		begin = std::chrono::steady_clock::now();
 #endif
@@ -314,7 +314,7 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 
 #if OPT_TIMING
 		end = std::chrono::steady_clock::now();
-		stats.predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
 		begin = std::chrono::steady_clock::now();
 #endif
@@ -360,14 +360,14 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 
 #if OPT_TIMING
 		end = std::chrono::steady_clock::now();
-		stats.move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+		stats->move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 #endif
 	}
 }
 
 void ONNXPredictor::PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 							   int64_t num_nodes, int64_t num_edges, int64_t feature_size, int64_t edge_size,
-							   int64_t output_size, PredictStats &stats) {
+							   int64_t output_size, unique_ptr<PredictStats> &stats) {
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 #endif
@@ -393,7 +393,7 @@ void ONNXPredictor::PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vec
 	session.Run(run_options, input_names, inputs.data(), 2, output_names, &outputs, 1);
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	stats.predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+	stats->predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 #endif
 }
 } // namespace duckdb

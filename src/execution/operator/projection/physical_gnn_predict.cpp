@@ -7,33 +7,34 @@
 #include <iostream>
 #include <map>
 
+#include "duckdb_onnx.hpp"
+
 namespace duckdb {
-class PredictGNNOperatorState : public OperatorState {
-public:
-    explicit PredictGNNOperatorState() {
-    }
+// class PredictGNNOperatorState : public OperatorState {
+// public:
+//     explicit PredictGNNOperatorState() {
+//     }
 
-    PredictStats stats;
+//     PredictStats stats;
 
-public:
-    void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
-        // std::cout << "Finanlize: " << std::endl;
-        std::cout << "Load @run: " << stats.load << std::endl;
-        std::cout << "Move @run: " << stats.move << std::endl;
-        std::cout << "Predict @run: " << stats.predict << std::endl;
-        std::cout << "Move Rev @run: " << stats.move_rev << std::endl;
+// public:
+//     void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
+//         // std::cout << "Finanlize: " << std::endl;
+//         std::cout << "Load @run: " << stats.load << std::endl;
+//         std::cout << "Move @run: " << stats.move << std::endl;
+//         std::cout << "Predict @run: " << stats.predict << std::endl;
+//         std::cout << "Move Rev @run: " << stats.move_rev << std::endl;
 
-        std::map<std::string, long> stats_map{{"load", stats.load}, {"move", stats.move}, {"predict", stats.predict}, {"move_rev", stats.move_rev}, {"correct", stats.correct}, {"total", stats.total}};
+//         std::map<std::string, long> stats_map{{"load", stats.load}, {"move", stats.move}, {"predict", stats.predict}, {"move_rev", stats.move_rev}, {"correct", stats.correct}, {"total", stats.total}};
 
-        context.thread.profiler.Flush(op, stats_map, "predict");
-    }
-};
+//         context.thread.profiler.Flush(op, stats_map, "predict");
+//     }
+// };
 
 class PredictGNNGlobalState : public GlobalSinkState {
 public:
-	PredictGNNGlobalState(ClientContext &context, BufferManager &buffer_manager_p, unique_ptr<Predictor> p, const vector<LogicalType> &node_types, PredictStats stats) :
-	buffer_manager(buffer_manager_p), predictor(std::move(p)) {
-		this->stats = stats;
+	PredictGNNGlobalState(ClientContext &context, BufferManager &buffer_manager_p, unique_ptr<Predictor> p, const vector<LogicalType> &node_types, unique_ptr<PredictStats> s) :
+	buffer_manager(buffer_manager_p), predictor(std::move(p)), stats(std::move(s)) {
 		layout.Initialize(node_types, false);
 		data_collection = make_uniq<TupleDataCollection>(buffer_manager, layout);
 	}
@@ -41,7 +42,7 @@ public:
 	mutex lock;
 	bool phase1_done = false;
 	
-	PredictStats stats;
+	unique_ptr<PredictStats> stats;
 	unique_ptr<Predictor> predictor;
 
 	BufferManager &buffer_manager;
@@ -128,9 +129,9 @@ SourceResultType PhysicalGNNPredict::GetData(ExecutionContext &context, DataChun
 //===--------------------------------------------------------------------===//
 // Operator
 //===--------------------------------------------------------------------===//
-unique_ptr<OperatorState> PhysicalGNNPredict::GetOperatorState(ExecutionContext &context) const {
-    return make_uniq<PredictGNNOperatorState>();
-}
+// unique_ptr<OperatorState> PhysicalGNNPredict::GetOperatorState(ExecutionContext &context) const {
+//     return make_uniq<PredictGNNOperatorState>();
+// }
 
 void PhysicalGNNPredict::BuildPipelines(Pipeline &current, MetaPipeline &meta_pipeline) {
     this->op_state.reset();
@@ -190,8 +191,8 @@ unique_ptr<GlobalSinkState> PhysicalGNNPredict::GetGlobalSinkState(ClientContext
     auto p = make_uniq<ONNXPredictor>();
     p->task = static_cast<PredictorTask>(model_type);
     p->Config(client_config);
-    p->Load(model_name, *stats);
-    return make_uniq<PredictGNNGlobalState>(context, BufferManager::GetBufferManager(context), std::move(p), node_types, *stats);
+    p->Load(model_name, stats);
+    return make_uniq<PredictGNNGlobalState>(context, BufferManager::GetBufferManager(context), std::move(p), node_types, std::move(stats));
 }
 
 SinkResultType PhysicalGNNPredict::Sink(ExecutionContext &context, DataChunk &chunk, OperatorSinkInput &input) const {
@@ -278,14 +279,10 @@ SinkFinalizeType PhysicalGNNPredict::Finalize(Pipeline &pipeline, Event &event, 
 	predictor.PredictGNN(gstate.node_data, gstate.edge_data, gstate.output, num_nodes, num_edges, feature_size, 
 						 edge_size, out_size, gstate.stats);
 
-	std::cout << "Load @run: " << gstate.stats.load << std::endl;
-	std::cout << "Move @run: " << gstate.stats.move << std::endl;
-	std::cout << "Predict @run: " << gstate.stats.predict << std::endl;
-	std::cout << "Move Rev @run: " << gstate.stats.move_rev << std::endl;
-
-	// std::map<std::string, long> stats_map{{"load", gstate.stats.load}, {"move", gstate.stats.move}, {"predict", gstate.stats.predict}, {"move_rev", gstate.stats.move_rev}, {"correct", gstate.stats.correct}, {"total", gstate.stats.total}};
-
-	// context.thread.profiler.Flush(op, stats_map, "predict");
+	std::cout << "Load @run: " << gstate.stats->load << std::endl;
+	std::cout << "Move @run: " << gstate.stats->move << std::endl;
+	std::cout << "Predict @run: " << gstate.stats->predict << std::endl;
+	std::cout << "Move Rev @run: " << gstate.stats->move_rev << std::endl;
 
 	return SinkFinalizeType::READY;
 }
