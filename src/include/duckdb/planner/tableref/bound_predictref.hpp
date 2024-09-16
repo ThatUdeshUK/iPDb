@@ -16,6 +16,8 @@ namespace duckdb {
 struct BoundPredictInfo {
     uint8_t model_type;
     string model_name;
+    //! The path of the model
+    string model_path;
     //! The set of types
     vector<LogicalType> types;
     //! Input mask for feature column

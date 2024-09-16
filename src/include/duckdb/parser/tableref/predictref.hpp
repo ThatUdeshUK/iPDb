@@ -26,8 +26,6 @@ public:
 	unique_ptr<TableRef> source;
 	//! The (optional) source table of the predict
 	unique_ptr<TableRef> opt_source;
-	//! The model type 
-	uint8_t model_type;
 	//! The model name for the predict
 	string model_name;
     //! Aliases for the column names

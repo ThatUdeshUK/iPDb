@@ -7,7 +7,9 @@
 #include <iostream>
 #include <map>
 
+#if ENABLE_PREDICT
 #include "duckdb_onnx.hpp"
+#endif
 
 namespace duckdb {
 // class PredictGNNOperatorState : public OperatorState {
@@ -188,10 +190,14 @@ unique_ptr<GlobalSinkState> PhysicalGNNPredict::GetGlobalSinkState(ClientContext
 	auto &client_config = ClientConfig::GetConfig(context);
 
     auto stats = make_uniq<PredictStats>();
+#if defined(ENABLE_PREDICT)
     auto p = make_uniq<ONNXPredictor>();
     p->task = static_cast<PredictorTask>(model_type);
     p->Config(client_config);
-    p->Load(model_name, stats);
+    p->Load(model_path, stats);
+#else
+	auto p = nullptr;
+#endif
     return make_uniq<PredictGNNGlobalState>(context, BufferManager::GetBufferManager(context), std::move(p), node_types, std::move(stats));
 }
 
@@ -288,7 +294,7 @@ SinkFinalizeType PhysicalGNNPredict::Finalize(Pipeline &pipeline, Event &event, 
 }
 
 string PhysicalGNNPredict::ParamsToString() const {
-    return model_name;
+    return model_path;
 }
 
 } // namespace duckdb

@@ -3,13 +3,35 @@
 #include "duckdb/planner/tableref/bound_predictref.hpp"
 #include "duckdb/parser/tableref/subqueryref.hpp"
 #include "duckdb/parser/query_node/select_node.hpp"
+#include "duckdb/catalog/catalog.hpp"
+#include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 
 namespace duckdb {
 
+struct BindModelData {
+	vector<reference<ModelCatalogEntry>> entries;
+};
+
 unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     auto result = make_uniq<BoundPredictRef>();
-    result->bound_predict.model_type = ref.model_type;
     result->bound_predict.model_name = std::move(ref.model_name);
+
+    // result->bound_predict.model_type = ref.model_type;
+	auto models = make_uniq<BindModelData>();
+    auto schemas = Catalog::GetAllSchemas(context);
+	for (auto &schema : schemas) {
+		schema.get().Scan(context, CatalogType::MODEL_ENTRY,
+		                  [&](CatalogEntry &entry) { models->entries.push_back(entry.Cast<ModelCatalogEntry>()); });
+	};
+
+    if (models->entries.size() < 1) {
+        throw InternalException("Catalog Error: Model with name `" + result->bound_predict.model_name + "` does not exist!");
+    } else {
+        auto &stored_model = models->entries[0].get();
+        auto stored_model_data = stored_model.GetData();
+        result->bound_predict.model_type = stored_model_data.model_type;
+        result->bound_predict.model_path = stored_model_data.model_path;
+    }
 
     result->bind_index = GenerateTableIndex();
     result->child_binder = Binder::CreateBinder(context, this);
@@ -58,7 +80,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     }
     result->bound_predict.input_mask = std::move(input_mask);
 
-    if (ref.model_type == 2) {
+    if (result->bound_predict.model_type == 2) {
         vector<string> opt_names;
         vector<LogicalType> opt_types;
         result->opt_binder = Binder::CreateBinder(context, this);

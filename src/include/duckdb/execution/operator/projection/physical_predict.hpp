@@ -63,7 +63,7 @@ public:
     PhysicalPredict(vector<LogicalType> types, unique_ptr<PhysicalOperator> child);
 
     uint8_t model_type;
-    string model_name;
+    string model_path;
 
     std::vector<idx_t> input_mask;
     std::vector<LogicalType> result_set_types;
@@ -93,7 +93,7 @@ public:
 	PhysicalGNNPredict(vector<LogicalType> types, idx_t estimated_cardinality);
 
     uint8_t model_type;
-    string model_name;
+    string model_path;
 
     idx_t num_nodes;
     idx_t num_edges;

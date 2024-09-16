@@ -132,6 +132,9 @@ protected:
 	void ReplayDropSequence();
 	void ReplaySequenceValue();
 
+	void ReplayCreateModel();
+	void ReplayDropModel();
+
 	void ReplayCreateMacro();
 	void ReplayDropMacro();
 
@@ -283,6 +286,12 @@ void WriteAheadLogDeserializer::ReplayEntry(WALType entry_type) {
 		break;
 	case WALType::DROP_SEQUENCE:
 		ReplayDropSequence();
+		break;
+	case WALType::CREATE_MODEL:
+		ReplayCreateModel();
+		break;
+	case WALType::DROP_MODEL:
+		ReplayDropModel();
 		break;
 	case WALType::SEQUENCE_VALUE:
 		ReplaySequenceValue();
@@ -484,6 +493,30 @@ void WriteAheadLogDeserializer::ReplaySequenceValue() {
 	// fetch the sequence from the catalog
 	auto &seq = catalog.GetEntry<SequenceCatalogEntry>(context, schema, name);
 	seq.ReplayValue(usage_count, counter);
+}
+
+//===--------------------------------------------------------------------===//
+// Replay Model
+//===--------------------------------------------------------------------===//
+void WriteAheadLogDeserializer::ReplayCreateModel() {
+	auto entry = deserializer.ReadProperty<unique_ptr<CreateInfo>>(101, "model");
+	if (DeserializeOnly()) {
+		return;
+	}
+
+	catalog.CreateModel(context, entry->Cast<CreateModelInfo>());
+}
+
+void WriteAheadLogDeserializer::ReplayDropModel() {
+	DropInfo info;
+	info.type = CatalogType::MODEL_ENTRY;
+	info.schema = deserializer.ReadProperty<string>(101, "schema");
+	info.name = deserializer.ReadProperty<string>(102, "name");
+	if (DeserializeOnly()) {
+		return;
+	}
+
+	catalog.DropEntry(context, info);
 }
 
 //===--------------------------------------------------------------------===//

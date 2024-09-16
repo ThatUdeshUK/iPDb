@@ -55,7 +55,7 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
     auto p = InitPredictor();
     p->task = static_cast<PredictorTask>(model_type);
     p->Config(client_config);
-    p->Load(model_name, stats);
+    p->Load(model_path, stats);
     return make_uniq<PredictState>(context, std::move(p), std::move(stats));
 }
 
@@ -168,7 +168,7 @@ string PhysicalPredict::GetName() const {
 }
 
 string PhysicalPredict::ParamsToString() const {
-    return model_name;
+    return model_path;
 }
 
 } // namespace duckdb

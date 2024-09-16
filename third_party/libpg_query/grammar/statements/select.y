@@ -1100,36 +1100,30 @@ table_ref:	relation_expr opt_alias_clause opt_tablesample_clause
 					n->location = @2;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' model_type_value ',' SCONST ',' table_ref opt_feat_col_list ')' WITH '(' with_result_col_list ')' opt_alias_clause
+			| PREDICT '(' qualified_name ',' table_ref opt_feat_col_list ')' WITH '(' with_result_col_list ')' opt_alias_clause
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
-					n->source = $7;
-					n->model_type = $3;
-					n->model_name = $5;
-					n->input_feat = $8;
-					n->result_set = $12;
-					n->alias = $14;
+					n->source = $5;
+					n->model_name = $3;
+					n->input_feat = $6;
+					n->result_set = $10;
+					n->alias = $12;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' GNN ',' SCONST ',' table_ref opt_feat_col_list ',' table_ref opt_feat_col_list ')' WITH '(' with_result_col_list ')' opt_alias_clause
+			| PREDICT '(' qualified_name ',' table_ref opt_feat_col_list ',' table_ref opt_feat_col_list ')' WITH '(' with_result_col_list ')' opt_alias_clause
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
-					n->source = $7;
-					n->opt_source = $10;
-					n->model_type = 2;
-					n->model_name = $5;
-					n->input_feat = $8;
-					n->opt_feat = $11;
-					n->result_set = $15;
-					n->alias = $17;
+					n->source = $5;
+					n->model_name = $3;
+					n->input_feat = $6;
+					n->opt_source = $8;
+					n->opt_feat = $9;
+					n->result_set = $13;
+					n->has_opt = 1;
+					n->alias = $15;
 					$$ = (PGNode *) n;
 				}
 		;
-
-model_type_value:
-			TABULAR 							{ $$ = 0; }
-			| LLM 								{ $$ = 1; }
-		;	
 
 opt_feat_col_list:
 			FEATURES '(' name_list_opt_comma ')'

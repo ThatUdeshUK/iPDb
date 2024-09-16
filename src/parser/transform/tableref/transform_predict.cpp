@@ -5,11 +5,12 @@ namespace duckdb {
 
 unique_ptr<TableRef> Transformer::TransformPredict(duckdb_libpgquery::PGPredictExpr &root) {
 	auto result = make_uniq<PredictRef>();
-    result->model_type = root.model_type;
-    result->model_name.assign(root.model_name);
+
+	auto qname = TransformQualifiedName(*root.model_name);
+	result->model_name = qname.name;
 
 	result->source = TransformTableRefNode(*root.source);
-    if (result->model_type == 2) {
+    if (root.has_opt) {
 	    result->opt_source = TransformTableRefNode(*root.opt_source);
     }
 	result->alias = TransformAlias(root.alias, result->column_name_alias);
