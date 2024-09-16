@@ -1397,6 +1397,7 @@ typedef enum PGObjectType {
 	PG_OBJECT_RULE,
 	PG_OBJECT_SCHEMA,
 	PG_OBJECT_SEQUENCE,
+	PG_OBJECT_MODEL,
 	PG_OBJECT_SUBSCRIPTION,
 	PG_OBJECT_STATISTIC_EXT,
 	PG_OBJECT_TABCONSTRAINT,
@@ -1779,6 +1780,29 @@ typedef struct PGAlterSeqStmt {
 	bool for_identity;
 	bool missing_ok; /* skip error if a role is missing? */
 } PGAlterSeqStmt;
+
+/* ----------------------
+ *		{Create|Alter} MODEL Statement
+ * ----------------------
+ */
+
+typedef struct PGCreateModelStmt {
+	PGNodeTag type;
+	PGRangeVar *model; /* the model to create */
+	int model_type; /* the model to create */
+	char *model_path; /* the path to the model */
+	PGOid ownerId; /* ID of owner, or InvalidOid for default */
+	bool for_identity;
+	PGOnCreateConflict onconflict;        /* what to do on create conflict */
+} PGCreateModelStmt;
+
+typedef struct PGAlterModelStmt {
+	PGNodeTag type;
+	PGRangeVar *model; /* the model to alter */
+	PGList *options;
+	bool for_identity;
+	bool missing_ok; /* skip error if a role is missing? */
+} PGAlterModelStmt;
 
 /* ----------------------
  *		CREATE FUNCTION Statement

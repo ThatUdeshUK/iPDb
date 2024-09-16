@@ -159,6 +159,7 @@ optional_ptr<CatalogEntry> CatalogSet::CreateCommittedEntry(unique_ptr<CatalogEn
 
 	auto catalog_entry = entry.get();
 
+
 	entry->set = this;
 	// Set the timestamp to the first committed transaction
 	entry->timestamp = 0;

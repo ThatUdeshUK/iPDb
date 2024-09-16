@@ -26,6 +26,9 @@ unique_ptr<SQLStatement> Transformer::TransformDrop(duckdb_libpgquery::PGDropStm
 	case duckdb_libpgquery::PG_OBJECT_SEQUENCE:
 		info.type = CatalogType::SEQUENCE_ENTRY;
 		break;
+	case duckdb_libpgquery::PG_OBJECT_MODEL:
+		info.type = CatalogType::MODEL_ENTRY;
+		break;
 	case duckdb_libpgquery::PG_OBJECT_FUNCTION:
 		info.type = CatalogType::MACRO_ENTRY;
 		break;

@@ -536,6 +536,10 @@ std::string Transformer::NodetypeToString(duckdb_libpgquery::PGNodeTag type) { /
 		return "T_CreateSeqStmt";
 	case duckdb_libpgquery::T_PGAlterSeqStmt:
 		return "T_AlterSeqStmt";
+	case duckdb_libpgquery::T_PGCreateModelStmt:
+		return "T_CreateModelStmt";
+	case duckdb_libpgquery::T_PGAlterModelStmt:
+		return "T_AlterModelStmt";
 	case duckdb_libpgquery::T_PGVariableSetStmt:
 		return "T_VariableSetStmt";
 	case duckdb_libpgquery::T_PGVariableShowStmt:

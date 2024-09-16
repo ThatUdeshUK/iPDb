@@ -227,6 +227,22 @@ void WriteAheadLog::WriteSequenceValue(SequenceValue val) {
 }
 
 //===--------------------------------------------------------------------===//
+// MODELS
+//===--------------------------------------------------------------------===//
+void WriteAheadLog::WriteCreateModel(const ModelCatalogEntry &entry) {
+	WriteAheadLogSerializer serializer(*this, WALType::CREATE_MODEL);
+	serializer.WriteProperty(101, "model", &entry);
+	serializer.End();
+}
+
+void WriteAheadLog::WriteDropModel(const ModelCatalogEntry &entry) {
+	WriteAheadLogSerializer serializer(*this, WALType::DROP_MODEL);
+	serializer.WriteProperty(101, "schema", entry.schema.name);
+	serializer.WriteProperty(102, "name", entry.name);
+	serializer.End();
+}
+
+//===--------------------------------------------------------------------===//
 // MACROS
 //===--------------------------------------------------------------------===//
 void WriteAheadLog::WriteCreateMacro(const ScalarMacroCatalogEntry &entry) {

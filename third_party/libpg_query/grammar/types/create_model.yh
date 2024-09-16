@@ -1,0 +1,1 @@
+%type <ival> model_type_wgnn_value

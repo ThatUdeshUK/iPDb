@@ -126,6 +126,8 @@ private:
 	unique_ptr<CreateStatement> TransformCreateSchema(duckdb_libpgquery::PGCreateSchemaStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGCreateSeqStmt node into a CreateStatement
 	unique_ptr<CreateStatement> TransformCreateSequence(duckdb_libpgquery::PGCreateSeqStmt &node);
+	//! Transform a Postgres duckdb_libpgquery::T_PGCreateModelStmt node into a CreateStatement
+	unique_ptr<CreateStatement> TransformCreateModel(duckdb_libpgquery::PGCreateModelStmt &node);
 	//! Transform a Postgres duckdb_libpgquery::T_PGViewStmt node into a CreateStatement
 	unique_ptr<CreateStatement> TransformCreateView(duckdb_libpgquery::PGViewStmt &node);
 	//! Transform a Postgres duckdb_libpgquery::T_PGIndexStmt node into CreateStatement
@@ -138,6 +140,8 @@ private:
 	unique_ptr<AlterStatement> TransformCommentOn(duckdb_libpgquery::PGCommentOnStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGAlterSeqStmt node into CreateStatement
 	unique_ptr<AlterStatement> TransformAlterSequence(duckdb_libpgquery::PGAlterSeqStmt &stmt);
+	//! Transform a Postgres duckdb_libpgquery::T_PGAlterModelStmt node into AlterStatement
+	unique_ptr<AlterStatement> TransformAlterModel(duckdb_libpgquery::PGAlterModelStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGDropStmt node into a Drop[Table,Schema]Statement
 	unique_ptr<SQLStatement> TransformDrop(duckdb_libpgquery::PGDropStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGInsertStmt node into a InsertStatement

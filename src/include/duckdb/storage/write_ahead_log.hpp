@@ -11,6 +11,7 @@
 #include "duckdb/catalog/catalog_entry/index_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/scalar_macro_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/sequence_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_macro_catalog_entry.hpp"
 #include "duckdb/common/enums/wal_type.hpp"
 #include "duckdb/common/helper.hpp"
@@ -29,6 +30,7 @@ class Catalog;
 class DatabaseInstance;
 class SchemaCatalogEntry;
 class SequenceCatalogEntry;
+class ModelCatalogEntry;
 class ScalarMacroCatalogEntry;
 class ViewCatalogEntry;
 class TypeCatalogEntry;
@@ -78,6 +80,9 @@ public:
 	void WriteCreateSequence(const SequenceCatalogEntry &entry);
 	void WriteDropSequence(const SequenceCatalogEntry &entry);
 	void WriteSequenceValue(SequenceValue val);
+
+	void WriteCreateModel(const ModelCatalogEntry &entry);
+	void WriteDropModel(const ModelCatalogEntry &entry);
 
 	void WriteCreateMacro(const ScalarMacroCatalogEntry &entry);
 	void WriteDropMacro(const ScalarMacroCatalogEntry &entry);

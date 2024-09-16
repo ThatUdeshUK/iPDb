@@ -38,8 +38,10 @@ add_library_unity(
   transform_upsert.cpp
   transform_use.cpp
   transform_create_sequence.cpp
+  transform_create_model.cpp
   transform_vacuum.cpp
-  transform_alter_sequence.cpp)
+  transform_alter_sequence.cpp
+  transform_alter_model.cpp)
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:duckdb_transformer_statement>
     PARENT_SCOPE)

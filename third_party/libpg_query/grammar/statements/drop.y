@@ -72,6 +72,7 @@ DropStmt:	DROP drop_type_any_name IF_P EXISTS any_name_list opt_drop_behavior
 drop_type_any_name:
 			TABLE									{ $$ = PG_OBJECT_TABLE; }
 			| SEQUENCE								{ $$ = PG_OBJECT_SEQUENCE; }
+			| MODEL									{ $$ = PG_OBJECT_MODEL; }
 			| FUNCTION								{ $$ = PG_OBJECT_FUNCTION; }
 			| MACRO									{ $$ = PG_OBJECT_FUNCTION; }
 			| MACRO TABLE                           { $$ = PG_OBJECT_TABLE_MACRO; }

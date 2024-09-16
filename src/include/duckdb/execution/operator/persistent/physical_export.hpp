@@ -21,6 +21,7 @@ struct ExportEntries {
 	vector<reference<CatalogEntry>> schemas;
 	vector<reference<CatalogEntry>> custom_types;
 	vector<reference<CatalogEntry>> sequences;
+	vector<reference<CatalogEntry>> models;
 	vector<reference<CatalogEntry>> tables;
 	vector<reference<CatalogEntry>> views;
 	vector<reference<CatalogEntry>> indexes;

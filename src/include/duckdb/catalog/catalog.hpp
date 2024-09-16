@@ -33,6 +33,7 @@ struct CreatePragmaFunctionInfo;
 struct CreateFunctionInfo;
 struct CreateViewInfo;
 struct CreateSequenceInfo;
+struct CreateModelInfo;
 struct CreateCollationInfo;
 struct CreateIndexInfo;
 struct CreateTypeInfo;
@@ -151,6 +152,9 @@ public:
 	//! Creates a sequence in the catalog.
 	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(CatalogTransaction transaction, CreateSequenceInfo &info);
 	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(ClientContext &context, CreateSequenceInfo &info);
+	//! Creates a model in the catalog.
+	DUCKDB_API optional_ptr<CatalogEntry> CreateModel(CatalogTransaction transaction, CreateModelInfo &info);
+	DUCKDB_API optional_ptr<CatalogEntry> CreateModel(ClientContext &context, CreateModelInfo &info);
 	//! Creates a Enum in the catalog.
 	DUCKDB_API optional_ptr<CatalogEntry> CreateType(CatalogTransaction transaction, CreateTypeInfo &info);
 	DUCKDB_API optional_ptr<CatalogEntry> CreateType(ClientContext &context, CreateTypeInfo &info);
@@ -182,6 +186,9 @@ public:
 	//! Creates a table in the catalog.
 	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(CatalogTransaction transaction, SchemaCatalogEntry &schema,
 	                                                     CreateSequenceInfo &info);
+	//! Creates a model in the catalog.
+	DUCKDB_API optional_ptr<CatalogEntry> CreateModel(CatalogTransaction transaction, SchemaCatalogEntry &schema,
+	                                                  CreateModelInfo &info);
 	//! Creates a enum in the catalog.
 	DUCKDB_API optional_ptr<CatalogEntry> CreateType(CatalogTransaction transaction, SchemaCatalogEntry &schema,
 	                                                 CreateTypeInfo &info);

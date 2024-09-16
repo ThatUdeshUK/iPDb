@@ -113,6 +113,8 @@ string PhysicalOperatorToString(PhysicalOperatorType type) {
 		return "ALTER";
 	case PhysicalOperatorType::CREATE_SEQUENCE:
 		return "CREATE_SEQUENCE";
+	case PhysicalOperatorType::CREATE_MODEL:
+		return "CREATE_MODEL";
 	case PhysicalOperatorType::CREATE_VIEW:
 		return "CREATE_VIEW";
 	case PhysicalOperatorType::CREATE_SCHEMA:

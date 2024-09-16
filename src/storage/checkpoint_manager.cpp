@@ -6,6 +6,7 @@
 #include "duckdb/catalog/catalog_entry/scalar_macro_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/sequence_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/view_catalog_entry.hpp"
 #include "duckdb/catalog/duck_catalog.hpp"
@@ -71,6 +72,13 @@ static catalog_entry_vector_t GetCatalogEntries(vector<reference<SchemaCatalogEn
 		});
 
 		schema.Scan(CatalogType::SEQUENCE_ENTRY, [&](CatalogEntry &entry) {
+			if (entry.internal) {
+				return;
+			}
+			entries.push_back(entry);
+		});
+
+		schema.Scan(CatalogType::MODEL_ENTRY, [&](CatalogEntry &entry) {
 			if (entry.internal) {
 				return;
 			}
@@ -302,6 +310,11 @@ void CheckpointWriter::WriteEntry(CatalogEntry &entry, Serializer &serializer) {
 		WriteSequence(seq, serializer);
 		break;
 	}
+	case CatalogType::MODEL_ENTRY: {
+		auto &seq = entry.Cast<ModelCatalogEntry>();
+		WriteModel(seq, serializer);
+		break;
+	}
 	case CatalogType::TABLE_ENTRY: {
 		auto &table = entry.Cast<TableCatalogEntry>();
 		WriteTable(table, serializer);
@@ -354,6 +367,10 @@ void CheckpointReader::ReadEntry(CatalogTransaction transaction, Deserializer &d
 	}
 	case CatalogType::SEQUENCE_ENTRY: {
 		ReadSequence(transaction, deserializer);
+		break;
+	}
+	case CatalogType::MODEL_ENTRY: {
+		ReadModel(transaction, deserializer);
 		break;
 	}
 	case CatalogType::TABLE_ENTRY: {
@@ -415,6 +432,19 @@ void CheckpointReader::ReadSequence(CatalogTransaction transaction, Deserializer
 	auto info = deserializer.ReadProperty<unique_ptr<CreateInfo>>(100, "sequence");
 	auto &sequence_info = info->Cast<CreateSequenceInfo>();
 	catalog.CreateSequence(transaction, sequence_info);
+}
+
+//===--------------------------------------------------------------------===//
+// Models
+//===--------------------------------------------------------------------===//
+void CheckpointWriter::WriteModel(ModelCatalogEntry &model, Serializer &serializer) {
+	serializer.WriteProperty(100, "model", &model);
+}
+
+void CheckpointReader::ReadModel(CatalogTransaction transaction, Deserializer &deserializer) {
+	auto info = deserializer.ReadProperty<unique_ptr<CreateInfo>>(100, "model");
+	auto &model_info = info->Cast<CreateModelInfo>();
+	catalog.CreateModel(transaction, model_info);
 }
 
 //===--------------------------------------------------------------------===//

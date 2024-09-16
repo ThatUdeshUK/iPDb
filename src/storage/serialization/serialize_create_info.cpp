@@ -13,6 +13,7 @@
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
 #include "duckdb/parser/parsed_data/create_sequence_info.hpp"
+#include "duckdb/parser/parsed_data/create_model_info.hpp"
 
 namespace duckdb {
 
@@ -56,6 +57,9 @@ unique_ptr<CreateInfo> CreateInfo::Deserialize(Deserializer &deserializer) {
 		break;
 	case CatalogType::SEQUENCE_ENTRY:
 		result = CreateSequenceInfo::Deserialize(deserializer);
+		break;
+	case CatalogType::MODEL_ENTRY:
+		result = CreateModelInfo::Deserialize(deserializer);
 		break;
 	case CatalogType::TABLE_ENTRY:
 		result = CreateTableInfo::Deserialize(deserializer);
@@ -161,6 +165,23 @@ unique_ptr<CreateInfo> CreateSequenceInfo::Deserialize(Deserializer &deserialize
 	deserializer.ReadPropertyWithDefault<bool>(206, "cycle", result->cycle);
 	return std::move(result);
 }
+
+
+void CreateModelInfo::Serialize(Serializer &serializer) const {
+	CreateInfo::Serialize(serializer);
+	serializer.WritePropertyWithDefault<string>(200, "name", name);
+	serializer.WritePropertyWithDefault<uint8_t>(201, "model_type", model_type);
+	serializer.WritePropertyWithDefault<string>(202, "model_path", model_path);
+}
+
+unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<CreateModelInfo>(new CreateModelInfo());
+	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
+	deserializer.ReadPropertyWithDefault<uint8_t>(201, "model_type", result->model_type);
+	deserializer.ReadPropertyWithDefault<string>(202, "model_path", result->model_path);
+	return std::move(result);
+}
+
 
 void CreateTableInfo::Serialize(Serializer &serializer) const {
 	CreateInfo::Serialize(serializer);

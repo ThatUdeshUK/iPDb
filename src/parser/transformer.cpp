@@ -153,6 +153,8 @@ unique_ptr<SQLStatement> Transformer::TransformStatementInternal(duckdb_libpgque
 		return TransformCreateView(PGCast<duckdb_libpgquery::PGViewStmt>(stmt));
 	case duckdb_libpgquery::T_PGCreateSeqStmt:
 		return TransformCreateSequence(PGCast<duckdb_libpgquery::PGCreateSeqStmt>(stmt));
+	case duckdb_libpgquery::T_PGCreateModelStmt:
+		return TransformCreateModel(PGCast<duckdb_libpgquery::PGCreateModelStmt>(stmt));
 	case duckdb_libpgquery::T_PGCreateFunctionStmt:
 		return TransformCreateFunction(PGCast<duckdb_libpgquery::PGCreateFunctionStmt>(stmt));
 	case duckdb_libpgquery::T_PGDropStmt:
@@ -209,6 +211,8 @@ unique_ptr<SQLStatement> Transformer::TransformStatementInternal(duckdb_libpgque
 		return TransformCreateType(PGCast<duckdb_libpgquery::PGCreateTypeStmt>(stmt));
 	case duckdb_libpgquery::T_PGAlterSeqStmt:
 		return TransformAlterSequence(PGCast<duckdb_libpgquery::PGAlterSeqStmt>(stmt));
+	case duckdb_libpgquery::T_PGAlterModelStmt:
+		return TransformAlterModel(PGCast<duckdb_libpgquery::PGAlterModelStmt>(stmt));
 	case duckdb_libpgquery::T_PGAttachStmt:
 		return TransformAttach(PGCast<duckdb_libpgquery::PGAttachStmt>(stmt));
 	case duckdb_libpgquery::T_PGDetachStmt:

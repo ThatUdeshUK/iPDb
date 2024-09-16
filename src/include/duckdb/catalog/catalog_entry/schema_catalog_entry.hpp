@@ -19,6 +19,7 @@ class StandardEntry;
 class TableCatalogEntry;
 class TableFunctionCatalogEntry;
 class SequenceCatalogEntry;
+class ModelCatalogEntry;
 
 enum class OnCreateConflict : uint8_t;
 
@@ -30,6 +31,7 @@ struct CreateViewInfo;
 struct BoundCreateTableInfo;
 struct CreatePragmaFunctionInfo;
 struct CreateSequenceInfo;
+struct CreateModelInfo;
 struct CreateSchemaInfo;
 struct CreateTableFunctionInfo;
 struct CreateCopyFunctionInfo;
@@ -69,6 +71,8 @@ public:
 	virtual optional_ptr<CatalogEntry> CreateView(CatalogTransaction transaction, CreateViewInfo &info) = 0;
 	//! Creates a sequence with the given name in the schema
 	virtual optional_ptr<CatalogEntry> CreateSequence(CatalogTransaction transaction, CreateSequenceInfo &info) = 0;
+	//! Creates a model with the given name in the schema
+	virtual optional_ptr<CatalogEntry> CreateModel(CatalogTransaction transaction, CreateModelInfo &info) = 0;
 	//! Create a table function within the given schema
 	virtual optional_ptr<CatalogEntry> CreateTableFunction(CatalogTransaction transaction,
 	                                                       CreateTableFunctionInfo &info) = 0;

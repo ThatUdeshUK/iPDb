@@ -628,6 +628,12 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 		    make_uniq<LogicalCreate>(LogicalOperatorType::LOGICAL_CREATE_SEQUENCE, std::move(stmt.info), &schema);
 		break;
 	}
+	case CatalogType::MODEL_ENTRY: {
+		auto &schema = BindCreateSchema(*stmt.info);
+		result.plan =
+		    make_uniq<LogicalCreate>(LogicalOperatorType::LOGICAL_CREATE_MODEL, std::move(stmt.info), &schema);
+		break;
+	}
 	case CatalogType::TABLE_MACRO_ENTRY: {
 		auto &schema = BindCreateSchema(*stmt.info);
 		result.plan =
