@@ -100,8 +100,8 @@ void ONNXPredictor::Preprocess2(const std::vector<long> &ids, int64_t *input_ids
 
     int i = 1;
 	for (auto& subToken : ids) {
-		*(input_ids + i) = subToken;
-		*(mask + i) = 1;
+		*(ids_start + i) = subToken;
+		*(mask_start + i) = 1;
 		i++;
 	}
 
