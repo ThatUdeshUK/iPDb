@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
+#include <iterator>
 #include <vector>
 #include <unordered_map>
-#include <boost/algorithm/string.hpp>
+// #include <boost/algorithm/string.hpp>
 
 //https://unicode.org/reports/tr15/#Norm_Forms
 //https://ssl.icu-project.org/apiref/icu4c/uchar_8h.html
@@ -16,8 +18,8 @@ std::string convertFromUnicode(const std::wstring& wText);
 
 class BasicTokenizer {
 public:
-    explicit BasicTokenizer() {};
-    BasicTokenizer(bool doLowerCase);
+    // explicit BasicTokenizer() {};
+    BasicTokenizer(bool doLowerCase=true);
     std::vector<std::wstring> tokenize(const std::string& text) const;
 
 private:
@@ -29,6 +31,7 @@ private:
     std::wstring tokenizeChineseChars(const std::wstring& text) const;
     bool isStripChar(const wchar_t& ch) const;
     std::wstring strip(const std::wstring& text) const;
+    std::wstring join(const std::vector<std::wstring>& elements) const;
     std::vector<std::wstring> split(const std::wstring& text) const;
     std::wstring runStripAccents(const std::wstring& text) const;
     std::vector<std::wstring> runSplitOnPunc(const std::wstring& text) const;
@@ -55,7 +58,7 @@ public:
     std::vector<std::wstring> tokenize(const std::string& text) const;
     std::vector<long> convertTokensToIds(const std::vector<std::wstring>& text) const;
     long convertTokenToId(const std::wstring& token) const;
-    int tokenizeToIds(const std::string& text, long* input_ids, long* mask, int size, int start = 0) const;
+    int tokenizeToIds(const std::string& text, int64_t* input_ids, int64_t* mask, int size, int start = 0) const;
     std::vector<long> tokenizeToIds(const std::string& text, int size) const;
 private:
     std::shared_ptr<Vocab> mVocab;

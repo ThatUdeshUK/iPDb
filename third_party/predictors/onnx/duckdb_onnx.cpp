@@ -71,7 +71,7 @@ void ONNXPredictor::Predict(std::vector<float> &input, std::vector<float> &outpu
 	output.insert(output.end(), floatarr, floatarr + output_size);
 }
 
-void ONNXPredictor::Preprocess(const std::string &text, long *input_ids, long *mask, int offset, int max_length) const {
+void ONNXPredictor::Preprocess(const std::string &text, int64_t *input_ids, int64_t *mask, int offset, int max_length) const {
 	long start_id = tokenizer.convertTokenToId(L"[CLS]");
 	long end_id = tokenizer.convertTokenToId(L"[SEP]");
 
@@ -89,7 +89,7 @@ void ONNXPredictor::Preprocess(const std::string &text, long *input_ids, long *m
 	}
 }
 
-void ONNXPredictor::Preprocess(const std::vector<long> &ids, long *input_ids, long *mask, int offset, int max_length) const {
+void ONNXPredictor::Preprocess2(const std::vector<long> &ids, int64_t *input_ids, int64_t *mask, int offset, int max_length) const {
 	long start_id = tokenizer.convertTokenToId(L"[CLS]");
 	long end_id = tokenizer.convertTokenToId(L"[SEP]");
 
@@ -116,17 +116,17 @@ void ONNXPredictor::Preprocess(const std::vector<long> &ids, long *input_ids, lo
 void ONNXPredictor::PredictLM(std::string &input, std::vector<float> &output, int output_size) {
 	long pad_id = tokenizer.convertTokenToId(L"[PAD]");
 
-	std::vector<long> input_ids(llm_max_tokens, pad_id);
-	std::vector<long> masks(llm_max_tokens, 0);
+	std::vector<int64_t> input_ids(llm_max_tokens, pad_id);
+	std::vector<int64_t> masks(llm_max_tokens, 0);
 	Preprocess(input, input_ids.data(), masks.data(), 0, llm_max_tokens);
 
 	std::array<int64_t, 2> inputs_shape_ {1, static_cast<int>(input_ids.size())};
 	std::array<int64_t, 2> output_shape_ {1, output_size};
 
 	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-	Ort::Value input_id_tensor_ = Ort::Value::CreateTensor<long>(memory_info, input_ids.data(), input_ids.size(),
+	Ort::Value input_id_tensor_ = Ort::Value::CreateTensor<int64_t>(memory_info, input_ids.data(), input_ids.size(),
 	                                                             inputs_shape_.data(), inputs_shape_.size());
-	Ort::Value mask_tensor_ = Ort::Value::CreateTensor<long>(memory_info, masks.data(), masks.size(),
+	Ort::Value mask_tensor_ = Ort::Value::CreateTensor<int64_t>(memory_info, masks.data(), masks.size(),
 	                                                         inputs_shape_.data(), inputs_shape_.size());
 	std::array<Ort::Value, 2> input_tensors {std::move(input_id_tensor_), std::move(mask_tensor_)};
 
@@ -171,13 +171,13 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		llm_max_tokens = batch_llm_max_tokens;
 		#endif
 
-		std::vector<long> input_ids(num_rows * llm_max_tokens);
-		std::vector<long> masks(num_rows * llm_max_tokens);
+		std::vector<int64_t> input_ids(num_rows * llm_max_tokens);
+		std::vector<int64_t> masks(num_rows * llm_max_tokens);
 
 		#if DYNAMIC_TOKEN_SIZE
 		for (int i = frow; i < lrow; ++i) {
 			int offset = (i - frow) * llm_max_tokens;
-			Preprocess(all_token_ids[i], input_ids.data(), masks.data(), offset, llm_max_tokens);
+			Preprocess2(all_token_ids[i], input_ids.data(), masks.data(), offset, llm_max_tokens);
 		}
 		#else
 		for (int i = frow; i < lrow; ++i) {
@@ -191,9 +191,9 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		std::array<int64_t, 2> output_shape_ {num_rows, output_size};
 
 		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-		Ort::Value input_id_tensor_ = Ort::Value::CreateTensor<long>(memory_info, input_ids.data(), input_ids.size(),
+		Ort::Value input_id_tensor_ = Ort::Value::CreateTensor<int64_t>(memory_info, input_ids.data(), input_ids.size(),
 		                                                             inputs_shape_.data(), inputs_shape_.size());
-		Ort::Value mask_tensor_ = Ort::Value::CreateTensor<long>(memory_info, masks.data(), masks.size(),
+		Ort::Value mask_tensor_ = Ort::Value::CreateTensor<int64_t>(memory_info, masks.data(), masks.size(),
 		                                                         inputs_shape_.data(), inputs_shape_.size());
 		std::array<Ort::Value, 2> input_tensors_ {std::move(input_id_tensor_), std::move(mask_tensor_)};
 
@@ -254,7 +254,7 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 		int lrow = std::min(frow + batch_size, rows);
 		int num_rows = lrow - frow;
 
-		std::array<int64_t, 2> input_shape_ {num_rows, input_mask.size()};
+		std::array<int64_t, 2> input_shape_ {num_rows, (long long)input_mask.size()};
 		std::array<int64_t, 2> output_shape_ {num_rows, output_size};
 
 #if MOVE_METHOD == ROW_FIRST_PUSH

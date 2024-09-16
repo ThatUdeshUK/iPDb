@@ -43,7 +43,7 @@ private:
     Ort::Session session{nullptr};
     FullTokenizer tokenizer;
     
-    void Preprocess(const std::string &text, long* input_ids, long* mask, int offset, int max_length) const;
-    void Preprocess(const std::vector<long> &text, long* input_ids, long* mask, int offset, int max_length) const;
+    void Preprocess(const std::string &text, int64_t* input_ids, int64_t* mask, int offset, int max_length) const;
+    void Preprocess2(const std::vector<long> &text, int64_t* input_ids, int64_t* mask, int offset, int max_length) const;
 };
 } // namespace duckdb

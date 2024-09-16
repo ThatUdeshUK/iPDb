@@ -28,9 +28,19 @@ static std::wstring strip(const std::wstring& text) {
 }
 
 static std::vector<std::wstring> split(const std::wstring& text) {
-    std::vector<std::wstring>  result;
-    boost::split(result, text, boost::is_any_of(stripChar));
-    return result;
+    std::wstring delimiter = L" ";
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::wstring token;
+    std::vector<std::wstring> res;
+
+    while ((pos_end = text.find_first_of(stripChar, pos_start)) != std::wstring::npos) {
+        token = text.substr(pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back(token);
+    }
+
+    res.push_back(text.substr (pos_start));
+    return res;
 }
 
 static std::vector<std::wstring> whitespaceTokenize(const std::wstring& text) {
@@ -86,7 +96,7 @@ static std::shared_ptr<Vocab> loadVocab(const std::string& vocabFile) {
     return vocab;
 }
 
-BasicTokenizer::BasicTokenizer(bool doLowerCase=true) 
+BasicTokenizer::BasicTokenizer(bool doLowerCase) 
     : mDoLowerCase(doLowerCase) {
 }
 
@@ -192,6 +202,22 @@ std::vector<std::wstring> BasicTokenizer::runSplitOnPunc(const std::wstring& tex
     return output;
 }
 
+std::wstring BasicTokenizer::join(const std::vector<std::wstring>& elements) const {
+    std::wstringstream os;
+    auto b = begin(elements), e = end(elements);
+
+    if (b != e) {
+        std::copy(b, prev(e), std::ostream_iterator<std::wstring, wchar_t>(os, L" ")); // Ok
+        // std::copy(b, prev(e), std::ostream_iterator<std::wstring, wchar_t>(os, " "));
+        b = prev(e);
+    }
+    // if (b != e) {
+    //     os << *b;
+    // }
+
+    return os.str();
+}
+
 std::vector<std::wstring> BasicTokenizer::tokenize(const std::string& text) const {
     std::wstring nText = convertToUnicode(text);
     nText = cleanText(nText);
@@ -208,7 +234,7 @@ std::vector<std::wstring> BasicTokenizer::tokenize(const std::string& text) cons
         const auto& tokens = runSplitOnPunc(token);
         splitTokens.insert(splitTokens.end(), tokens.begin(), tokens.end());
     }
-    return whitespaceTokenize(boost::join(splitTokens, L" "));
+    return whitespaceTokenize(join(splitTokens));
 }
 
 WordpieceTokenizer::WordpieceTokenizer(const std::shared_ptr<Vocab> vocab, const std::wstring& unkToken, size_t maxInputCharsPerWord)
@@ -280,7 +306,7 @@ long FullTokenizer::convertTokenToId(const std::wstring& token) const {
     return (*mVocab)[token];
 }
 
-int FullTokenizer::tokenizeToIds(const std::string& text, long* input_ids, long* mask, int size, int start) const {
+int FullTokenizer::tokenizeToIds(const std::string& text, int64_t* input_ids, int64_t* mask, int size, int start) const {
     int i = start;
     for (auto& token : mBasicTokenizer.tokenize(text)) {
         for (auto& subToken : mWordpieceTokenizer.tokenize(token)) {
