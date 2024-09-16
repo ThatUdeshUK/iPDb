@@ -9,3 +9,4 @@
 #include "duckdb/planner/tableref/bound_pivotref.hpp"
 #include "duckdb/parser/tableref/delimgetref.hpp"
 #include "duckdb/planner/tableref/bound_delimgetref.hpp"
+#include "duckdb/planner/tableref/bound_predictref.hpp"
