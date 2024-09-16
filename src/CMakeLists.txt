@@ -110,6 +110,10 @@ else()
       duckdb_mbedtls
       duckdb_yyjson)
 
+  if(ENABLE_PREDICT)
+    set(DUCKDB_LINK_LIBS ${DUCKDB_LINK_LIBS} duckdb_torch)
+  endif()
+
   add_library(duckdb SHARED ${ALL_OBJECT_FILES})
 
   if(WIN32 AND NOT MINGW)
