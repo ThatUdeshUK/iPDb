@@ -161,7 +161,7 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		std::vector<std::vector<long>> all_token_ids;
 		for (int i = frow; i < lrow; ++i) {
 			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
-			auto token_ids = tokenizer.tokenizeToIds(input_str, 512);
+			auto token_ids = tokenizer.tokenizeToIds(input_str, 510);
 			int i_count = std::min((int) token_ids.size() + 2, 512);
 			if (i_count > batch_llm_max_tokens) {
 				batch_llm_max_tokens = i_count;
@@ -175,8 +175,8 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 		std::vector<int64_t> masks(num_rows * llm_max_tokens);
 
 		#if DYNAMIC_TOKEN_SIZE
-		for (int i = frow; i < lrow; ++i) {
-			int offset = (i - frow) * llm_max_tokens;
+		for (int i = 0; i < lrow - frow; ++i) {
+			int offset = (i) * llm_max_tokens;
 			Preprocess2(all_token_ids[i], input_ids.data(), masks.data(), offset, llm_max_tokens);
 		}
 		#else

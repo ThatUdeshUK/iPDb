@@ -6,7 +6,6 @@ if(POLICY CMP0063)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_library(ONNX_RUNTIME_LIB onnxruntime HINTS "$ENV{ONNX_INSTALL_PREFIX}/lib")
 message(STATUS "ORT Include Libs: ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
