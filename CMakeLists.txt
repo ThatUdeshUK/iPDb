@@ -1225,7 +1225,7 @@ if (ENABLE_PREDICT)
     if (NOT DEFINED ENV{ONNX_INSTALL_PREFIX})
       message( FATAL_ERROR "ONNX_INSTALL_PREFIX environment variable is not defined with USE_TORCH=0 option, CMake will exit." )
     endif()
-    find_path(ONNX_RUNTIME_SESSION_INCLUDE_DIRS onnxruntime_cxx_api.h HINTS "$ENV{ONNX_INSTALL_PREFIX}/include/onnxruntime")
+    find_path(ONNX_RUNTIME_SESSION_INCLUDE_DIRS onnxruntime_cxx_api.h HINTS "$ENV{ONNX_INSTALL_PREFIX}/include")
   endif()
 endif()
 
