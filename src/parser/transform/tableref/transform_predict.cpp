@@ -43,16 +43,6 @@ unique_ptr<TableRef> Transformer::TransformPredict(duckdb_libpgquery::PGPredictE
         }
     }
 
-    for (auto c = root.result_set->head; c != nullptr; c = lnext(c)) {
-        auto cdef = PGPointerCast<duckdb_libpgquery::PGColumnDef>(c->data.ptr_value);
-        auto centry = TransformColumnDefinition(*cdef);
-        if (cdef->constraints) {
-            throw ParserException("Result set must not contain constraints!");
-        }
-        result->result_set_names.push_back(centry.GetName());
-        result->result_set_types.push_back(centry.GetType());
-    }
-
 	SetQueryLocation(*result, root.location);
 	return std::move(result);
 }

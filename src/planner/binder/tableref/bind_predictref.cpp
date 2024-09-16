@@ -16,22 +16,25 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     auto result = make_uniq<BoundPredictRef>();
     result->bound_predict.model_name = std::move(ref.model_name);
 
-    // result->bound_predict.model_type = ref.model_type;
 	auto models = make_uniq<BindModelData>();
     auto schemas = Catalog::GetAllSchemas(context);
 	for (auto &schema : schemas) {
-		schema.get().Scan(context, CatalogType::MODEL_ENTRY,
-		                  [&](CatalogEntry &entry) { models->entries.push_back(entry.Cast<ModelCatalogEntry>()); });
+		schema.get().Scan(context, CatalogType::MODEL_ENTRY, [&](CatalogEntry &entry) { 
+            auto &item = entry.Cast<ModelCatalogEntry>();
+            if (item.name == result->bound_predict.model_name) {
+                models->entries.push_back(item); 
+            }
+        });
 	};
 
     if (models->entries.size() < 1) {
         throw InternalException("Catalog Error: Model with name `" + result->bound_predict.model_name + "` does not exist!");
-    } else {
-        auto &stored_model = models->entries[0].get();
-        auto stored_model_data = stored_model.GetData();
-        result->bound_predict.model_type = stored_model_data.model_type;
-        result->bound_predict.model_path = stored_model_data.model_path;
     }
+
+    auto &stored_model = models->entries[0].get();
+    auto stored_model_data = stored_model.GetData();
+    result->bound_predict.model_type = stored_model_data.model_type;
+    result->bound_predict.model_path = stored_model_data.model_path;
 
     result->bind_index = GenerateTableIndex();
     result->child_binder = Binder::CreateBinder(context, this);
@@ -127,16 +130,16 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
         result->bound_predict.opt_mask = std::move(opt_mask);
     }
 
-    vector<string> result_names = ref.result_set_names;
+    vector<string> result_names = stored_model_data.out_names;
     names.insert(names.end(), std::make_move_iterator(result_names.begin()), std::make_move_iterator(result_names.end()));
 
-    vector<LogicalType> result_types = ref.result_set_types;
+    vector<LogicalType> result_types = stored_model_data.out_types;
     types.insert(types.end(), std::make_move_iterator(result_types.begin()), std::make_move_iterator(result_types.end()));
 
     result->bound_predict.types = types;
     result->bound_predict.input_set_types = std::move(input_types);
-    result->bound_predict.result_set_names = std::move(ref.result_set_names);
-    result->bound_predict.result_set_types = std::move(ref.result_set_types);
+    result->bound_predict.result_set_names = std::move(stored_model_data.out_names);
+    result->bound_predict.result_set_types = std::move(stored_model_data.out_types);
 
     auto subquery_alias = ref.alias.empty() ? "__unnamed_predict" : ref.alias;
     bind_context.AddGenericBinding(result->bind_index, subquery_alias, names, types);

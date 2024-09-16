@@ -53,6 +53,9 @@ static unique_ptr<FunctionData> DuckDBModelsBind(ClientContext &context, TableFu
 	names.emplace_back("model_path");
 	return_types.emplace_back(LogicalType::VARCHAR);
 
+	names.emplace_back("output_count");
+	return_types.emplace_back(LogicalType::BIGINT);
+
 	names.emplace_back("sql");
 	return_types.emplace_back(LogicalType::VARCHAR);
 
@@ -108,6 +111,8 @@ void DuckDBModelsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 		output.SetValue(col++, count, Value::UTINYINT(model_data.model_type));
 		// model_path, VARCHAR
 		output.SetValue(col++, count, Value(model_data.model_path));
+		// output_count, LogicalType::BIGINT
+		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.out_types.size())));
 		// sql, LogicalType::VARCHAR
 		output.SetValue(col++, count, Value(model.ToSQL()));
 

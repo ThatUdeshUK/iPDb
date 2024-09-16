@@ -1,1 +1,2 @@
-%type <ival> model_type_wgnn_value
+%type <ival> model_type_value
+%type <list> result_col_list with_result_col_list

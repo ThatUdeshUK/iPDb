@@ -24,6 +24,10 @@ struct ModelData {
 	string model_path;
 	//! The model type
 	uint8_t model_type;
+	//! Output set names
+    vector<string> out_names;
+    //! Output set types
+    vector<LogicalType> out_types;
 };
 
 //! A model catalog entry

@@ -172,6 +172,8 @@ void CreateModelInfo::Serialize(Serializer &serializer) const {
 	serializer.WritePropertyWithDefault<string>(200, "name", name);
 	serializer.WritePropertyWithDefault<uint8_t>(201, "model_type", model_type);
 	serializer.WritePropertyWithDefault<string>(202, "model_path", model_path);
+	serializer.WritePropertyWithDefault<vector<string>>(203, "out_names", out_names);
+	serializer.WritePropertyWithDefault<vector<LogicalType>>(204, "out_types", out_types);
 }
 
 unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
@@ -179,6 +181,8 @@ unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) 
 	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
 	deserializer.ReadPropertyWithDefault<uint8_t>(201, "model_type", result->model_type);
 	deserializer.ReadPropertyWithDefault<string>(202, "model_path", result->model_path);
+	deserializer.ReadPropertyWithDefault<vector<string>>(203, "out_names", result->out_names);
+	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(204, "out_types", result->out_types);
 	return std::move(result);
 }
 

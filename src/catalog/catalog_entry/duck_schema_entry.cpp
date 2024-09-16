@@ -227,8 +227,8 @@ optional_ptr<CatalogEntry> DuckSchemaEntry::CreateSequence(CatalogTransaction tr
 }
 
 optional_ptr<CatalogEntry> DuckSchemaEntry::CreateModel(CatalogTransaction transaction, CreateModelInfo &info) {
-	auto sequence = make_uniq<ModelCatalogEntry>(catalog, *this, info);
-	return AddEntry(transaction, std::move(sequence), info.on_conflict);
+	auto model = make_uniq<ModelCatalogEntry>(catalog, *this, info);
+	return AddEntry(transaction, std::move(model), info.on_conflict);
 }
 
 optional_ptr<CatalogEntry> DuckSchemaEntry::CreateType(CatalogTransaction transaction, CreateTypeInfo &info) {

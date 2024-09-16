@@ -38,10 +38,6 @@ public:
     vector<string> opt_set_names;
 	//! (Optional) Exclude set names
     vector<string> exclude_opt_set_names;
-	    //! Result set names
-    vector<string> result_set_names;
-    //! Result set types
-    vector<LogicalType> result_set_types;
 
 public:
 	string ToString() const override;

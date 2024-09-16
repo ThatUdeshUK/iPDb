@@ -14,7 +14,7 @@
 namespace duckdb {
 
 ModelData::ModelData(CreateModelInfo &info)
-    : model_path(info.model_path), model_type(info.model_type) {
+    : model_path(info.model_path), model_type(info.model_type), out_names(info.out_names), out_types(info.out_types) {
 }
 
 ModelCatalogEntry::ModelCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateModelInfo &info)
@@ -39,10 +39,10 @@ ModelData ModelCatalogEntry::GetData() const {
 	return data;
 }
 
-void ModelCatalogEntry::SetData(string v_path, uint8_t v_type) {
-	data.model_path = v_path;
-	data.model_type = v_type;
-}
+// void ModelCatalogEntry::SetData(string v_path, uint8_t v_type) {
+// 	data.model_path = v_path;
+// 	data.model_type = v_type;
+// }
 
 unique_ptr<CreateInfo> ModelCatalogEntry::GetInfo() const {
 	auto model_data = GetData();
@@ -53,6 +53,8 @@ unique_ptr<CreateInfo> ModelCatalogEntry::GetInfo() const {
 	result->name = name;
 	result->model_path = model_data.model_path;
 	result->model_type = model_data.model_type;
+	result->out_names = model_data.out_names;
+	result->out_types = model_data.out_types;
 	result->dependencies = dependencies;
 	result->comment = comment;
 	result->tags = tags;
@@ -63,11 +65,20 @@ string ModelCatalogEntry::ToSQL() const {
 	auto model_data = GetData();
 
 	std::stringstream ss;
-	ss << "CREATE MODEL ";
-	ss << name;
-	ss << " ( " << model_data.model_type;
-	ss << " , " << model_data.model_path;
-	ss << " ); ";
+	ss << "CREATE";
+	switch(model_data.model_type) {
+		case 0:
+			ss << " TABULAR";
+			break;
+		case 1:
+			ss << " LLM";
+			break;
+		case 2:
+			ss << " GNN";
+	}
+	ss << " MODEL " << name;
+	ss << " PATH '" << model_data.model_path;
+	ss << "' OUTPUT(...); ";
 	return ss.str();
 }
 } // namespace duckdb

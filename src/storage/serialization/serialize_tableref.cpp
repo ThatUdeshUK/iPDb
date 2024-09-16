@@ -169,8 +169,6 @@ void PredictRef::Serialize(Serializer &serializer) const {
     serializer.WritePropertyWithDefault<unique_ptr<TableRef>>(200, "source", source);
     serializer.WritePropertyWithDefault<string>(201, "model_name", model_name);
     serializer.WritePropertyWithDefault<vector<string>>(202, "column_name_alias", column_name_alias);
-    serializer.WritePropertyWithDefault<vector<string>>(203, "result_set_names", result_set_names);
-    serializer.WritePropertyWithDefault<vector<LogicalType>>(204, "result_set_types", result_set_types);
 }
 
 unique_ptr<TableRef> PredictRef::Deserialize(Deserializer &deserializer) {
@@ -178,8 +176,6 @@ unique_ptr<TableRef> PredictRef::Deserialize(Deserializer &deserializer) {
     deserializer.ReadPropertyWithDefault<unique_ptr<TableRef>>(200, "source", result->source);
     deserializer.ReadPropertyWithDefault<string>(201, "model_name", result->model_name);
     deserializer.ReadPropertyWithDefault<vector<string>>(202, "column_name_alias", result->column_name_alias);
-    deserializer.ReadPropertyWithDefault<vector<string>>(203, "result_set_names", result->result_set_names);
-    deserializer.ReadPropertyWithDefault<vector<LogicalType>>(204, "result_set_types", result->result_set_types);
     return std::move(result);
 }
 

@@ -1238,7 +1238,6 @@ typedef struct PGPredictExpr {
     PGRangeVar *model_name;    /* path to the model */
     PGNode *input_feat;  /* The input set required by the model */
     PGNode *opt_feat;  /* The input set required by the model */
-    PGList *result_set;  /* The result set produced by the model */
     PGAlias *alias;      /* table alias & optional column aliases */
     int has_opt;    	 /* has optional sources */
     int location;        /* token location, or -1 if unknown */
@@ -1791,6 +1790,7 @@ typedef struct PGCreateModelStmt {
 	PGRangeVar *model; /* the model to create */
 	int model_type; /* the model to create */
 	char *model_path; /* the path to the model */
+	PGList *result_set;  /* The result set produced by the model */
 	PGOid ownerId; /* ID of owner, or InvalidOid for default */
 	bool for_identity;
 	PGOnCreateConflict onconflict;        /* what to do on create conflict */

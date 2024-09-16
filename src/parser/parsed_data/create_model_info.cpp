@@ -16,6 +16,8 @@ unique_ptr<CreateInfo> CreateModelInfo::Copy() const {
 	result->schema = schema;
 	result->model_type = model_type;
 	result->model_path = model_path;
+	result->out_names = out_names;
+	result->out_types = out_types;
 	return std::move(result);
 }
 
@@ -28,15 +30,23 @@ string CreateModelInfo::ToString() const {
 	if (temporary) {
 		ss << " TEMPORARY";
 	}
+	switch(model_type) {
+		case 0:
+			ss << " TABULAR";
+			break;
+		case 1:
+			ss << " LLM";
+			break;
+		case 2:
+			ss << " GNN";
+	}
 	ss << " MODEL ";
 	if (on_conflict == OnCreateConflict::IGNORE_ON_CONFLICT) {
 		ss << " IF NOT EXISTS ";
 	}
 	ss << QualifierToString(temporary ? "" : catalog, schema, name);
-	ss << " ( ";
-	ss << model_type << " ";
-	ss << model_path << " ";
-	ss << " );";
+	ss << " PATH '" << model_path;
+	ss << "' OUTPUT(...); ";
 	return ss.str();
 }
 

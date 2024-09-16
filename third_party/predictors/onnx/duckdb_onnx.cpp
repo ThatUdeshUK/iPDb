@@ -18,7 +18,7 @@ void ONNXPredictor::Config(const ClientConfig &client_config) {
 }
 
 void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {
-	std::cout << "Model Loaded" << std::endl;
+	// std::cout << "Model Loaded" << std::endl;
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 #endif
@@ -48,7 +48,7 @@ void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats>
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	stats->load = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-   std::cout << "Load @run: " << stats->load << std::endl;
+//    std::cout << "Load @run: " << stats->load << std::endl;
 #endif
 }
 

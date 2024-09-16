@@ -13,15 +13,6 @@
 
 namespace duckdb {
 
-enum class ModelInfo : uint8_t {
-	// Model start
-	MODEL_NAME,
-	// Mdole type
-	MODEL_TYPE,
-	// Model path
-	MODEL_PATH
-};
-
 struct CreateModelInfo : public CreateInfo {
 	CreateModelInfo();
 
@@ -31,6 +22,10 @@ struct CreateModelInfo : public CreateInfo {
 	uint8_t model_type;
 	//! The path of the stored model
 	string model_path;
+	//! Output set names
+    vector<string> out_names;
+    //! Output set types
+    vector<LogicalType> out_types;
 
 public:
 	unique_ptr<CreateInfo> Copy() const override;
