@@ -5,6 +5,7 @@
 #include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/numeric_utils.hpp"
+#include "duckdb/common/enum_util.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
 
@@ -48,7 +49,7 @@ static unique_ptr<FunctionData> DuckDBModelsBind(ClientContext &context, TableFu
 	return_types.emplace_back(LogicalType::BOOLEAN);
 
 	names.emplace_back("model_type");
-	return_types.emplace_back(LogicalType::UTINYINT);
+	return_types.emplace_back(LogicalType::VARCHAR);
 
 	names.emplace_back("model_path");
 	return_types.emplace_back(LogicalType::VARCHAR);
@@ -128,8 +129,8 @@ void DuckDBModelsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 		output.SetValue(col++, count, Value::MAP(model.tags));
 		// temporary, BOOLEAN
 		output.SetValue(col++, count, Value::BOOLEAN(model.temporary));
-		// model_type, UTINYINT
-		output.SetValue(col++, count, Value::UTINYINT(model_data.model_type));
+		// model_type, VARCHAR
+		output.SetValue(col++, count, Value(EnumUtil::ToChars(model_data.model_type)));
 		// model_path, VARCHAR
 		output.SetValue(col++, count, Value(model_data.model_path));
 		// rel_name, VARCHAR

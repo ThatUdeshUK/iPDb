@@ -10,6 +10,7 @@
 
 #include "duckdb/catalog/standard_entry.hpp"
 #include "duckdb/common/mutex.hpp"
+#include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/parser/parsed_data/create_model_info.hpp"
 #include "duckdb/parser/parsed_data/alter_table_info.hpp"
 
@@ -23,7 +24,7 @@ struct ModelData {
 	//! The model path
 	string model_path;
 	//! The model type
-	uint8_t model_type;
+	ModelType model_type;
 	//! The attached relation
 	string rel_name;
 	//! Input set names

@@ -84,7 +84,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
     }
     result->bound_predict.input_mask = std::move(input_mask);
 
-    if (result->bound_predict.model_type == 2) {
+    if (result->bound_predict.model_type == ModelType::GNN) {
         vector<string> opt_names;
         vector<LogicalType> opt_types;
         result->opt_binder = Binder::CreateBinder(context, this);

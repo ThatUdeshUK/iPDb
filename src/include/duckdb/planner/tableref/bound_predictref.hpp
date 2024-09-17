@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/bound_tableref.hpp"
 
 namespace duckdb {
 
 struct BoundPredictInfo {
-    uint8_t model_type;
+    ModelType model_type;
     string model_name;
     //! The path of the model
     string model_path;

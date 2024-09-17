@@ -170,7 +170,7 @@ unique_ptr<CreateInfo> CreateSequenceInfo::Deserialize(Deserializer &deserialize
 void CreateModelInfo::Serialize(Serializer &serializer) const {
 	CreateInfo::Serialize(serializer);
 	serializer.WritePropertyWithDefault<string>(200, "name", name);
-	serializer.WritePropertyWithDefault<uint8_t>(201, "model_type", model_type);
+	serializer.WriteProperty<ModelType>(201, "model_type", model_type);
 	serializer.WritePropertyWithDefault<string>(202, "model_path", model_path);
 	serializer.WritePropertyWithDefault<string>(203, "rel_name", rel_name);
 	serializer.WritePropertyWithDefault<vector<string>>(204, "input_set_names", input_set_names);
@@ -186,7 +186,7 @@ void CreateModelInfo::Serialize(Serializer &serializer) const {
 unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
 	auto result = duckdb::unique_ptr<CreateModelInfo>(new CreateModelInfo());
 	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
-	deserializer.ReadPropertyWithDefault<uint8_t>(201, "model_type", result->model_type);
+	deserializer.ReadProperty<ModelType>(201, "model_type", result->model_type);
 	deserializer.ReadPropertyWithDefault<string>(202, "model_path", result->model_path);
 	deserializer.ReadPropertyWithDefault<string>(203, "rel_name", result->rel_name);
 	deserializer.ReadPropertyWithDefault<vector<string>>(204, "input_set_names", result->input_set_names);

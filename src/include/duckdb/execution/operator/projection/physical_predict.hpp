@@ -11,6 +11,7 @@
 #include "duckdb/execution/physical_operator.hpp"
 #include "duckdb/main/client_config.hpp"
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/planner/expression.hpp"
 
 namespace duckdb {
@@ -62,7 +63,7 @@ class PhysicalPredict : public PhysicalOperator {
 public:
     PhysicalPredict(vector<LogicalType> types, unique_ptr<PhysicalOperator> child);
 
-    uint8_t model_type;
+    ModelType model_type;
     string model_path;
 
     std::vector<idx_t> input_mask;
@@ -71,7 +72,7 @@ public:
 
 public:
     string GetName() const override;
-    string ParamsToString() const override;
+    InsertionOrderPreservingMap<string> ParamsToString() const override;
 
 public:
     unique_ptr<OperatorState> GetOperatorState(ExecutionContext &context) const override;
@@ -93,7 +94,7 @@ public:
 public:
 	PhysicalGNNPredict(vector<LogicalType> types, idx_t estimated_cardinality);
 
-    uint8_t model_type;
+    ModelType model_type;
     string model_path;
 
     idx_t num_nodes;
@@ -134,7 +135,7 @@ public:
 		return true;
 	}
 
-	string ParamsToString() const override;
+	InsertionOrderPreservingMap<string> ParamsToString() const override;
 };
 
 } // namespace duckdb

@@ -10,6 +10,7 @@
 
 #include "duckdb/parser/parsed_data/create_info.hpp"
 #include "duckdb/common/limits.hpp"
+#include "duckdb/common/enums/model_type.hpp"
 
 namespace duckdb {
 
@@ -19,7 +20,7 @@ struct CreateModelInfo : public CreateInfo {
 	//! Model name to create
 	string name;
 	//! The type of the model
-	uint8_t model_type;
+	ModelType model_type;
 	//! The path of the stored model
 	string model_path;
 	

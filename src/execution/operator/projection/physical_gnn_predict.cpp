@@ -2,6 +2,7 @@
 #include "duckdb/parallel/meta_pipeline.hpp"
 #include "duckdb/common/types/row/tuple_data_iterator.hpp"
 #include "duckdb/common/types/row/tuple_data_layout.hpp"
+#include "duckdb/common/enum_util.hpp"
 #include "duckdb/storage/buffer_manager.hpp"
 
 #include <iostream>
@@ -249,8 +250,19 @@ SinkFinalizeType PhysicalGNNPredict::Finalize(Pipeline &pipeline, Event &event, 
 	return SinkFinalizeType::READY;
 }
 
-string PhysicalGNNPredict::ParamsToString() const {
-    return model_path;
+InsertionOrderPreservingMap<string> PhysicalGNNPredict::ParamsToString() const {
+    InsertionOrderPreservingMap<string> result;
+	result["Type"] = EnumUtil::ToChars<ModelType>(model_type);
+    result["Model Path"] = model_path;
+
+	for (const auto& item: options) {
+		stringstream ss;
+		ss << item.second;
+		result[item.first] = ss.str();
+	}
+ 
+	SetEstimatedCardinality(result, estimated_cardinality);
+    return std::move(result);
 }
 
 } // namespace duckdb

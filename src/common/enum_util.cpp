@@ -34,6 +34,7 @@
 #include "duckdb/common/enums/logical_operator_type.hpp"
 #include "duckdb/common/enums/memory_tag.hpp"
 #include "duckdb/common/enums/metric_type.hpp"
+#include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/common/enums/on_create_conflict.hpp"
 #include "duckdb/common/enums/on_entry_not_found.hpp"
 #include "duckdb/common/enums/operator_result_type.hpp"
@@ -958,6 +959,8 @@ const char* EnumUtil::ToChars<CatalogType>(CatalogType value) {
 		return "TYPE_ENTRY";
 	case CatalogType::DATABASE_ENTRY:
 		return "DATABASE_ENTRY";
+	case CatalogType::MODEL_ENTRY:
+		return "MODEL_ENTRY";
 	case CatalogType::TABLE_FUNCTION_ENTRY:
 		return "TABLE_FUNCTION_ENTRY";
 	case CatalogType::SCALAR_FUNCTION_ENTRY:
@@ -1020,6 +1023,9 @@ CatalogType EnumUtil::FromString<CatalogType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "DATABASE_ENTRY")) {
 		return CatalogType::DATABASE_ENTRY;
+	}
+	if (StringUtil::Equals(value, "MODEL_ENTRY")) {
+		return CatalogType::MODEL_ENTRY;
 	}
 	if (StringUtil::Equals(value, "TABLE_FUNCTION_ENTRY")) {
 		return CatalogType::TABLE_FUNCTION_ENTRY;
@@ -3641,6 +3647,8 @@ const char* EnumUtil::ToChars<LogicalOperatorType>(LogicalOperatorType value) {
 		return "LOGICAL_PIVOT";
 	case LogicalOperatorType::LOGICAL_COPY_DATABASE:
 		return "LOGICAL_COPY_DATABASE";
+	case LogicalOperatorType::LOGICAL_PREDICT:
+		return "LOGICAL_PREDICT";
 	case LogicalOperatorType::LOGICAL_GET:
 		return "LOGICAL_GET";
 	case LogicalOperatorType::LOGICAL_CHUNK_GET:
@@ -3695,6 +3703,8 @@ const char* EnumUtil::ToChars<LogicalOperatorType>(LogicalOperatorType value) {
 		return "LOGICAL_CREATE_INDEX";
 	case LogicalOperatorType::LOGICAL_CREATE_SEQUENCE:
 		return "LOGICAL_CREATE_SEQUENCE";
+	case LogicalOperatorType::LOGICAL_CREATE_MODEL:
+		return "LOGICAL_CREATE_MODEL";
 	case LogicalOperatorType::LOGICAL_CREATE_VIEW:
 		return "LOGICAL_CREATE_VIEW";
 	case LogicalOperatorType::LOGICAL_CREATE_SCHEMA:
@@ -3784,6 +3794,9 @@ LogicalOperatorType EnumUtil::FromString<LogicalOperatorType>(const char *value)
 	if (StringUtil::Equals(value, "LOGICAL_COPY_DATABASE")) {
 		return LogicalOperatorType::LOGICAL_COPY_DATABASE;
 	}
+	if (StringUtil::Equals(value, "LOGICAL_PREDICT")) {
+		return LogicalOperatorType::LOGICAL_PREDICT;
+	}
 	if (StringUtil::Equals(value, "LOGICAL_GET")) {
 		return LogicalOperatorType::LOGICAL_GET;
 	}
@@ -3864,6 +3877,9 @@ LogicalOperatorType EnumUtil::FromString<LogicalOperatorType>(const char *value)
 	}
 	if (StringUtil::Equals(value, "LOGICAL_CREATE_SEQUENCE")) {
 		return LogicalOperatorType::LOGICAL_CREATE_SEQUENCE;
+	}
+	if (StringUtil::Equals(value, "LOGICAL_CREATE_MODEL")) {
+		return LogicalOperatorType::LOGICAL_CREATE_MODEL;
 	}
 	if (StringUtil::Equals(value, "LOGICAL_CREATE_VIEW")) {
 		return LogicalOperatorType::LOGICAL_CREATE_VIEW;
@@ -4585,6 +4601,34 @@ MetricsType EnumUtil::FromString<MetricsType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "OPTIMIZER_MATERIALIZED_CTE")) {
 		return MetricsType::OPTIMIZER_MATERIALIZED_CTE;
+	}
+	throw NotImplementedException(StringUtil::Format("Enum value: '%s' not implemented", value));
+}
+
+template<>
+const char* EnumUtil::ToChars<ModelType>(ModelType value) {
+	switch(value) {
+	case ModelType::TABULAR:
+		return "TABULAR";
+	case ModelType::LLM:
+		return "LLM";
+	case ModelType::GNN:
+		return "GNN";
+	default:
+		throw NotImplementedException(StringUtil::Format("Enum value: '%d' not implemented", value));
+	}
+}
+
+template<>
+ModelType EnumUtil::FromString<ModelType>(const char *value) {
+	if (StringUtil::Equals(value, "TABULAR")) {
+		return ModelType::TABULAR;
+	}
+	if (StringUtil::Equals(value, "LLM")) {
+		return ModelType::LLM;
+	}
+	if (StringUtil::Equals(value, "GNN")) {
+		return ModelType::GNN;
 	}
 	throw NotImplementedException(StringUtil::Format("Enum value: '%s' not implemented", value));
 }
@@ -5384,6 +5428,8 @@ const char* EnumUtil::ToChars<PhysicalOperatorType>(PhysicalOperatorType value) 
 		return "STREAMING_WINDOW";
 	case PhysicalOperatorType::PIVOT:
 		return "PIVOT";
+	case PhysicalOperatorType::PREDICT:
+		return "PREDICT";
 	case PhysicalOperatorType::COPY_DATABASE:
 		return "COPY_DATABASE";
 	case PhysicalOperatorType::TABLE_SCAN:
@@ -5450,6 +5496,8 @@ const char* EnumUtil::ToChars<PhysicalOperatorType>(PhysicalOperatorType value) 
 		return "ALTER";
 	case PhysicalOperatorType::CREATE_SEQUENCE:
 		return "CREATE_SEQUENCE";
+	case PhysicalOperatorType::CREATE_MODEL:
+		return "CREATE_MODEL";
 	case PhysicalOperatorType::CREATE_VIEW:
 		return "CREATE_VIEW";
 	case PhysicalOperatorType::CREATE_SCHEMA:
@@ -5566,6 +5614,9 @@ PhysicalOperatorType EnumUtil::FromString<PhysicalOperatorType>(const char *valu
 	if (StringUtil::Equals(value, "PIVOT")) {
 		return PhysicalOperatorType::PIVOT;
 	}
+	if (StringUtil::Equals(value, "PREDICT")) {
+		return PhysicalOperatorType::PREDICT;
+	}
 	if (StringUtil::Equals(value, "COPY_DATABASE")) {
 		return PhysicalOperatorType::COPY_DATABASE;
 	}
@@ -5664,6 +5715,9 @@ PhysicalOperatorType EnumUtil::FromString<PhysicalOperatorType>(const char *valu
 	}
 	if (StringUtil::Equals(value, "CREATE_SEQUENCE")) {
 		return PhysicalOperatorType::CREATE_SEQUENCE;
+	}
+	if (StringUtil::Equals(value, "CREATE_MODEL")) {
+		return PhysicalOperatorType::CREATE_MODEL;
 	}
 	if (StringUtil::Equals(value, "CREATE_VIEW")) {
 		return PhysicalOperatorType::CREATE_VIEW;
@@ -7467,6 +7521,8 @@ const char* EnumUtil::ToChars<TableReferenceType>(TableReferenceType value) {
 		return "COLUMN_DATA";
 	case TableReferenceType::DELIM_GET:
 		return "DELIM_GET";
+	case TableReferenceType::PREDICT:
+		return "PREDICT";
 	default:
 		throw NotImplementedException(StringUtil::Format("Enum value: '%d' not implemented", value));
 	}
@@ -7509,6 +7565,9 @@ TableReferenceType EnumUtil::FromString<TableReferenceType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "DELIM_GET")) {
 		return TableReferenceType::DELIM_GET;
+	}
+	if (StringUtil::Equals(value, "PREDICT")) {
+		return TableReferenceType::PREDICT;
 	}
 	throw NotImplementedException(StringUtil::Format("Enum value: '%s' not implemented", value));
 }
@@ -8081,6 +8140,10 @@ const char* EnumUtil::ToChars<WALType>(WALType value) {
 		return "UPDATE_TUPLE";
 	case WALType::ROW_GROUP_DATA:
 		return "ROW_GROUP_DATA";
+	case WALType::CREATE_MODEL:
+		return "CREATE_MODEL";
+	case WALType::DROP_MODEL:
+		return "DROP_MODEL";
 	case WALType::WAL_VERSION:
 		return "WAL_VERSION";
 	case WALType::CHECKPOINT:
@@ -8165,6 +8228,12 @@ WALType EnumUtil::FromString<WALType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "ROW_GROUP_DATA")) {
 		return WALType::ROW_GROUP_DATA;
+	}
+	if (StringUtil::Equals(value, "CREATE_MODEL")) {
+		return WALType::CREATE_MODEL;
+	}
+	if (StringUtil::Equals(value, "DROP_MODEL")) {
+		return WALType::DROP_MODEL;
 	}
 	if (StringUtil::Equals(value, "WAL_VERSION")) {
 		return WALType::WAL_VERSION;

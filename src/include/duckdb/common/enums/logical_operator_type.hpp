@@ -28,9 +28,9 @@ enum class LogicalOperatorType : uint8_t {
 	LOGICAL_COPY_TO_FILE = 10,
 	LOGICAL_DISTINCT = 11,
 	LOGICAL_SAMPLE = 12,
-	LOGICAL_PIVOT = 14,
-	LOGICAL_COPY_DATABASE = 15,
-    LOGICAL_PREDICT = 16,
+	LOGICAL_PIVOT = 13,
+	LOGICAL_COPY_DATABASE = 14,
+    LOGICAL_PREDICT = 15,
 
 	// -----------------------------
 	// Data sources

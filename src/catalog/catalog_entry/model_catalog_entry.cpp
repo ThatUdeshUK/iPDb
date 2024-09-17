@@ -2,6 +2,7 @@
 
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
+#include "duckdb/common/enum_util.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/parser/parsed_data/create_model_info.hpp"
 #include "duckdb/catalog/dependency_manager.hpp"
@@ -75,17 +76,7 @@ string ModelCatalogEntry::ToSQL() const {
 	auto model_data = GetData();
 
 	std::stringstream ss;
-	ss << "CREATE";
-	switch(model_data.model_type) {
-		case 0:
-			ss << " TABULAR";
-			break;
-		case 1:
-			ss << " LLM";
-			break;
-		case 2:
-			ss << " GNN";
-	}
+	ss << "CREATE " << EnumUtil::ToChars<ModelType>(model_data.model_type);
 	ss << " MODEL " << name;
 	ss << " PATH '" << model_data.model_path;
 	//TODO: add attach on expresion

@@ -2,7 +2,6 @@
  *
  *		QUERY :
  *				CREATE MODEL modelname
- *				ALTER MODEL modelname
  *
  *****************************************************************************/
 CreateModelStmt:

@@ -162,8 +162,19 @@ string PhysicalPredict::GetName() const {
     return "PREDICT";
 }
 
-string PhysicalPredict::ParamsToString() const {
-    return model_path;
+InsertionOrderPreservingMap<string> PhysicalPredict::ParamsToString() const {
+    InsertionOrderPreservingMap<string> result;
+	result["Type"] = EnumUtil::ToChars<ModelType>(model_type);
+    result["Model Path"] = model_path;
+
+	for (const auto& item: options) {
+		stringstream ss;
+		ss << item.second;
+		result[item.first] = ss.str();
+	}
+    
+    SetEstimatedCardinality(result, estimated_cardinality);
+    return std::move(result);
 }
 
 } // namespace duckdb

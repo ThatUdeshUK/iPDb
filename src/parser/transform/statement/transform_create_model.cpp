@@ -64,7 +64,7 @@ unique_ptr<CreateStatement> Transformer::TransformCreateModel(duckdb_libpgquery:
 	info->schema = qname.schema;
 	info->name = qname.name;
 	
-	info->model_type = stmt.model_type;
+	info->model_type = static_cast<ModelType>(stmt.model_type);
 	info->model_path = stmt.model_path;
 
 	auto model_on = TransformModelOn(PGCast<duckdb_libpgquery::PGModelOn>(*stmt.model_on));

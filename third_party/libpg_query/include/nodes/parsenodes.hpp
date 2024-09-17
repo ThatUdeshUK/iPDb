@@ -1806,14 +1806,6 @@ typedef struct PGCreateModelStmt {
 	PGOnCreateConflict onconflict;        /* what to do on create conflict */
 } PGCreateModelStmt;
 
-typedef struct PGAlterModelStmt {
-	PGNodeTag type;
-	PGRangeVar *model; /* the model to alter */
-	PGList *options;
-	bool for_identity;
-	bool missing_ok; /* skip error if a role is missing? */
-} PGAlterModelStmt;
-
 /* ----------------------
  *		CREATE FUNCTION Statement
  * ----------------------

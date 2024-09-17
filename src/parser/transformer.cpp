@@ -211,8 +211,6 @@ unique_ptr<SQLStatement> Transformer::TransformStatementInternal(duckdb_libpgque
 		return TransformCreateType(PGCast<duckdb_libpgquery::PGCreateTypeStmt>(stmt));
 	case duckdb_libpgquery::T_PGAlterSeqStmt:
 		return TransformAlterSequence(PGCast<duckdb_libpgquery::PGAlterSeqStmt>(stmt));
-	case duckdb_libpgquery::T_PGAlterModelStmt:
-		return TransformAlterModel(PGCast<duckdb_libpgquery::PGAlterModelStmt>(stmt));
 	case duckdb_libpgquery::T_PGAttachStmt:
 		return TransformAttach(PGCast<duckdb_libpgquery::PGAttachStmt>(stmt));
 	case duckdb_libpgquery::T_PGDetachStmt:
