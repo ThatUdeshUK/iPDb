@@ -16,9 +16,9 @@ namespace duckdb {
 
 ModelData::ModelData(CreateModelInfo &info)
     : model_path(info.model_path), model_type(info.model_type), rel_name(info.rel_name),
-	input_set_names(info.input_set_names), exclude_set_names(info.exclude_set_names), opt_rel_name(info.opt_rel_name),
-	opt_set_names(info.opt_set_names), exclude_opt_set_names(info.exclude_opt_set_names), out_names(info.out_names), 
-	out_types(info.out_types), options(info.options) {
+      input_set_names(info.input_set_names), exclude_set_names(info.exclude_set_names), opt_rel_name(info.opt_rel_name),
+      opt_set_names(info.opt_set_names), exclude_opt_set_names(info.exclude_opt_set_names), out_names(info.out_names),
+      out_types(info.out_types), options(info.options) {
 }
 
 ModelCatalogEntry::ModelCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateModelInfo &info)
@@ -42,11 +42,6 @@ ModelData ModelCatalogEntry::GetData() const {
 	lock_guard<mutex> model_lock(lock);
 	return data;
 }
-
-// void ModelCatalogEntry::SetData(string v_path, uint8_t v_type) {
-// 	data.model_path = v_path;
-// 	data.model_type = v_type;
-// }
 
 unique_ptr<CreateInfo> ModelCatalogEntry::GetInfo() const {
 	auto model_data = GetData();
@@ -79,7 +74,7 @@ string ModelCatalogEntry::ToSQL() const {
 	ss << "CREATE " << EnumUtil::ToChars<ModelType>(model_data.model_type);
 	ss << " MODEL " << name;
 	ss << " PATH '" << model_data.model_path;
-	//TODO: add attach on expresion
+	// TODO: add attach on expresion
 	ss << "' OUTPUT(...); ";
 	return ss.str();
 }

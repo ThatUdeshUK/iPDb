@@ -11,6 +11,7 @@
 #include "duckdb/parser/parsed_data/create_info.hpp"
 #include "duckdb/common/limits.hpp"
 #include "duckdb/common/enums/model_type.hpp"
+#include "duckdb/common/case_insensitive_map.hpp"
 
 namespace duckdb {
 
@@ -23,25 +24,25 @@ struct CreateModelInfo : public CreateInfo {
 	ModelType model_type;
 	//! The path of the stored model
 	string model_path;
-	
+
 	//! The relation attached to
 	string rel_name;
 	//! Input set names
-    vector<string> input_set_names;
+	vector<string> input_set_names;
 	//! Exclude set names
-    vector<string> exclude_set_names;
+	vector<string> exclude_set_names;
 
 	//! The relation attached to
 	string opt_rel_name;
 	//! Input set names
-    vector<string> opt_set_names;
+	vector<string> opt_set_names;
 	//! Exclude set names
-    vector<string> exclude_opt_set_names;
+	vector<string> exclude_opt_set_names;
 
 	//! Output set names
-    vector<string> out_names;
-    //! Output set types
-    vector<LogicalType> out_types;
+	vector<string> out_names;
+	//! Output set types
+	vector<LogicalType> out_types;
 
 	case_insensitive_map_t<Value> options;
 

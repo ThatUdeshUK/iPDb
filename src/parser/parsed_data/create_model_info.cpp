@@ -7,7 +7,8 @@
 namespace duckdb {
 
 CreateModelInfo::CreateModelInfo()
-    : CreateInfo(CatalogType::MODEL_ENTRY, INVALID_SCHEMA), name(string()), model_type(ModelType::TABULAR), model_path(string()) {
+    : CreateInfo(CatalogType::MODEL_ENTRY, INVALID_SCHEMA), name(string()), model_type(ModelType::TABULAR),
+      model_path(string()) {
 }
 
 unique_ptr<CreateInfo> CreateModelInfo::Copy() const {
@@ -45,7 +46,7 @@ string CreateModelInfo::ToString() const {
 	}
 	ss << QualifierToString(temporary ? "" : catalog, schema, name);
 	ss << " PATH '" << model_path;
-	//TODO: - add model on expression here
+	// TODO: - add model on expression here
 	ss << "' OUTPUT(...); ";
 	return ss.str();
 }

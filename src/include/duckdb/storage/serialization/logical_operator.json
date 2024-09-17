@@ -834,6 +834,23 @@
     ]
   },
   {
+    "class": "LogicalPredict",
+    "base": "LogicalOperator",
+    "enum": "LOGICAL_PREDICT",
+    "members": [
+      {
+        "id": 200,
+        "name": "predict_index",
+        "type": "idx_t"
+      },
+      {
+        "id": 201,
+        "name": "bound_predict",
+        "type": "BoundPredictInfo"
+      }
+    ]
+  },
+  {
     "class": "LogicalGet",
     "base": "LogicalOperator",
     "enum": "LOGICAL_GET",

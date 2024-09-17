@@ -28,7 +28,7 @@ enum class TableReferenceType : uint8_t {
 	SHOW_REF = 10,       // SHOW statement
 	COLUMN_DATA = 11,    // column data collection
 	DELIM_GET = 12,      // Delim get ref
-    PREDICT = 13         // predict statement
+	PREDICT = 13         // predict statement
 };
 
 } // namespace duckdb

@@ -177,7 +177,7 @@ optional_ptr<CatalogEntry> Catalog::CreateModel(ClientContext &context, CreateMo
 }
 
 optional_ptr<CatalogEntry> Catalog::CreateModel(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-                                                   CreateModelInfo &info) {
+                                                CreateModelInfo &info) {
 	return schema.CreateModel(transaction, info);
 }
 

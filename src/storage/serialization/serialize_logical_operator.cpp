@@ -139,11 +139,11 @@ unique_ptr<LogicalOperator> LogicalOperator::Deserialize(Deserializer &deseriali
 	case LogicalOperatorType::LOGICAL_PIVOT:
 		result = LogicalPivot::Deserialize(deserializer);
 		break;
-    case LogicalOperatorType::LOGICAL_PREDICT:
-        result = LogicalPredict::Deserialize(deserializer);
-        break;
 	case LogicalOperatorType::LOGICAL_POSITIONAL_JOIN:
 		result = LogicalPositionalJoin::Deserialize(deserializer);
+		break;
+	case LogicalOperatorType::LOGICAL_PREDICT:
+		result = LogicalPredict::Deserialize(deserializer);
 		break;
 	case LogicalOperatorType::LOGICAL_PROJECTION:
 		result = LogicalProjection::Deserialize(deserializer);
@@ -572,25 +572,25 @@ unique_ptr<LogicalOperator> LogicalPivot::Deserialize(Deserializer &deserializer
 	return std::move(result);
 }
 
-void LogicalPredict::Serialize(Serializer &serializer) const {
-    LogicalOperator::Serialize(serializer);
-    serializer.WritePropertyWithDefault<idx_t>(200, "predict_index", predict_index);
-    serializer.WriteProperty<BoundPredictInfo>(201, "bound_predict", bound_predict);
-}
-
-unique_ptr<LogicalOperator> LogicalPredict::Deserialize(Deserializer &deserializer) {
-    auto result = duckdb::unique_ptr<LogicalPredict>(new LogicalPredict());
-    deserializer.ReadPropertyWithDefault<idx_t>(200, "predict_index", result->predict_index);
-    deserializer.ReadProperty<BoundPredictInfo>(201, "bound_predict", result->bound_predict);
-    return std::move(result);
-}
-
 void LogicalPositionalJoin::Serialize(Serializer &serializer) const {
 	LogicalOperator::Serialize(serializer);
 }
 
 unique_ptr<LogicalOperator> LogicalPositionalJoin::Deserialize(Deserializer &deserializer) {
 	auto result = duckdb::unique_ptr<LogicalPositionalJoin>(new LogicalPositionalJoin());
+	return std::move(result);
+}
+
+void LogicalPredict::Serialize(Serializer &serializer) const {
+	LogicalOperator::Serialize(serializer);
+	serializer.WritePropertyWithDefault<idx_t>(200, "predict_index", predict_index);
+	serializer.WriteProperty<BoundPredictInfo>(201, "bound_predict", bound_predict);
+}
+
+unique_ptr<LogicalOperator> LogicalPredict::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<LogicalPredict>(new LogicalPredict());
+	deserializer.ReadPropertyWithDefault<idx_t>(200, "predict_index", result->predict_index);
+	deserializer.ReadProperty<BoundPredictInfo>(201, "bound_predict", result->bound_predict);
 	return std::move(result);
 }
 

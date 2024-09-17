@@ -141,8 +141,8 @@ struct ClientConfig {
 
 	//! If HTTP logging is enabled or not.
 	bool enable_http_logging = false;
-	//! The file to save query HTTP logging conda install -n mldb ipykernel --update-deps --force-reinstallinformation to, instead of printing it to the console
-	//! (empty = print to console)
+	//! The file to save query HTTP logging conda install -n mldb ipykernel --update-deps --force-reinstallinformation
+	//! to, instead of printing it to the console (empty = print to console)
 	string http_logging_output;
 
 	//! Batch size used by the ML operator for inference
@@ -150,7 +150,7 @@ struct ClientConfig {
 
 	//! Max fixed token size for the output of the LLM tokenizer
 	idx_t llm_max_tokens = 512;
-	
+
 	//! Execution mode for ONNX Runtime (0 - Sequential, 1 - Parallel)
 	idx_t onnx_execution_mode = 0;
 

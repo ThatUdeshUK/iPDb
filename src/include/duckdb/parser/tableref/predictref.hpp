@@ -28,8 +28,8 @@ public:
 	unique_ptr<TableRef> opt_source;
 	//! The model name for the predict
 	string model_name;
-    //! Aliases for the column names
-    vector<string> column_name_alias;
+	//! Aliases for the column names
+	vector<string> column_name_alias;
 
 public:
 	string ToString() const override;

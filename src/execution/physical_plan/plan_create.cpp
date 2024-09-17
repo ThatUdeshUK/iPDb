@@ -18,7 +18,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalCreate &op
 		                                         op.estimated_cardinality);
 	case LogicalOperatorType::LOGICAL_CREATE_MODEL:
 		return make_uniq<PhysicalCreateModel>(unique_ptr_cast<CreateInfo, CreateModelInfo>(std::move(op.info)),
-		                                         op.estimated_cardinality);
+		                                      op.estimated_cardinality);
 	case LogicalOperatorType::LOGICAL_CREATE_VIEW:
 		return make_uniq<PhysicalCreateView>(unique_ptr_cast<CreateInfo, CreateViewInfo>(std::move(op.info)),
 		                                     op.estimated_cardinality);

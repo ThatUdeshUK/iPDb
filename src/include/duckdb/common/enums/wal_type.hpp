@@ -54,7 +54,7 @@ enum class WALType : uint8_t {
 	ROW_GROUP_DATA = 29,
 
 	CREATE_MODEL = 30,
-	DROP_MODEL =  31,
+	DROP_MODEL = 31,
 
 	// -----------------------------
 	// Flush

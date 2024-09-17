@@ -230,11 +230,11 @@ void ParsedExpressionIterator::EnumerateTableRefChildren(
 		}
 		break;
 	}
-    case TableReferenceType::PREDICT: {
-        auto &p_ref = ref.Cast<PredictRef>();
-        EnumerateTableRefChildren(*p_ref.source, expr_callback, ref_callback);
-        break;
-    }
+	case TableReferenceType::PREDICT: {
+		auto &p_ref = ref.Cast<PredictRef>();
+		EnumerateTableRefChildren(*p_ref.source, expr_callback, ref_callback);
+		break;
+	}
 	case TableReferenceType::SUBQUERY: {
 		auto &sq_ref = ref.Cast<SubqueryRef>();
 		EnumerateQueryNodeChildren(*sq_ref.subquery->node, expr_callback, ref_callback);

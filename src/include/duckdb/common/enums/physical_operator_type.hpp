@@ -35,7 +35,7 @@ enum class PhysicalOperatorType : uint8_t {
 	STREAMING_SAMPLE,
 	STREAMING_WINDOW,
 	PIVOT,
-    PREDICT,
+	PREDICT,
 	COPY_DATABASE,
 
 	// -----------------------------

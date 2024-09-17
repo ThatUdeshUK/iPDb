@@ -21,23 +21,23 @@ public:
 	static constexpr const LogicalOperatorType TYPE = LogicalOperatorType::LOGICAL_PREDICT;
 
 public:
-    LogicalPredict(idx_t predict_idx, BoundPredictInfo info);
+	LogicalPredict(idx_t predict_idx, BoundPredictInfo info);
 
-    idx_t predict_index;
-    BoundPredictInfo bound_predict;
+	idx_t predict_index;
+	BoundPredictInfo bound_predict;
 
 public:
 	vector<ColumnBinding> GetColumnBindings() override;
 
-    void Serialize(Serializer &serializer) const override;
-    static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-    vector<idx_t> GetTableIndex() const override;
-    string GetName() const override;
+	void Serialize(Serializer &serializer) const override;
+	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
+	vector<idx_t> GetTableIndex() const override;
+	string GetName() const override;
 
 protected:
 	void ResolveTypes() override;
 
 private:
-    LogicalPredict();
+	LogicalPredict();
 };
 } // namespace duckdb

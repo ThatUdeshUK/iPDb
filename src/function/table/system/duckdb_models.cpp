@@ -164,8 +164,7 @@ void DuckDBModelsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 }
 
 void DuckDBModelsFun::RegisterFunction(BuiltinFunctions &set) {
-	set.AddFunction(
-	    TableFunction("duckdb_models", {}, DuckDBModelsFunction, DuckDBModelsBind, DuckDBModelsInit));
+	set.AddFunction(TableFunction("duckdb_models", {}, DuckDBModelsFunction, DuckDBModelsBind, DuckDBModelsInit));
 }
 
 } // namespace duckdb

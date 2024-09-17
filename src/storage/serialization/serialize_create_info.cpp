@@ -52,14 +52,14 @@ unique_ptr<CreateInfo> CreateInfo::Deserialize(Deserializer &deserializer) {
 	case CatalogType::MACRO_ENTRY:
 		result = CreateMacroInfo::Deserialize(deserializer);
 		break;
+	case CatalogType::MODEL_ENTRY:
+		result = CreateModelInfo::Deserialize(deserializer);
+		break;
 	case CatalogType::SCHEMA_ENTRY:
 		result = CreateSchemaInfo::Deserialize(deserializer);
 		break;
 	case CatalogType::SEQUENCE_ENTRY:
 		result = CreateSequenceInfo::Deserialize(deserializer);
-		break;
-	case CatalogType::MODEL_ENTRY:
-		result = CreateModelInfo::Deserialize(deserializer);
 		break;
 	case CatalogType::TABLE_ENTRY:
 		result = CreateTableInfo::Deserialize(deserializer);
@@ -134,39 +134,6 @@ unique_ptr<CreateInfo> CreateMacroInfo::Deserialize(Deserializer &deserializer) 
 	return std::move(result);
 }
 
-void CreateSchemaInfo::Serialize(Serializer &serializer) const {
-	CreateInfo::Serialize(serializer);
-}
-
-unique_ptr<CreateInfo> CreateSchemaInfo::Deserialize(Deserializer &deserializer) {
-	auto result = duckdb::unique_ptr<CreateSchemaInfo>(new CreateSchemaInfo());
-	return std::move(result);
-}
-
-void CreateSequenceInfo::Serialize(Serializer &serializer) const {
-	CreateInfo::Serialize(serializer);
-	serializer.WritePropertyWithDefault<string>(200, "name", name);
-	serializer.WritePropertyWithDefault<uint64_t>(201, "usage_count", usage_count);
-	serializer.WritePropertyWithDefault<int64_t>(202, "increment", increment);
-	serializer.WritePropertyWithDefault<int64_t>(203, "min_value", min_value);
-	serializer.WritePropertyWithDefault<int64_t>(204, "max_value", max_value);
-	serializer.WritePropertyWithDefault<int64_t>(205, "start_value", start_value);
-	serializer.WritePropertyWithDefault<bool>(206, "cycle", cycle);
-}
-
-unique_ptr<CreateInfo> CreateSequenceInfo::Deserialize(Deserializer &deserializer) {
-	auto result = duckdb::unique_ptr<CreateSequenceInfo>(new CreateSequenceInfo());
-	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
-	deserializer.ReadPropertyWithDefault<uint64_t>(201, "usage_count", result->usage_count);
-	deserializer.ReadPropertyWithDefault<int64_t>(202, "increment", result->increment);
-	deserializer.ReadPropertyWithDefault<int64_t>(203, "min_value", result->min_value);
-	deserializer.ReadPropertyWithDefault<int64_t>(204, "max_value", result->max_value);
-	deserializer.ReadPropertyWithDefault<int64_t>(205, "start_value", result->start_value);
-	deserializer.ReadPropertyWithDefault<bool>(206, "cycle", result->cycle);
-	return std::move(result);
-}
-
-
 void CreateModelInfo::Serialize(Serializer &serializer) const {
 	CreateInfo::Serialize(serializer);
 	serializer.WritePropertyWithDefault<string>(200, "name", name);
@@ -200,6 +167,37 @@ unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) 
 	return std::move(result);
 }
 
+void CreateSchemaInfo::Serialize(Serializer &serializer) const {
+	CreateInfo::Serialize(serializer);
+}
+
+unique_ptr<CreateInfo> CreateSchemaInfo::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<CreateSchemaInfo>(new CreateSchemaInfo());
+	return std::move(result);
+}
+
+void CreateSequenceInfo::Serialize(Serializer &serializer) const {
+	CreateInfo::Serialize(serializer);
+	serializer.WritePropertyWithDefault<string>(200, "name", name);
+	serializer.WritePropertyWithDefault<uint64_t>(201, "usage_count", usage_count);
+	serializer.WritePropertyWithDefault<int64_t>(202, "increment", increment);
+	serializer.WritePropertyWithDefault<int64_t>(203, "min_value", min_value);
+	serializer.WritePropertyWithDefault<int64_t>(204, "max_value", max_value);
+	serializer.WritePropertyWithDefault<int64_t>(205, "start_value", start_value);
+	serializer.WritePropertyWithDefault<bool>(206, "cycle", cycle);
+}
+
+unique_ptr<CreateInfo> CreateSequenceInfo::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<CreateSequenceInfo>(new CreateSequenceInfo());
+	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
+	deserializer.ReadPropertyWithDefault<uint64_t>(201, "usage_count", result->usage_count);
+	deserializer.ReadPropertyWithDefault<int64_t>(202, "increment", result->increment);
+	deserializer.ReadPropertyWithDefault<int64_t>(203, "min_value", result->min_value);
+	deserializer.ReadPropertyWithDefault<int64_t>(204, "max_value", result->max_value);
+	deserializer.ReadPropertyWithDefault<int64_t>(205, "start_value", result->start_value);
+	deserializer.ReadPropertyWithDefault<bool>(206, "cycle", result->cycle);
+	return std::move(result);
+}
 
 void CreateTableInfo::Serialize(Serializer &serializer) const {
 	CreateInfo::Serialize(serializer);

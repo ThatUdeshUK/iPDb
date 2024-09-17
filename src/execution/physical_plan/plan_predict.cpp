@@ -7,13 +7,13 @@
 namespace duckdb {
 
 unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &op) {
-	switch(op.bound_predict.model_type) {
+	switch (op.bound_predict.model_type) {
 	case ModelType::TABULAR:
 	case ModelType::LLM: {
 		D_ASSERT(op.children.size() == 1);
 		auto child_plan = CreatePlan(*op.children[0]);
 		auto predict = make_uniq<PhysicalPredict>(std::move(op.types), std::move(child_plan));
-		predict->model_type = std::move(op.bound_predict.model_type);
+		predict->model_type = op.bound_predict.model_type;
 		predict->model_path = std::move(op.bound_predict.model_path);
 		predict->input_mask = std::move(op.bound_predict.input_mask);
 		predict->result_set_types = std::move(op.bound_predict.result_set_types);
@@ -29,7 +29,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &o
 		auto predict = make_uniq<PhysicalGNNPredict>(std::move(op.types), node_cardinality);
 		predict->children.push_back(std::move(node_plan));
 		predict->children.push_back(std::move(edge_plan));
-		predict->model_type = std::move(op.bound_predict.model_type);
+		predict->model_type = op.bound_predict.model_type;
 		predict->model_path = std::move(op.bound_predict.model_path);
 		predict->num_nodes = node_cardinality;
 		predict->num_edges = edge_cardinality;
@@ -41,7 +41,8 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &o
 		return std::move(predict);
 	}
 	default:
-		throw InternalException("Plan Error: Unknown model type `" + std::string(EnumUtil::ToChars<ModelType>(op.bound_predict.model_type)));
+		throw InternalException("Plan Error: Unknown model type `" +
+		                        std::string(EnumUtil::ToChars<ModelType>(op.bound_predict.model_type)));
 	}
 }
 

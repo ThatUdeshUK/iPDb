@@ -10,9 +10,9 @@ unique_ptr<TableRef> Transformer::TransformPredict(duckdb_libpgquery::PGPredictE
 	result->model_name = qname.name;
 
 	result->source = TransformTableRefNode(*root.source);
-    if (root.has_opt) {
-	    result->opt_source = TransformTableRefNode(*root.opt_source);
-    }
+	if (root.has_opt) {
+		result->opt_source = TransformTableRefNode(*root.opt_source);
+	}
 	result->alias = TransformAlias(root.alias, result->column_name_alias);
 
 	SetQueryLocation(*result, root.location);

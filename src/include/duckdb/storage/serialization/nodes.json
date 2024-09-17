@@ -382,6 +382,35 @@
     "pointer_type": "none"
   },
   {
+    "class": "BoundPredictInfo",
+    "includes": [
+      "duckdb/planner/tableref/bound_predictref.hpp"
+    ],
+    "members": [
+      {
+        "id": 100,
+        "name": "model_name",
+        "type": "string"
+      },
+      {
+        "id": 101,
+        "name": "types",
+        "type": "vector<LogicalType>"
+      },
+      {
+        "id": 102,
+        "name": "result_set_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 103,
+        "name": "result_set_types",
+        "type": "vector<LogicalType>"
+      }
+    ],
+    "pointer_type": "none"
+  },
+  {
     "class": "ColumnDefinition",
     "includes": [
       "duckdb/parser/column_definition.hpp"
