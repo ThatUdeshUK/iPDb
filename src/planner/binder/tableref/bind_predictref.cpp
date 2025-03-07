@@ -60,7 +60,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 				}
 			}
 			if (!feature_found) {
-				throw BinderException("Input tabel should contain the BY feature columns");
+				throw BinderException("Input table should contain the BY feature columns");
 			}
 		}
 	} else if (!stored_model_data.exclude_set_names.empty()) {
@@ -106,7 +106,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 					}
 				}
 				if (!feature_found) {
-					throw BinderException("Input tabel should contain the BY feature columns");
+					throw BinderException("Input table should contain the BY feature columns");
 				}
 			}
 		} else if (!stored_model_data.exclude_opt_set_names.empty()) {

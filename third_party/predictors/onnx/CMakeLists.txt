@@ -10,10 +10,10 @@ set(CMAKE_CXX_STANDARD 17)
 find_library(ONNX_RUNTIME_LIB onnxruntime HINTS "$ENV{ONNX_INSTALL_PREFIX}/lib")
 message(STATUS "ORT Include Libs: ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
 
-find_path(UTF8PROC_INCLUDE_DIRS utf8proc.h HINTS "${UTF8PROC_INSTALL_PREFIX}/include")
+find_path(UTF8PROC_INCLUDE_DIRS utf8proc.h HINTS "$ENV{UTF8PROC_INSTALL_PREFIX}/include")
 message(STATUS "UTF8LIB Include Libs: ${UTF8PROC_INCLUDE_DIRS}")
 
-find_library(UTF8PROC_LIB utf8proc HINTS "${UTF8PROC_INSTALL_PREFIX}/lib")
+find_library(UTF8PROC_LIB utf8proc HINTS "$ENV{UTF8PROC_INSTALL_PREFIX}/lib")
 message(STATUS "UTF8LIB Libs: ${UTF8PROC_LIB}")
 
 include_directories(include)

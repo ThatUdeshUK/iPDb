@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "PerfEvent.hpp"
+
 namespace duckdb {
 ONNXPredictor::ONNXPredictor() : Predictor() {
 }
@@ -257,6 +259,9 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 		std::array<int64_t, 2> input_shape_ {num_rows, (long long)input_mask.size()};
 		std::array<int64_t, 2> output_shape_ {num_rows, output_size};
 
+		// PerfEvent e;
+		// e.startCounters();
+
 #if MOVE_METHOD == ROW_FIRST_PUSH
 		std::vector<float> input_data;
 		for (int i = frow; i < lrow; ++i) {
@@ -290,6 +295,10 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 			input_idx++;
 		}
 #endif
+		// e.stopCounters();
+		// e.printReport(std::cout, num_rows);
+		// std::cout << std::endl;
+
 		std::vector<float> output_data(num_rows * output_size, 0);
 
 		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
@@ -308,8 +317,15 @@ void ONNXPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, 
 		begin = std::chrono::steady_clock::now();
 #endif
 
+		// PerfEvent e1;
+		// e1.startCounters();
+
 		Ort::RunOptions run_options;
 		session.Run(run_options, input_names, &input_tensor_, 1, output_names, &output_tensor_, 1);
+
+		// e1.stopCounters();
+		// e1.printReport(std::cout, num_rows);
+		// std::cout << std::endl;
 
 #if OPT_TIMING
 		end = std::chrono::steady_clock::now();

@@ -12,7 +12,7 @@ RUN cd utf8proc && \
     mkdir build && \
     cmake -S . -B build && \
     cmake --build build && \
-    make prefix="/root/utf8proc" && make install
+    make prefix="/root/utf8proc" install
 
 WORKDIR /root/temp
 RUN rm -rf /root/onnxruntime && mkdir /root/onnxruntime
