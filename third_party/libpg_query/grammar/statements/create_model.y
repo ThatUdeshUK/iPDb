@@ -53,6 +53,7 @@ model_type_value:
 			TABULAR 							{ $$ = 0; }
 			| LLM 								{ $$ = 1; }
 			| GNN 								{ $$ = 2; }
+			| LLM_API 							{ $$ = 3; }
 		;
 
 model_on:

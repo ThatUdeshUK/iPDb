@@ -1,12 +1,20 @@
 if(ENABLE_PREDICT)
-  if(USE_TORCH)
+  if (PREDICTOR_IMPL STREQUAL "torchscript")
+    message(
+      STATUS "Added TorchScript include directories")
     include_directories(${LIBTORCH_INCLUDE_DIRS})
     include_directories(../../third_party/predictors/torchscript/include)
-  else()
+  endif ()
+  if (PREDICTOR_IMPL STREQUAL "onnx")
     message(
-      STATUS "ORT include lib in src -> ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
+      STATUS "Added ORT include lib in src -> ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
     include_directories(${ONNX_RUNTIME_SESSION_INCLUDE_DIRS})
     include_directories(../../third_party/predictors/onnx/include)
+  endif()
+  if (PREDICTOR_IMPL STREQUAL "llm_api")
+    message(
+      STATUS "Added LLM API include directories")
+    include_directories(../../third_party/predictors/llm_api/include)
   endif()
 endif()
 

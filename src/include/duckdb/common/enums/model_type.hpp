@@ -17,7 +17,8 @@ namespace duckdb {
 enum class ModelType : uint8_t {
     TABULAR,
     LLM,
-    GNN
+    GNN,
+    LLM_API,
 };
 
 } // namespace duckdb

@@ -15,7 +15,12 @@
 #include "duckdb/planner/expression.hpp"
 
 namespace duckdb {
-typedef enum PredictorTask { PREDICT_TABULAR_TASK = 0, PREDICT_LLM_TASK = 1, PREDICT_GNN_TASK = 2 } PredictorTask;
+typedef enum PredictorTask { 
+	PREDICT_TABULAR_TASK = 0, 
+	PREDICT_LLM_TASK = 1, 
+	PREDICT_GNN_TASK = 2, 
+	PREDICT_LLM_API_TASK = 3 
+} PredictorTask;
 
 struct PredictStats {
 	long load;

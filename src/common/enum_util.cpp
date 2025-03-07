@@ -4614,6 +4614,8 @@ const char* EnumUtil::ToChars<ModelType>(ModelType value) {
 		return "LLM";
 	case ModelType::GNN:
 		return "GNN";
+	case ModelType::LLM_API:
+		return "LLM_API";
 	default:
 		throw NotImplementedException(StringUtil::Format("Enum value: '%d' not implemented", value));
 	}
@@ -4629,6 +4631,9 @@ ModelType EnumUtil::FromString<ModelType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "GNN")) {
 		return ModelType::GNN;
+	}
+	if (StringUtil::Equals(value, "LLM_API")) {
+		return ModelType::LLM_API;
 	}
 	throw NotImplementedException(StringUtil::Format("Enum value: '%s' not implemented", value));
 }

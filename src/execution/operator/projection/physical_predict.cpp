@@ -3,10 +3,12 @@
 #include <iostream>
 #include <map>
 
-#if defined(ENABLE_PREDICT) && defined(USE_TORCH)
+#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 1
 #include "duckdb_torch.hpp"
-#elif ENABLE_PREDICT
+#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 #include "duckdb_onnx.hpp"
+#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
+#include "duckdb_llm_api.hpp"
 #endif
 
 #define CHUNK_PRED 1
@@ -45,10 +47,12 @@ PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, unique_ptr<Physica
 }
 
 unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
-#if defined(ENABLE_PREDICT) && USE_TORCH
+#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 1
 	return make_uniq<TorchPredictor>();
-#elif defined(ENABLE_PREDICT)
+#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
+#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
+	return make_uniq<LlmApiPredictor>();
 #else
 	return nullptr;
 #endif
@@ -83,6 +87,9 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	} else if (predictor.task == PREDICT_LLM_TASK) {
 		predictor.PredictLMChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                         state.stats);
+	} else if (predictor.task == PREDICT_LLM_API_TASK) {
+		predictor.PredictChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
+		                       state.stats);
 	}
 #elif VEC_PRED
 	std::vector<float> inputs;

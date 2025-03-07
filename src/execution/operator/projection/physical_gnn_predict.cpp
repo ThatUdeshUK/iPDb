@@ -9,7 +9,7 @@
 #include <iostream>
 #include <map>
 
-#if ENABLE_PREDICT
+#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 #include "duckdb_onnx.hpp"
 #endif
 
@@ -67,7 +67,7 @@ PhysicalGNNPredict::PhysicalGNNPredict(vector<LogicalType> types_p, idx_t estima
 }
 
 unique_ptr<Predictor> PhysicalGNNPredict::InitPredictor() const {
-#if defined(ENABLE_PREDICT)
+#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
 #else
 	return nullptr;
