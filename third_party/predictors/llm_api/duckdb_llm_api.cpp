@@ -140,6 +140,10 @@ void LlmApiPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows
 		end = std::chrono::steady_clock::now();
 		stats->move_rev += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 #endif
+
+		// TODO: Calculate the accuracy metric here for the prediction and update the stats.correct and stats.total
+		// stats->correct += <no_of_positives>;
+		// stats->total += rows;
 	}
 }
 

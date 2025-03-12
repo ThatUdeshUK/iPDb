@@ -148,25 +148,6 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	}
 #endif
 
-	int positives = 0;
-	auto lhs = (float *)input.data[1].GetData();
-
-	auto neg = (float *)predictions.data[0].GetData();
-	auto pos = (float *)predictions.data[1].GetData();
-
-	for (size_t i = 0; i < input.size(); i++) {
-		if ((*pos > *neg && *lhs > 0) || (*pos < *neg && *lhs < 1)) {
-			positives++;
-		}
-		lhs++;
-		// rhs++;
-		neg++;
-		pos++;
-	}
-
-	state.stats->correct += positives;
-	state.stats->total += input.size();
-
 	chunk.Fuse(predictions);
 	return OperatorResultType::NEED_MORE_INPUT;
 }
