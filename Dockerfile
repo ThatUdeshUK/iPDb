@@ -26,4 +26,4 @@ WORKDIR /root/duckml
 COPY . .
 
 RUN make clean
-RUN export ONNX_INSTALL_PREFIX="/root/onnxruntime" && export UTF8PROC_INCLUDE_DIRS="/root/utf8proc" && make debug GEN=ninja DISABLE_SANITIZER=1 ENABLE_PREDICT=1 USE_TORCH=0
+RUN export ONNX_INSTALL_PREFIX="/root/onnxruntime" && export UTF8PROC_INSTALL_PREFIX="/root/utf8proc" && make debug GEN=ninja -j 8 DISABLE_SANITIZER=1 ENABLE_PREDICT=1 PREDICTOR_IMPL=onnx
