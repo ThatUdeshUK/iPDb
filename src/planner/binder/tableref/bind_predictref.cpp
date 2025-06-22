@@ -15,6 +15,8 @@ struct BindModelData {
 unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 	auto result = make_uniq<BoundPredictRef>();
 	result->bound_predict.model_name = std::move(ref.model_name);
+	
+	result->bound_predict.prompt = std::move(ref.prompt);
 
 	auto models = make_uniq<BindModelData>();
 	auto schemas = Catalog::GetAllSchemas(context);

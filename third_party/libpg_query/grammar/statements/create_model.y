@@ -51,9 +51,9 @@ CreateModelStmt:
 		
 model_type_value:
 			TABULAR 							{ $$ = 0; }
-			| LLM 								{ $$ = 1; }
+			| LM 								{ $$ = 1; }
 			| GNN 								{ $$ = 2; }
-			| LLM_API 							{ $$ = 3; }
+			| LLM 							{ $$ = 3; }
 		;
 
 model_on:
@@ -77,6 +77,11 @@ model_on:
 					n->rel_feat = $4;
 					n->opt_name = $6;
 					n->opt_feat = $7;
+					$$ = (PGNode *)n;
+				}
+			| ON PROMPT
+				{
+					PGModelOn *n = makeNode(PGModelOn);
 					$$ = (PGNode *)n;
 				}
 		;

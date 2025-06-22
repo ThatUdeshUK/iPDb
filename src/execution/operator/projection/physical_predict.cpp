@@ -8,7 +8,7 @@
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 #include "duckdb_onnx.hpp"
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
-#include "duckdb_llm_api.hpp"
+#include "duckdb_llama_cpp.hpp"
 #endif
 
 #define CHUNK_PRED 1
@@ -52,7 +52,7 @@ unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
-	return make_uniq<LlmApiPredictor>();
+	return make_uniq<LlamaCppPredictor>(prompt);
 #else
 	return nullptr;
 #endif
@@ -84,10 +84,10 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	if (predictor.task == PREDICT_TABULAR_TASK) {
 		predictor.PredictChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                       state.stats);
-	} else if (predictor.task == PREDICT_LLM_TASK) {
+	} else if (predictor.task == PREDICT_LM_TASK) {
 		predictor.PredictLMChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                         state.stats);
-	} else if (predictor.task == PREDICT_LLM_API_TASK) {
+	} else if (predictor.task == PREDICT_LLM_TASK) {
 		predictor.PredictChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                       state.stats);
 	}
@@ -128,7 +128,7 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 			inputs.clear();
 			outputs.clear();
 		}
-	} else if (predictor.task == PREDICT_LLM_TASK) {
+	} else if (predictor.task == PREDICT_LM_TASK) {
 		int output_size = (int)result_set_types.size();
 		std::string input_str;
 		std::vector<float> outputs;

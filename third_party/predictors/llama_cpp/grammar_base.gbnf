@@ -1,0 +1,9 @@
+root ::= DuckMLGE
+DuckMLGE ::= "{"   ws   "\"location\":"   ws   string   ","   ws   "\"role\":"   ws   string   "}"
+DuckMLGElist ::= "[]" | "["   ws   DuckMLGE   (","   ws   DuckMLGE)*   "]"
+string ::= "\""   ([^"]*)   "\""
+boolean ::= "true" | "false"
+ws ::= [ ]*
+number ::= [0-9]+   "."?   [0-9]*
+stringlist ::= "["   ws   "]" | "["   ws   string   (","   ws   string)*   ws   "]"
+numberlist ::= "["   ws   "]" | "["   ws   string   (","   ws   number)*   ws   "]"

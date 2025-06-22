@@ -1233,14 +1233,15 @@ typedef struct PGPivotStmt {
  */
 typedef struct PGPredictExpr {
     PGNodeTag type;
-    PGNode *source;      /* the source subtree */
-    PGNode *opt_source;  /* the optional source subtree */
-    PGRangeVar *model_name;    /* path to the model */
-    PGNode *input_feat;  /* The input set required by the model */
-    PGNode *opt_feat;  /* The input set required by the model */
-    PGAlias *alias;      /* table alias & optional column aliases */
-    int has_opt;    	 /* has optional sources */
-    int location;        /* token location, or -1 if unknown */
+    PGNode *source;      	/* the source subtree */
+    PGNode *opt_source;  	/* the optional source subtree */
+    PGRangeVar *model_name; /* path to the model */
+    char *prompt;    	/* prompt for the llms */
+    PGNode *input_feat;  	/* The input set required by the model */
+    PGNode *opt_feat;	 	/* The input set required by the model */
+    PGAlias *alias;      	/* table alias & optional column aliases */
+    int has_opt;    	 	/* has optional sources */
+    int location;        	/* token location, or -1 if unknown */
 } PGPredictExpr;
 
 /*
@@ -1791,6 +1792,7 @@ typedef struct PGModelOn {
     PGRangeVar *opt_name;  /* the optional source subtree */
     PGNode *rel_feat;  /* The input set required by the model */
     PGNode *opt_feat;  /* The input set required by the model */
+    bool *on_prompt;  /* The input set required by the model */
 } PGModelOn;
 
 typedef struct PGCreateModelStmt {

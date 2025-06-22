@@ -26,7 +26,7 @@ void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats>
 #endif
 	this->model_path = model_path;
 
-	if (this->task == PredictorTask::PREDICT_LLM_TASK)
+	if (this->task == PredictorTask::PREDICT_LM_TASK)
 		tokenizer = FullTokenizer(model_path + "/vocab.txt");
 
 	std::string instanceName {"model"};
@@ -43,7 +43,7 @@ void ONNXPredictor::Load(const std::string &model_path, unique_ptr<PredictStats>
 	sessionOptions.SetInterOpNumThreads(this->inter_tc);
 
 	std::string final_path = model_path;
-	if (this->task == PredictorTask::PREDICT_LLM_TASK)
+	if (this->task == PredictorTask::PREDICT_LM_TASK)
 		final_path += "/model.onnx";
 	Ort::Session session_tmp(env, (final_path).c_str(), sessionOptions);
 	session = std::move(session_tmp);

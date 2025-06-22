@@ -4610,12 +4610,12 @@ const char* EnumUtil::ToChars<ModelType>(ModelType value) {
 	switch(value) {
 	case ModelType::TABULAR:
 		return "TABULAR";
-	case ModelType::LLM:
-		return "LLM";
+	case ModelType::LM:
+		return "LM";
 	case ModelType::GNN:
 		return "GNN";
-	case ModelType::LLM_API:
-		return "LLM_API";
+	case ModelType::LLM:
+		return "LLM";
 	default:
 		throw NotImplementedException(StringUtil::Format("Enum value: '%d' not implemented", value));
 	}
@@ -4626,14 +4626,14 @@ ModelType EnumUtil::FromString<ModelType>(const char *value) {
 	if (StringUtil::Equals(value, "TABULAR")) {
 		return ModelType::TABULAR;
 	}
-	if (StringUtil::Equals(value, "LLM")) {
-		return ModelType::LLM;
+	if (StringUtil::Equals(value, "LM")) {
+		return ModelType::LM;
 	}
 	if (StringUtil::Equals(value, "GNN")) {
 		return ModelType::GNN;
 	}
-	if (StringUtil::Equals(value, "LLM_API")) {
-		return ModelType::LLM_API;
+	if (StringUtil::Equals(value, "LLM")) {
+		return ModelType::LLM;
 	}
 	throw NotImplementedException(StringUtil::Format("Enum value: '%s' not implemented", value));
 }

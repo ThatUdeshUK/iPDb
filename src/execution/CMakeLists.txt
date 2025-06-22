@@ -11,10 +11,10 @@ if(ENABLE_PREDICT)
     include_directories(${ONNX_RUNTIME_SESSION_INCLUDE_DIRS})
     include_directories(../../third_party/predictors/onnx/include)
   endif()
-  if (PREDICTOR_IMPL STREQUAL "llm_api")
+  if (PREDICTOR_IMPL STREQUAL "llama_cpp")
     message(
-      STATUS "Added LLM API include directories")
-    include_directories(../../third_party/predictors/llm_api/include)
+      STATUS "Added LLaMa.cpp include directories")
+    include_directories(../../third_party/predictors/llama_cpp/include)
   endif()
 endif()
 

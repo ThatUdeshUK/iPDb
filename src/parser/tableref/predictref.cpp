@@ -37,6 +37,7 @@ unique_ptr<TableRef> PredictRef::Copy() {
 		copy->opt_source = opt_source->Copy();
 	}
 	copy->model_name = model_name;
+	copy->prompt = prompt;
 	copy->alias = alias;
 	return std::move(copy);
 }

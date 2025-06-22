@@ -16,10 +16,18 @@ public:
 	QualifiedName oname;
 	vector<string> opt_set_names;
 	vector<string> exclude_opt_set_names;
+
+	bool on_prompt;
 };
 
 unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModelOn &stmt) {
 	auto n = make_uniq<ModelOnInfo>();
+
+	if (stmt.on_prompt) {
+		n->on_prompt = stmt.on_prompt;
+		return n;
+	}
+
 	if (stmt.rel_name) {
 		n->rname = TransformQualifiedName(*stmt.rel_name);
 	}

@@ -9,6 +9,9 @@ unique_ptr<TableRef> Transformer::TransformPredict(duckdb_libpgquery::PGPredictE
 	auto qname = TransformQualifiedName(*root.model_name);
 	result->model_name = qname.name;
 
+	if (root.prompt != nullptr)
+		result->prompt = root.prompt;
+
 	result->source = TransformTableRefNode(*root.source);
 	if (root.has_opt) {
 		result->opt_source = TransformTableRefNode(*root.opt_source);

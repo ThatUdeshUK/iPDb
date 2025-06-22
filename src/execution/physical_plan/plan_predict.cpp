@@ -9,13 +9,14 @@ namespace duckdb {
 unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPredict &op) {
 	switch (op.bound_predict.model_type) {
 	case ModelType::TABULAR:
-	case ModelType::LLM:
-	case ModelType::LLM_API: {
+	case ModelType::LM:
+	case ModelType::LLM: {
 		D_ASSERT(op.children.size() == 1);
 		auto child_plan = CreatePlan(*op.children[0]);
 		auto predict = make_uniq<PhysicalPredict>(std::move(op.types), std::move(child_plan));
 		predict->model_type = op.bound_predict.model_type;
 		predict->model_path = std::move(op.bound_predict.model_path);
+		predict->prompt = std::move(op.bound_predict.prompt);
 		predict->input_mask = std::move(op.bound_predict.input_mask);
 		predict->result_set_types = std::move(op.bound_predict.result_set_types);
 		predict->options = std::move(op.bound_predict.options);

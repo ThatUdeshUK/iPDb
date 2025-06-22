@@ -28,6 +28,8 @@ public:
 	unique_ptr<TableRef> opt_source;
 	//! The model name for the predict
 	string model_name;
+	//! The prompt for llm tasks
+	string prompt;
 	//! Aliases for the column names
 	vector<string> column_name_alias;
 
