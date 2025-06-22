@@ -38,6 +38,7 @@ add_library_unity(
   transform_upsert.cpp
   transform_use.cpp
   transform_create_sequence.cpp
+  transform_create_model.cpp
   transform_vacuum.cpp
   transform_alter_sequence.cpp)
 set(ALL_OBJECT_FILES

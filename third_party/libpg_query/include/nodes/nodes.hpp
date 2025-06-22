@@ -199,8 +199,10 @@ typedef enum PGNodeTag {
 	T_PGPivotStmt,
 	T_PGAtClause,
 	T_PGSingleArrowFunction,
+    T_PGPredictExpr,
+    T_PGPredictFeatExpr,
 
-	/*
+    /*
 	 * TAGS FOR EXPRESSION STATE NODES (execnodes.h)
 	 *
 	 * ExprState represents the evaluation state for a whole expression tree.
@@ -355,6 +357,8 @@ typedef enum PGNodeTag {
 	T_PGCreateTableAsStmt,
 	T_PGCreateSeqStmt,
 	T_PGAlterSeqStmt,
+	T_PGCreateModelStmt,
+	T_PGModelOn,
 	T_PGVariableSetStmt,
 	T_PGVariableShowStmt,
 	T_PGVariableShowSelectStmt,

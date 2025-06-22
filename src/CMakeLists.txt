@@ -109,6 +109,16 @@ else()
       duckdb_yyjson
       duckdb_zstd)
 
+  if(ENABLE_PREDICT)
+    if (${PREDICTOR_IMPL} STREQUAL "torchscript")
+      set(DUCKDB_LINK_LIBS ${DUCKDB_LINK_LIBS} duckdb_torch)
+    elseif (${PREDICTOR_IMPL} STREQUAL "onnx")
+      set(DUCKDB_LINK_LIBS ${DUCKDB_LINK_LIBS} duckdb_onnx)
+    elseif (${PREDICTOR_IMPL} STREQUAL "llama_cpp")
+      set(DUCKDB_LINK_LIBS ${DUCKDB_LINK_LIBS} duckdb_llama_cpp)
+    endif()
+  endif()
+
   add_library(duckdb SHARED ${ALL_OBJECT_FILES})
 
   if(WIN32 AND NOT MINGW)

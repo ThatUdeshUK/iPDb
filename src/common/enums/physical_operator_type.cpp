@@ -119,6 +119,8 @@ string PhysicalOperatorToString(PhysicalOperatorType type) {
 		return "ALTER";
 	case PhysicalOperatorType::CREATE_SEQUENCE:
 		return "CREATE_SEQUENCE";
+	case PhysicalOperatorType::CREATE_MODEL:
+		return "CREATE_MODEL";
 	case PhysicalOperatorType::CREATE_VIEW:
 		return "CREATE_VIEW";
 	case PhysicalOperatorType::CREATE_SCHEMA:
@@ -159,6 +161,8 @@ string PhysicalOperatorToString(PhysicalOperatorType type) {
 		return "EXTENSION";
 	case PhysicalOperatorType::PIVOT:
 		return "PIVOT";
+	case PhysicalOperatorType::PREDICT:
+		return "PREDICT";
 	case PhysicalOperatorType::COPY_DATABASE:
 		return "COPY_DATABASE";
 	case PhysicalOperatorType::VERIFY_VECTOR:

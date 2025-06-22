@@ -36,6 +36,7 @@ enum class PhysicalOperatorType : uint8_t {
 	STREAMING_SAMPLE,
 	STREAMING_WINDOW,
 	PIVOT,
+	PREDICT,
 	COPY_DATABASE,
 
 	// -----------------------------
@@ -89,6 +90,7 @@ enum class PhysicalOperatorType : uint8_t {
 	CREATE_INDEX,
 	ALTER,
 	CREATE_SEQUENCE,
+	CREATE_MODEL,
 	CREATE_VIEW,
 	CREATE_SCHEMA,
 	CREATE_MACRO,

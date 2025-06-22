@@ -9,6 +9,7 @@
 #include "duckdb/catalog/catalog_entry/scalar_function_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/scalar_macro_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/sequence_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_function_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_macro_catalog_entry.hpp"
@@ -30,6 +31,7 @@
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_schema_info.hpp"
 #include "duckdb/parser/parsed_data/create_sequence_info.hpp"
+#include "duckdb/parser/parsed_data/create_model_info.hpp"
 #include "duckdb/parser/parsed_data/create_table_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
 #include "duckdb/parser/parsed_data/create_view_info.hpp"
@@ -75,7 +77,7 @@ DuckSchemaEntry::DuckSchemaEntry(Catalog &catalog, CreateSchemaInfo &info)
                       catalog.IsSystemCatalog() ? make_uniq<DefaultTableFunctionGenerator>(catalog, *this) : nullptr),
       copy_functions(catalog), pragma_functions(catalog),
       functions(catalog, catalog.IsSystemCatalog() ? make_uniq<DefaultFunctionGenerator>(catalog, *this) : nullptr),
-      sequences(catalog), collations(catalog), types(catalog, make_uniq<DefaultTypeGenerator>(catalog, *this)) {
+      sequences(catalog), models(catalog),  collations(catalog), types(catalog, make_uniq<DefaultTypeGenerator>(catalog, *this)) {
 }
 
 unique_ptr<CatalogEntry> DuckSchemaEntry::Copy(ClientContext &context) const {
@@ -223,6 +225,11 @@ optional_ptr<CatalogEntry> DuckSchemaEntry::AddEntry(CatalogTransaction transact
 optional_ptr<CatalogEntry> DuckSchemaEntry::CreateSequence(CatalogTransaction transaction, CreateSequenceInfo &info) {
 	auto sequence = make_uniq<SequenceCatalogEntry>(catalog, *this, info);
 	return AddEntry(transaction, std::move(sequence), info.on_conflict);
+}
+
+optional_ptr<CatalogEntry> DuckSchemaEntry::CreateModel(CatalogTransaction transaction, CreateModelInfo &info) {
+	auto model = make_uniq<ModelCatalogEntry>(catalog, *this, info);
+	return AddEntry(transaction, std::move(model), info.on_conflict);
 }
 
 optional_ptr<CatalogEntry> DuckSchemaEntry::CreateType(CatalogTransaction transaction, CreateTypeInfo &info) {
@@ -386,6 +393,8 @@ CatalogSet &DuckSchemaEntry::GetCatalogSet(CatalogType type) {
 		return functions;
 	case CatalogType::SEQUENCE_ENTRY:
 		return sequences;
+	case CatalogType::MODEL_ENTRY:
+		return models;
 	case CatalogType::COLLATION_ENTRY:
 		return collations;
 	case CatalogType::TYPE_ENTRY:
@@ -405,6 +414,7 @@ void DuckSchemaEntry::Verify(Catalog &catalog) {
 	pragma_functions.Verify(catalog);
 	functions.Verify(catalog);
 	sequences.Verify(catalog);
+	models.Verify(catalog);
 	collations.Verify(catalog);
 	types.Verify(catalog);
 }

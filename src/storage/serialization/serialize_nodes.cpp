@@ -18,6 +18,7 @@
 #include "duckdb/common/queue.hpp"
 #include "duckdb/parser/tableref/pivotref.hpp"
 #include "duckdb/planner/tableref/bound_pivotref.hpp"
+#include "duckdb/planner/tableref/bound_predictref.hpp"
 #include "duckdb/parser/column_definition.hpp"
 #include "duckdb/parser/column_list.hpp"
 #include "duckdb/planner/column_binding.hpp"
@@ -152,6 +153,22 @@ BoundPivotInfo BoundPivotInfo::Deserialize(Deserializer &deserializer) {
 	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(101, "types", result.types);
 	deserializer.ReadPropertyWithDefault<vector<string>>(102, "pivot_values", result.pivot_values);
 	deserializer.ReadPropertyWithDefault<vector<unique_ptr<Expression>>>(103, "aggregates", result.aggregates);
+	return result;
+}
+
+void BoundPredictInfo::Serialize(Serializer &serializer) const {
+	serializer.WritePropertyWithDefault<string>(100, "model_name", model_name);
+	serializer.WritePropertyWithDefault<vector<LogicalType>>(101, "types", types);
+	serializer.WritePropertyWithDefault<vector<string>>(102, "result_set_names", result_set_names);
+	serializer.WritePropertyWithDefault<vector<LogicalType>>(103, "result_set_types", result_set_types);
+}
+
+BoundPredictInfo BoundPredictInfo::Deserialize(Deserializer &deserializer) {
+	BoundPredictInfo result;
+	deserializer.ReadPropertyWithDefault<string>(100, "model_name", result.model_name);
+	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(101, "types", result.types);
+	deserializer.ReadPropertyWithDefault<vector<string>>(102, "result_set_names", result.result_set_names);
+	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(103, "result_set_types", result.result_set_types);
 	return result;
 }
 

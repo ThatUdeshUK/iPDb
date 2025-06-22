@@ -37,6 +37,7 @@
 #include "duckdb/common/enums/logical_operator_type.hpp"
 #include "duckdb/common/enums/memory_tag.hpp"
 #include "duckdb/common/enums/metric_type.hpp"
+#include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/common/enums/on_create_conflict.hpp"
 #include "duckdb/common/enums/on_entry_not_found.hpp"
 #include "duckdb/common/enums/operator_result_type.hpp"
@@ -741,6 +742,7 @@ const StringUtil::EnumStringLiteral *GetCatalogTypeValues() {
 		{ static_cast<uint32_t>(CatalogType::COLLATION_ENTRY), "COLLATION_ENTRY" },
 		{ static_cast<uint32_t>(CatalogType::TYPE_ENTRY), "TYPE_ENTRY" },
 		{ static_cast<uint32_t>(CatalogType::DATABASE_ENTRY), "DATABASE_ENTRY" },
+		{ static_cast<uint32_t>(CatalogType::MODEL_ENTRY), "MODEL_ENTRY" },
 		{ static_cast<uint32_t>(CatalogType::TABLE_FUNCTION_ENTRY), "TABLE_FUNCTION_ENTRY" },
 		{ static_cast<uint32_t>(CatalogType::SCALAR_FUNCTION_ENTRY), "SCALAR_FUNCTION_ENTRY" },
 		{ static_cast<uint32_t>(CatalogType::AGGREGATE_FUNCTION_ENTRY), "AGGREGATE_FUNCTION_ENTRY" },
@@ -760,12 +762,12 @@ const StringUtil::EnumStringLiteral *GetCatalogTypeValues() {
 
 template<>
 const char* EnumUtil::ToChars<CatalogType>(CatalogType value) {
-	return StringUtil::EnumToString(GetCatalogTypeValues(), 23, "CatalogType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetCatalogTypeValues(), 24, "CatalogType", static_cast<uint32_t>(value));
 }
 
 template<>
 CatalogType EnumUtil::FromString<CatalogType>(const char *value) {
-	return static_cast<CatalogType>(StringUtil::StringToEnum(GetCatalogTypeValues(), 23, "CatalogType", value));
+	return static_cast<CatalogType>(StringUtil::StringToEnum(GetCatalogTypeValues(), 24, "CatalogType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetCheckpointAbortValues() {
@@ -2361,6 +2363,7 @@ const StringUtil::EnumStringLiteral *GetLogicalOperatorTypeValues() {
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_SAMPLE), "LOGICAL_SAMPLE" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_PIVOT), "LOGICAL_PIVOT" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_COPY_DATABASE), "LOGICAL_COPY_DATABASE" },
+		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_PREDICT), "LOGICAL_PREDICT" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_GET), "LOGICAL_GET" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CHUNK_GET), "LOGICAL_CHUNK_GET" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_DELIM_GET), "LOGICAL_DELIM_GET" },
@@ -2388,6 +2391,7 @@ const StringUtil::EnumStringLiteral *GetLogicalOperatorTypeValues() {
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_TABLE), "LOGICAL_CREATE_TABLE" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_INDEX), "LOGICAL_CREATE_INDEX" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_SEQUENCE), "LOGICAL_CREATE_SEQUENCE" },
+		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_MODEL), "LOGICAL_CREATE_MODEL" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_VIEW), "LOGICAL_CREATE_VIEW" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_SCHEMA), "LOGICAL_CREATE_SCHEMA" },
 		{ static_cast<uint32_t>(LogicalOperatorType::LOGICAL_CREATE_MACRO), "LOGICAL_CREATE_MACRO" },
@@ -2414,12 +2418,12 @@ const StringUtil::EnumStringLiteral *GetLogicalOperatorTypeValues() {
 
 template<>
 const char* EnumUtil::ToChars<LogicalOperatorType>(LogicalOperatorType value) {
-	return StringUtil::EnumToString(GetLogicalOperatorTypeValues(), 61, "LogicalOperatorType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetLogicalOperatorTypeValues(), 63, "LogicalOperatorType", static_cast<uint32_t>(value));
 }
 
 template<>
 LogicalOperatorType EnumUtil::FromString<LogicalOperatorType>(const char *value) {
-	return static_cast<LogicalOperatorType>(StringUtil::StringToEnum(GetLogicalOperatorTypeValues(), 61, "LogicalOperatorType", value));
+	return static_cast<LogicalOperatorType>(StringUtil::StringToEnum(GetLogicalOperatorTypeValues(), 63, "LogicalOperatorType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetLogicalTypeIdValues() {
@@ -2657,6 +2661,26 @@ const char* EnumUtil::ToChars<MetricsType>(MetricsType value) {
 template<>
 MetricsType EnumUtil::FromString<MetricsType>(const char *value) {
 	return static_cast<MetricsType>(StringUtil::StringToEnum(GetMetricsTypeValues(), 51, "MetricsType", value));
+}
+
+const StringUtil::EnumStringLiteral *GetModelTypeValues() {
+	static constexpr StringUtil::EnumStringLiteral values[] {
+		{ static_cast<uint32_t>(ModelType::TABULAR), "TABULAR" },
+		{ static_cast<uint32_t>(ModelType::LM), "LM" },
+		{ static_cast<uint32_t>(ModelType::GNN), "GNN" },
+		{ static_cast<uint32_t>(ModelType::LLM), "LLM" }
+	};
+	return values;
+}
+
+template<>
+const char* EnumUtil::ToChars<ModelType>(ModelType value) {
+	return StringUtil::EnumToString(GetModelTypeValues(), 4, "ModelType", static_cast<uint32_t>(value));
+}
+
+template<>
+ModelType EnumUtil::FromString<ModelType>(const char *value) {
+	return static_cast<ModelType>(StringUtil::StringToEnum(GetModelTypeValues(), 4, "ModelType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetMultiFileColumnMappingModeValues() {
@@ -3140,6 +3164,7 @@ const StringUtil::EnumStringLiteral *GetPhysicalOperatorTypeValues() {
 		{ static_cast<uint32_t>(PhysicalOperatorType::STREAMING_SAMPLE), "STREAMING_SAMPLE" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::STREAMING_WINDOW), "STREAMING_WINDOW" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::PIVOT), "PIVOT" },
+		{ static_cast<uint32_t>(PhysicalOperatorType::PREDICT), "PREDICT" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::COPY_DATABASE), "COPY_DATABASE" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::TABLE_SCAN), "TABLE_SCAN" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::DUMMY_SCAN), "DUMMY_SCAN" },
@@ -3175,6 +3200,7 @@ const StringUtil::EnumStringLiteral *GetPhysicalOperatorTypeValues() {
 		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_INDEX), "CREATE_INDEX" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::ALTER), "ALTER" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_SEQUENCE), "CREATE_SEQUENCE" },
+		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_MODEL), "CREATE_MODEL" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_VIEW), "CREATE_VIEW" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_SCHEMA), "CREATE_SCHEMA" },
 		{ static_cast<uint32_t>(PhysicalOperatorType::CREATE_MACRO), "CREATE_MACRO" },
@@ -3207,12 +3233,12 @@ const StringUtil::EnumStringLiteral *GetPhysicalOperatorTypeValues() {
 
 template<>
 const char* EnumUtil::ToChars<PhysicalOperatorType>(PhysicalOperatorType value) {
-	return StringUtil::EnumToString(GetPhysicalOperatorTypeValues(), 81, "PhysicalOperatorType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetPhysicalOperatorTypeValues(), 83, "PhysicalOperatorType", static_cast<uint32_t>(value));
 }
 
 template<>
 PhysicalOperatorType EnumUtil::FromString<PhysicalOperatorType>(const char *value) {
-	return static_cast<PhysicalOperatorType>(StringUtil::StringToEnum(GetPhysicalOperatorTypeValues(), 81, "PhysicalOperatorType", value));
+	return static_cast<PhysicalOperatorType>(StringUtil::StringToEnum(GetPhysicalOperatorTypeValues(), 83, "PhysicalOperatorType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetPhysicalTypeValues() {
@@ -4182,19 +4208,20 @@ const StringUtil::EnumStringLiteral *GetTableReferenceTypeValues() {
 		{ static_cast<uint32_t>(TableReferenceType::PIVOT), "PIVOT" },
 		{ static_cast<uint32_t>(TableReferenceType::SHOW_REF), "SHOW_REF" },
 		{ static_cast<uint32_t>(TableReferenceType::COLUMN_DATA), "COLUMN_DATA" },
-		{ static_cast<uint32_t>(TableReferenceType::DELIM_GET), "DELIM_GET" }
+		{ static_cast<uint32_t>(TableReferenceType::DELIM_GET), "DELIM_GET" },
+		{ static_cast<uint32_t>(TableReferenceType::PREDICT), "PREDICT" }
 	};
 	return values;
 }
 
 template<>
 const char* EnumUtil::ToChars<TableReferenceType>(TableReferenceType value) {
-	return StringUtil::EnumToString(GetTableReferenceTypeValues(), 12, "TableReferenceType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetTableReferenceTypeValues(), 13, "TableReferenceType", static_cast<uint32_t>(value));
 }
 
 template<>
 TableReferenceType EnumUtil::FromString<TableReferenceType>(const char *value) {
-	return static_cast<TableReferenceType>(StringUtil::StringToEnum(GetTableReferenceTypeValues(), 12, "TableReferenceType", value));
+	return static_cast<TableReferenceType>(StringUtil::StringToEnum(GetTableReferenceTypeValues(), 13, "TableReferenceType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetTableScanTypeValues() {
@@ -4564,6 +4591,8 @@ const StringUtil::EnumStringLiteral *GetWALTypeValues() {
 		{ static_cast<uint32_t>(WALType::DELETE_TUPLE), "DELETE_TUPLE" },
 		{ static_cast<uint32_t>(WALType::UPDATE_TUPLE), "UPDATE_TUPLE" },
 		{ static_cast<uint32_t>(WALType::ROW_GROUP_DATA), "ROW_GROUP_DATA" },
+		{ static_cast<uint32_t>(WALType::CREATE_MODEL), "CREATE_MODEL" },
+		{ static_cast<uint32_t>(WALType::DROP_MODEL), "DROP_MODEL" },
 		{ static_cast<uint32_t>(WALType::WAL_VERSION), "WAL_VERSION" },
 		{ static_cast<uint32_t>(WALType::CHECKPOINT), "CHECKPOINT" },
 		{ static_cast<uint32_t>(WALType::WAL_FLUSH), "WAL_FLUSH" }
@@ -4573,12 +4602,12 @@ const StringUtil::EnumStringLiteral *GetWALTypeValues() {
 
 template<>
 const char* EnumUtil::ToChars<WALType>(WALType value) {
-	return StringUtil::EnumToString(GetWALTypeValues(), 27, "WALType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetWALTypeValues(), 29, "WALType", static_cast<uint32_t>(value));
 }
 
 template<>
 WALType EnumUtil::FromString<WALType>(const char *value) {
-	return static_cast<WALType>(StringUtil::StringToEnum(GetWALTypeValues(), 27, "WALType", value));
+	return static_cast<WALType>(StringUtil::StringToEnum(GetWALTypeValues(), 29, "WALType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetWindowAggregationModeValues() {

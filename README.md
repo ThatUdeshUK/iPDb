@@ -13,6 +13,11 @@
   <a href="https://github.com/duckdb/duckdb/releases/"><img src="https://img.shields.io/github/v/release/duckdb/duckdb?color=brightgreen&display_name=tag&logo=duckdb&logoColor=white" alt="Latest Release"></a>
 </p>
 
+## DuckML
+
+Details on the introduced ML Operator and how to get started is available on [this document](https://docs.google.com/document/d/1w0fUHvjV4uFe5LYMZjbS6bVcX9qt9v6pgAVAKHrnxnw/edit?usp=sharing).
+
+
 ## DuckDB
 
 DuckDB is a high-performance analytical database system. It is designed to be fast, reliable, portable, and easy to use. DuckDB provides a rich SQL dialect, with support far beyond basic SQL. DuckDB supports arbitrary and nested correlated subqueries, window functions, collations, complex types (arrays, structs, maps), and [several extensions designed to make SQL easier to use](https://duckdb.org/docs/stable/sql/dialect/friendly_sql.html).

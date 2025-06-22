@@ -1,3 +1,23 @@
+if(ENABLE_PREDICT)
+  if (PREDICTOR_IMPL STREQUAL "torchscript")
+    message(
+      STATUS "Added TorchScript include directories")
+    include_directories(${LIBTORCH_INCLUDE_DIRS})
+    include_directories(../../third_party/predictors/torchscript/include)
+  endif ()
+  if (PREDICTOR_IMPL STREQUAL "onnx")
+    message(
+      STATUS "Added ORT include lib in src -> ${ONNX_RUNTIME_SESSION_INCLUDE_DIRS}")
+    include_directories(${ONNX_RUNTIME_SESSION_INCLUDE_DIRS})
+    include_directories(../../third_party/predictors/onnx/include)
+  endif()
+  if (PREDICTOR_IMPL STREQUAL "llama_cpp")
+    message(
+      STATUS "Added LLaMa.cpp include directories")
+    include_directories(../../third_party/predictors/llama_cpp/include)
+  endif()
+endif()
+
 add_subdirectory(expression_executor)
 add_subdirectory(nested_loop_join)
 add_subdirectory(operator)

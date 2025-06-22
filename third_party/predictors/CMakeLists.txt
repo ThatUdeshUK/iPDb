@@ -1,0 +1,12 @@
+if (ENABLE_PREDICT)
+  if (${PREDICTOR_IMPL} STREQUAL "torchscript")
+    add_subdirectory(torchscript)
+  elseif (${PREDICTOR_IMPL} STREQUAL "onnx")
+    add_subdirectory(onnx)
+  elseif (${PREDICTOR_IMPL} STREQUAL "llama_cpp")
+    add_subdirectory(llama_cpp)
+  else ()
+    message(FATAL_ERROR "Unknown predictor implementation requested: `${PREDICTOR_IMPL}`! Set with `PREDICTOR_IMPL=<torchscript|onnx|llama_cpp>`.")
+  endif ()
+endif()
+

@@ -85,5 +85,6 @@ schema_stmt:
 			CreateStmt
 			| IndexStmt
 			| CreateSeqStmt
+			| CreateModelStmt
 			| ViewStmt
 		;

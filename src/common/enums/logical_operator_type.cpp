@@ -96,6 +96,8 @@ string LogicalOperatorToString(LogicalOperatorType type) {
 		return "ALTER";
 	case LogicalOperatorType::LOGICAL_CREATE_SEQUENCE:
 		return "CREATE_SEQUENCE";
+	case LogicalOperatorType::LOGICAL_CREATE_MODEL:
+		return "CREATE_MODEL";
 	case LogicalOperatorType::LOGICAL_CREATE_TYPE:
 		return "CREATE_TYPE";
 	case LogicalOperatorType::LOGICAL_CREATE_VIEW:
@@ -128,6 +130,8 @@ string LogicalOperatorToString(LogicalOperatorType type) {
 		return "CUSTOM_OP";
 	case LogicalOperatorType::LOGICAL_PIVOT:
 		return "PIVOT";
+	case LogicalOperatorType::LOGICAL_PREDICT:
+		return "PREDICT";
 	case LogicalOperatorType::LOGICAL_UPDATE_EXTENSIONS:
 		return "UPDATE_EXTENSIONS";
 	}

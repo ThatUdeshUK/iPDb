@@ -1227,6 +1227,35 @@ typedef struct PGPivotStmt {
 	int location;        /* token location, or -1 if unknown */
 } PGPivotStmt;
 
+/*
+ * ----------------------
+ *      Predict Expression
+ * ----------------------
+ */
+typedef struct PGPredictExpr {
+    PGNodeTag type;
+    PGNode *source;      	/* the source subtree */
+    PGNode *opt_source;  	/* the optional source subtree */
+    PGRangeVar *model_name; /* path to the model */
+    char *prompt;    	/* prompt for the llms */
+    PGNode *input_feat;  	/* The input set required by the model */
+    PGNode *opt_feat;	 	/* The input set required by the model */
+    PGAlias *alias;      	/* table alias & optional column aliases */
+    int has_opt;    	 	/* has optional sources */
+    int location;        	/* token location, or -1 if unknown */
+} PGPredictExpr;
+
+/*
+ * ----------------------
+ *      Predict Features Expression
+ * ----------------------
+ */
+typedef struct PGPredictFeatExpr {
+	PGNodeTag type;
+    PGList *input_set;		/* The input set required by the model */
+    PGList *exclude_set;  	/* The column set excluded from the model */
+} PGPredictFeatExpr;
+
 /* ----------------------
  *		Select Statement
  *
@@ -1371,6 +1400,7 @@ typedef enum PGObjectType {
 	PG_OBJECT_RULE,
 	PG_OBJECT_SCHEMA,
 	PG_OBJECT_SEQUENCE,
+	PG_OBJECT_MODEL,
 	PG_OBJECT_SUBSCRIPTION,
 	PG_OBJECT_STATISTIC_EXT,
 	PG_OBJECT_TABCONSTRAINT,
@@ -1756,6 +1786,33 @@ typedef struct PGAlterSeqStmt {
 	bool for_identity;
 	bool missing_ok; /* skip error if a role is missing? */
 } PGAlterSeqStmt;
+
+/* ----------------------
+ *		{Create|Alter} MODEL Statement
+ * ----------------------
+ */
+
+typedef struct PGModelOn {
+	PGNodeTag type;
+	PGRangeVar *rel_name; /* name of the the model/view */
+    PGRangeVar *opt_name;  /* the optional source subtree */
+    PGNode *rel_feat;  /* The input set required by the model */
+    PGNode *opt_feat;  /* The input set required by the model */
+    bool *on_prompt;  /* The input set required by the model */
+} PGModelOn;
+
+typedef struct PGCreateModelStmt {
+	PGNodeTag type;
+	PGRangeVar *model; /* the model to create */
+	int model_type; /* the model to create */
+	char *model_path; /* the path to the model */
+	PGNode *model_on; /* entity model attached to */
+	PGList *result_set;  /* The result set produced by the model */
+	PGList *options;	/* The map of options */
+	PGOid ownerId; /* ID of owner, or InvalidOid for default */
+	bool for_identity;
+	PGOnCreateConflict onconflict;        /* what to do on create conflict */
+} PGCreateModelStmt;
 
 /* ----------------------
  *		CREATE FUNCTION Statement

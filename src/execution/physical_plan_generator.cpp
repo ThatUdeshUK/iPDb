@@ -136,6 +136,7 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalOperator &op) {
 		return CreatePlan(op.Cast<LogicalExecute>());
 	case LogicalOperatorType::LOGICAL_CREATE_VIEW:
 	case LogicalOperatorType::LOGICAL_CREATE_SEQUENCE:
+	case LogicalOperatorType::LOGICAL_CREATE_MODEL:
 	case LogicalOperatorType::LOGICAL_CREATE_SCHEMA:
 	case LogicalOperatorType::LOGICAL_CREATE_MACRO:
 	case LogicalOperatorType::LOGICAL_CREATE_TYPE:
@@ -165,6 +166,8 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalOperator &op) {
 		return CreatePlan(op.Cast<LogicalReset>());
 	case LogicalOperatorType::LOGICAL_PIVOT:
 		return CreatePlan(op.Cast<LogicalPivot>());
+	case LogicalOperatorType::LOGICAL_PREDICT:
+		return CreatePlan(op.Cast<LogicalPredict>());
 	case LogicalOperatorType::LOGICAL_COPY_DATABASE:
 		return CreatePlan(op.Cast<LogicalCopyDatabase>());
 	case LogicalOperatorType::LOGICAL_UPDATE_EXTENSIONS:

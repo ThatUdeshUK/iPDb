@@ -302,5 +302,75 @@
         "type": "bool"
       }
     ]
+  },
+  {
+    "class": "CreateModelInfo",
+    "base": "CreateInfo",
+    "enum": "MODEL_ENTRY",
+    "includes": [
+      "duckdb/parser/parsed_data/create_model_info.hpp"
+    ],
+    "members": [
+      {
+        "id": 200,
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "id": 201,
+        "name": "model_type",
+        "type": "ModelType"
+      },
+      {
+        "id": 202,
+        "name": "model_path",
+        "type": "string"
+      },
+      {
+        "id": 203,
+        "name": "rel_name",
+        "type": "string"
+      },
+      {
+        "id": 204,
+        "name": "input_set_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 205,
+        "name": "exclude_set_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 206,
+        "name": "opt_rel_name",
+        "type": "string"
+      },
+      {
+        "id": 207,
+        "name": "opt_set_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 208,
+        "name": "exclude_opt_set_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 209,
+        "name": "out_names",
+        "type": "vector<string>"
+      },
+      {
+        "id": 210,
+        "name": "out_types",
+        "type": "vector<LogicalType>"
+      },
+      {
+        "id": 211,
+        "name": "options",
+        "type": "case_insensitive_map_t<Value>"
+      }
+    ]
   }
 ]

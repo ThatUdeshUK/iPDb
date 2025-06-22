@@ -37,6 +37,7 @@ struct GroupingExpressionMap;
 class OnConflictInfo;
 class UpdateSetInfo;
 class MacroFunction;
+class ModelOnInfo;
 struct ParserOptions;
 struct PivotColumn;
 struct PivotColumnEntry;
@@ -126,6 +127,8 @@ private:
 	unique_ptr<CreateStatement> TransformCreateSchema(duckdb_libpgquery::PGCreateSchemaStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGCreateSeqStmt node into a CreateStatement
 	unique_ptr<CreateStatement> TransformCreateSequence(duckdb_libpgquery::PGCreateSeqStmt &node);
+	//! Transform a Postgres duckdb_libpgquery::T_PGCreateModelStmt node into a CreateStatement
+	unique_ptr<CreateStatement> TransformCreateModel(duckdb_libpgquery::PGCreateModelStmt &node);
 	//! Transform a Postgres duckdb_libpgquery::T_PGViewStmt node into a CreateStatement
 	unique_ptr<CreateStatement> TransformCreateView(duckdb_libpgquery::PGViewStmt &node);
 	//! Transform a Postgres duckdb_libpgquery::T_PGIndexStmt node into CreateStatement
@@ -142,6 +145,9 @@ private:
 	unique_ptr<SQLStatement> TransformDrop(duckdb_libpgquery::PGDropStmt &stmt);
 	//! Transform a Postgres duckdb_libpgquery::T_PGInsertStmt node into a InsertStatement
 	unique_ptr<InsertStatement> TransformInsert(duckdb_libpgquery::PGInsertStmt &stmt);
+
+	//! Transform a Postgres duckdb_libpgquery::T_PGModelOn node into a ModelOnInfo
+	unique_ptr<ModelOnInfo> TransformModelOn(duckdb_libpgquery::PGModelOn &stmt);
 
 	//! Transform a Postgres duckdb_libpgquery::T_PGOnConflictClause node into a OnConflictInfo
 	unique_ptr<OnConflictInfo> TransformOnConflictClause(duckdb_libpgquery::PGOnConflictClause *node,
@@ -317,6 +323,8 @@ private:
 	unique_ptr<TableRef> TransformJoin(duckdb_libpgquery::PGJoinExpr &root);
 	//! Transform a Postgres pivot node into a TableRef
 	unique_ptr<TableRef> TransformPivot(duckdb_libpgquery::PGPivotExpr &root);
+	//! Transform a predict node into a TableRef
+	unique_ptr<TableRef> TransformPredict(duckdb_libpgquery::PGPredictExpr &root);
 	//! Transform a table producing subquery into a TableRef
 	unique_ptr<TableRef> TransformRangeSubselect(duckdb_libpgquery::PGRangeSubselect &root);
 	//! Transform a VALUES list into a set of expressions

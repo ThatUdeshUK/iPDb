@@ -1184,6 +1184,33 @@ table_ref:	relation_expr opt_alias_clause opt_at_clause opt_tablesample_clause
 					n->location = @2;
 					$$ = (PGNode *) n;
 				}
+			| PREDICT '(' qualified_name ',' table_ref ')' opt_alias_clause
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->source = $5;
+					n->model_name = $3;
+					n->alias = $7;
+					$$ = (PGNode *) n;
+				}
+			| PREDICT '(' qualified_name ',' PROMPT SCONST ',' table_ref ')' opt_alias_clause
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->source = $8;
+					n->model_name = $3;
+					n->prompt = $6;
+					n->alias = $10;
+					$$ = (PGNode *) n;
+				}
+			| PREDICT '(' qualified_name ',' table_ref ',' table_ref ')' opt_alias_clause
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->source = $5;
+					n->model_name = $3;
+					n->opt_source = $7;
+					n->has_opt = 1;
+					n->alias = $9;
+					$$ = (PGNode *) n;
+				}
 		;
 
 opt_pivot_group_by:

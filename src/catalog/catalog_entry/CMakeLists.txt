@@ -13,6 +13,7 @@ add_library_unity(
   pragma_function_catalog_entry.cpp
   schema_catalog_entry.cpp
   sequence_catalog_entry.cpp
+  model_catalog_entry.cpp
   table_catalog_entry.cpp
   column_dependency_manager.cpp
   scalar_function_catalog_entry.cpp

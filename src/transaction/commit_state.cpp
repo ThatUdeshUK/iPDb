@@ -38,6 +38,7 @@ void CommitState::CommitEntryDrop(CatalogEntry &entry, data_ptr_t dataptr) {
 	case CatalogType::VIEW_ENTRY:
 	case CatalogType::INDEX_ENTRY:
 	case CatalogType::SEQUENCE_ENTRY:
+	case CatalogType::MODEL_ENTRY:
 	case CatalogType::TYPE_ENTRY:
 	case CatalogType::MACRO_ENTRY:
 	case CatalogType::TABLE_MACRO_ENTRY:
@@ -80,6 +81,7 @@ void CommitState::CommitEntryDrop(CatalogEntry &entry, data_ptr_t dataptr) {
 			case CatalogType::VIEW_ENTRY:
 			case CatalogType::INDEX_ENTRY:
 			case CatalogType::SEQUENCE_ENTRY:
+			case CatalogType::MODEL_ENTRY:
 			case CatalogType::TYPE_ENTRY:
 			case CatalogType::MACRO_ENTRY:
 			case CatalogType::TABLE_MACRO_ENTRY:

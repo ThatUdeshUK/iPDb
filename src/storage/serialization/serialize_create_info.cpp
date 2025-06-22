@@ -13,6 +13,7 @@
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
 #include "duckdb/parser/parsed_data/create_sequence_info.hpp"
+#include "duckdb/parser/parsed_data/create_model_info.hpp"
 
 namespace duckdb {
 
@@ -50,6 +51,9 @@ unique_ptr<CreateInfo> CreateInfo::Deserialize(Deserializer &deserializer) {
 		break;
 	case CatalogType::MACRO_ENTRY:
 		result = CreateMacroInfo::Deserialize(deserializer);
+		break;
+	case CatalogType::MODEL_ENTRY:
+		result = CreateModelInfo::Deserialize(deserializer);
 		break;
 	case CatalogType::SCHEMA_ENTRY:
 		result = CreateSchemaInfo::Deserialize(deserializer);
@@ -127,6 +131,39 @@ unique_ptr<CreateInfo> CreateMacroInfo::Deserialize(Deserializer &deserializer) 
 	auto extra_functions = deserializer.ReadPropertyWithDefault<vector<unique_ptr<MacroFunction>>>(202, "extra_functions");
 	auto result = duckdb::unique_ptr<CreateMacroInfo>(new CreateMacroInfo(deserializer.Get<CatalogType>(), std::move(function), std::move(extra_functions)));
 	result->name = std::move(name);
+	return std::move(result);
+}
+
+void CreateModelInfo::Serialize(Serializer &serializer) const {
+	CreateInfo::Serialize(serializer);
+	serializer.WritePropertyWithDefault<string>(200, "name", name);
+	serializer.WriteProperty<ModelType>(201, "model_type", model_type);
+	serializer.WritePropertyWithDefault<string>(202, "model_path", model_path);
+	serializer.WritePropertyWithDefault<string>(203, "rel_name", rel_name);
+	serializer.WritePropertyWithDefault<vector<string>>(204, "input_set_names", input_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(205, "exclude_set_names", exclude_set_names);
+	serializer.WritePropertyWithDefault<string>(206, "opt_rel_name", opt_rel_name);
+	serializer.WritePropertyWithDefault<vector<string>>(207, "opt_set_names", opt_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(208, "exclude_opt_set_names", exclude_opt_set_names);
+	serializer.WritePropertyWithDefault<vector<string>>(209, "out_names", out_names);
+	serializer.WritePropertyWithDefault<vector<LogicalType>>(210, "out_types", out_types);
+	serializer.WritePropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", options);
+}
+
+unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<CreateModelInfo>(new CreateModelInfo());
+	deserializer.ReadPropertyWithDefault<string>(200, "name", result->name);
+	deserializer.ReadProperty<ModelType>(201, "model_type", result->model_type);
+	deserializer.ReadPropertyWithDefault<string>(202, "model_path", result->model_path);
+	deserializer.ReadPropertyWithDefault<string>(203, "rel_name", result->rel_name);
+	deserializer.ReadPropertyWithDefault<vector<string>>(204, "input_set_names", result->input_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(205, "exclude_set_names", result->exclude_set_names);
+	deserializer.ReadPropertyWithDefault<string>(206, "opt_rel_name", result->opt_rel_name);
+	deserializer.ReadPropertyWithDefault<vector<string>>(207, "opt_set_names", result->opt_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(208, "exclude_opt_set_names", result->exclude_opt_set_names);
+	deserializer.ReadPropertyWithDefault<vector<string>>(209, "out_names", result->out_names);
+	deserializer.ReadPropertyWithDefault<vector<LogicalType>>(210, "out_types", result->out_types);
+	deserializer.ReadPropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", result->options);
 	return std::move(result);
 }
 

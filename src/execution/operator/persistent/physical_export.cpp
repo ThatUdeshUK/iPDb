@@ -153,6 +153,12 @@ void PhysicalExport::ExtractEntries(ClientContext &context, vector<reference<Sch
 			}
 			result.sequences.push_back(entry);
 		});
+		schema.Scan(context, CatalogType::MODEL_ENTRY, [&](CatalogEntry &entry) {
+			if (entry.internal) {
+				return;
+			}
+			result.models.push_back(entry);
+		});
 		schema.Scan(context, CatalogType::TYPE_ENTRY, [&](CatalogEntry &entry) {
 			if (entry.internal) {
 				return;
@@ -204,6 +210,7 @@ catalog_entry_vector_t PhysicalExport::GetNaiveExportOrder(ClientContext &contex
 	size += entries.schemas.size();
 	size += entries.custom_types.size();
 	size += entries.sequences.size();
+	size += entries.models.size();
 	size += entries.tables.size();
 	size += entries.views.size();
 	size += entries.indexes.size();
@@ -211,6 +218,7 @@ catalog_entry_vector_t PhysicalExport::GetNaiveExportOrder(ClientContext &contex
 	catalog_entries.reserve(size);
 	AddEntries(catalog_entries, entries.schemas);
 	AddEntries(catalog_entries, entries.sequences);
+	AddEntries(catalog_entries, entries.models);
 	AddEntries(catalog_entries, entries.custom_types);
 	AddEntries(catalog_entries, entries.tables);
 	AddEntries(catalog_entries, entries.macros);

@@ -48,6 +48,7 @@ void WALWriteState::WriteCatalogEntry(CatalogEntry &entry, data_ptr_t dataptr) {
 	case CatalogType::VIEW_ENTRY:
 	case CatalogType::INDEX_ENTRY:
 	case CatalogType::SEQUENCE_ENTRY:
+	case CatalogType::MODEL_ENTRY:
 	case CatalogType::TYPE_ENTRY:
 	case CatalogType::MACRO_ENTRY:
 	case CatalogType::TABLE_MACRO_ENTRY:
@@ -82,6 +83,10 @@ void WALWriteState::WriteCatalogEntry(CatalogEntry &entry, data_ptr_t dataptr) {
 			case CatalogType::SEQUENCE_ENTRY:
 				// CREATE SEQUENCE statement
 				log.WriteCreateSequence(parent.Cast<SequenceCatalogEntry>());
+				break;
+			case CatalogType::MODEL_ENTRY:
+				// CREATE MODEL statement
+				log.WriteCreateModel(parent.Cast<ModelCatalogEntry>());
 				break;
 			case CatalogType::TYPE_ENTRY:
 				// CREATE TYPE statement
@@ -124,6 +129,9 @@ void WALWriteState::WriteCatalogEntry(CatalogEntry &entry, data_ptr_t dataptr) {
 			break;
 		case CatalogType::SEQUENCE_ENTRY:
 			log.WriteDropSequence(entry.Cast<SequenceCatalogEntry>());
+			break;
+		case CatalogType::MODEL_ENTRY:
+			log.WriteDropModel(entry.Cast<ModelCatalogEntry>());
 			break;
 		case CatalogType::MACRO_ENTRY:
 			log.WriteDropMacro(entry.Cast<ScalarMacroCatalogEntry>());
