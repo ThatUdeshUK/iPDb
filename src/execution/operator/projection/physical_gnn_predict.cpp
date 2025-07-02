@@ -19,7 +19,7 @@ public:
 	PredictGNNGlobalState(ClientContext &context, BufferManager &buffer_manager_p, unique_ptr<Predictor> p,
 	                      const vector<LogicalType> &node_types, unique_ptr<PredictStats> s)
 	    : buffer_manager(buffer_manager_p), predictor(std::move(p)), stats(std::move(s)) {
-		layout.Initialize(node_types, false);
+		layout->Initialize(node_types, false);
 		data_collection = make_uniq<TupleDataCollection>(buffer_manager, layout);
 	}
 
@@ -30,7 +30,7 @@ public:
 	unique_ptr<Predictor> predictor;
 
 	BufferManager &buffer_manager;
-	TupleDataLayout layout;
+	shared_ptr<TupleDataLayout> layout;
 	unique_ptr<TupleDataCollection> data_collection;
 
 	vector<float> node_data;
@@ -43,12 +43,12 @@ public:
 	PredictGNNLocalState(ExecutionContext &context, BufferManager &buffer_manager_p,
 	                     const vector<LogicalType> &node_types)
 	    : buffer_manager(buffer_manager_p) {
-		layout.Initialize(node_types, false);
+		layout->Initialize(node_types, false);
 		data_collection = make_uniq<TupleDataCollection>(buffer_manager, layout);
 	}
 
 	BufferManager &buffer_manager;
-	TupleDataLayout layout;
+	shared_ptr<TupleDataLayout> layout;
 	unique_ptr<TupleDataCollection> data_collection;
 
 	vector<float> node_data;
@@ -62,8 +62,21 @@ public:
 	TupleDataScanState state;
 };
 
-PhysicalGNNPredict::PhysicalGNNPredict(vector<LogicalType> types_p, idx_t estimated_cardinality)
-    : PhysicalOperator(PhysicalOperatorType::PREDICT, std::move(types_p), estimated_cardinality) {
+PhysicalGNNPredict::PhysicalGNNPredict(vector<LogicalType> types_p, PhysicalOperator &node_child, PhysicalOperator &edge_child,
+									   idx_t node_cardinality, idx_t edge_cardinality, BoundPredictInfo bound_predict_p)
+    : PhysicalOperator(PhysicalOperatorType::PREDICT, std::move(types_p), node_cardinality) {
+	children.push_back(node_child);
+	children.push_back(edge_child);
+	
+	model_type = bound_predict_p.model_type;
+	model_path = std::move(bound_predict_p.model_path);
+	num_nodes = node_cardinality;
+	num_edges = edge_cardinality;
+	node_mask = std::move(bound_predict_p.input_mask);
+	edge_mask = std::move(bound_predict_p.opt_mask);
+	node_types = std::move(bound_predict_p.input_set_types);
+	result_set_types = std::move(bound_predict_p.result_set_types);
+	options = std::move(bound_predict_p.options);
 }
 
 unique_ptr<Predictor> PhysicalGNNPredict::InitPredictor() const {
@@ -130,14 +143,14 @@ void PhysicalGNNPredict::BuildPipelines(Pipeline &current, MetaPipeline &meta_pi
 
 	// on the RHS (build side), we construct a child MetaPipeline with this operator as its sink
 	auto &child_meta_pipeline = meta_pipeline.CreateChildMetaPipeline(current, *this);
-	child_meta_pipeline.Build(*this->children[1]);
+	child_meta_pipeline.Build(this->children[1]);
 
 	auto &child_meta_pipeline2 = meta_pipeline.CreateChildMetaPipeline(current, *this);
-	child_meta_pipeline2.Build(*this->children[0]);
+	child_meta_pipeline2.Build(this->children[0]);
 }
 
 vector<const_reference<PhysicalOperator>> PhysicalGNNPredict::GetSources() const {
-	auto result = children[0]->GetSources();
+	auto result = children[0].get().GetSources();
 	if (IsSource()) {
 		result.push_back(*this);
 	}

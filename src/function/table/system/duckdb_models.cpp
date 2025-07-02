@@ -148,7 +148,7 @@ void DuckDBModelsFunction(ClientContext &context, TableFunctionInput &data_p, Da
 		// output_count, LogicalType::BIGINT
 		output.SetValue(col++, count, Value::BIGINT(NumericCast<int64_t>(model_data.out_types.size())));
 		// options MAP(VARCHAR, VARCHAR)
-		unordered_map<string, string> option_out;
+		InsertionOrderPreservingMap<string> option_out;
 		for (const auto &element : model_data.options) {
 			stringstream ss;
 			ss << element.second;

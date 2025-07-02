@@ -163,7 +163,6 @@ static const ConfigurationOption internal_options[] = {
     DUCKDB_LOCAL(ProfileOutputSetting),
     DUCKDB_LOCAL_ALIAS("profiling_output", ProfileOutputSetting),
     DUCKDB_LOCAL(ProfilingModeSetting),
-    DUCKDB_LOCAL(CustomProfilingSettings),
     DUCKDB_LOCAL(MLBatchSizeSetting),
     DUCKDB_LOCAL(LLMMaxTokensSetting),
     DUCKDB_LOCAL(ONNXExecutionModeSetting),

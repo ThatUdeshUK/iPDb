@@ -1315,6 +1315,96 @@ Value ProfilingModeSetting::GetSetting(const ClientContext &context) {
 	return Value(config.enable_detailed_profiling ? "detailed" : "standard");
 }
 
+//===--------------------------------------------------------------------===//
+// ML Batch Size Output
+//===--------------------------------------------------------------------===//
+void MLBatchSizeSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).ml_batch_size = ClientConfig().ml_batch_size;
+}
+
+void MLBatchSizeSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	auto parameter = NumericCast<idx_t>(input.GetValue<int64_t>());
+	config.ml_batch_size = parameter;
+}
+
+Value MLBatchSizeSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BIGINT(NumericCast<int64_t>(config.ml_batch_size));
+}
+
+//===--------------------------------------------------------------------===//
+// LLM Max Tokens Output
+//===--------------------------------------------------------------------===//
+void LLMMaxTokensSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).llm_max_tokens = ClientConfig().llm_max_tokens;
+}
+
+void LLMMaxTokensSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	auto parameter = NumericCast<idx_t>(input.GetValue<int64_t>());
+	config.llm_max_tokens = parameter;
+}
+
+Value LLMMaxTokensSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BIGINT(NumericCast<int64_t>(config.llm_max_tokens));
+}
+
+//===--------------------------------------------------------------------===//
+// Excecution Mode
+//===--------------------------------------------------------------------===//
+void ONNXExecutionModeSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).onnx_execution_mode = ClientConfig().onnx_execution_mode;
+}
+
+void ONNXExecutionModeSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	auto parameter = NumericCast<idx_t>(input.GetValue<int64_t>());
+	config.onnx_execution_mode = parameter;
+}
+
+Value ONNXExecutionModeSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BIGINT(NumericCast<int64_t>(config.onnx_execution_mode));
+}
+
+//===--------------------------------------------------------------------===//
+// ONNX Intra Thread Count
+//===--------------------------------------------------------------------===//
+void ONNXIntraTCSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).onnx_intra_tc = ClientConfig().onnx_intra_tc;
+}
+
+void ONNXIntraTCSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	auto parameter = NumericCast<idx_t>(input.GetValue<int64_t>());
+	config.onnx_intra_tc = parameter;
+}
+
+Value ONNXIntraTCSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BIGINT(NumericCast<int64_t>(config.onnx_intra_tc));
+}
+
+//===--------------------------------------------------------------------===//
+// ONNX Inter Thread Count
+//===--------------------------------------------------------------------===//
+void ONNXInterTCSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).onnx_inter_tc = ClientConfig().onnx_inter_tc;
+}
+
+void ONNXInterTCSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	auto parameter = NumericCast<idx_t>(input.GetValue<int64_t>());
+	config.onnx_inter_tc = parameter;
+}
+
+Value ONNXInterTCSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BIGINT(NumericCast<int64_t>(config.onnx_inter_tc));
+}
+
 //===----------------------------------------------------------------------===//
 // Progress Bar Time
 //===----------------------------------------------------------------------===//

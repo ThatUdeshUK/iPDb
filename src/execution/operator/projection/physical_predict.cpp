@@ -41,9 +41,16 @@ public:
 	}
 };
 
-PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, unique_ptr<PhysicalOperator> child)
-    : PhysicalOperator(PhysicalOperatorType::PREDICT, std::move(types_p), child->estimated_cardinality) {
-	children.push_back(std::move(child));
+PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, PhysicalOperator &child, BoundPredictInfo bound_predict_p)
+    : PhysicalOperator(PhysicalOperatorType::PREDICT, std::move(types_p), child.estimated_cardinality) {
+	children.push_back(child);
+
+	model_type = bound_predict_p.model_type;
+	model_path = std::move(bound_predict_p.model_path);
+	prompt = std::move(bound_predict_p.prompt);
+	input_mask = std::move(bound_predict_p.input_mask);
+	result_set_types = std::move(bound_predict_p.result_set_types);
+	options = std::move(bound_predict_p.options);
 }
 
 unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {

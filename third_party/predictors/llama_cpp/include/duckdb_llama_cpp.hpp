@@ -9,6 +9,7 @@
 #include "duckdb/common/string_util.hpp"
 
 #include "llama.h"
+#include "openai.hpp"
 
 #define OPT_TIMING 1
 
@@ -19,6 +20,7 @@ public:
     int n_predict;
     std::string prompt;
     std::string grammar;
+    bool is_api;
 
     llama_model * model;
     const llama_vocab * vocab;

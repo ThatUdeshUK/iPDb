@@ -13,8 +13,10 @@
 #include "duckdb/common/common.hpp"
 #include "duckdb/common/enums/model_type.hpp"
 #include "duckdb/planner/expression.hpp"
+#include "duckdb/planner/tableref/bound_predictref.hpp"
 
 namespace duckdb {
+
 typedef enum PredictorTask { 
 	PREDICT_TABULAR_TASK = 0, 
 	PREDICT_LM_TASK = 1, 
@@ -69,7 +71,7 @@ public:
 //! PhysicalPredict implements the operator physical PREDICT operation
 class PhysicalPredict : public PhysicalOperator {
 public:
-	PhysicalPredict(vector<LogicalType> types, unique_ptr<PhysicalOperator> child);
+	PhysicalPredict(vector<LogicalType> types, PhysicalOperator &child, BoundPredictInfo bound_predict_p);
 
 	ModelType model_type;
 	string model_path;
@@ -102,7 +104,8 @@ public:
 	static constexpr const PhysicalOperatorType TYPE = PhysicalOperatorType::PREDICT;
 
 public:
-	PhysicalGNNPredict(vector<LogicalType> types, idx_t estimated_cardinality);
+	PhysicalGNNPredict(vector<LogicalType> types, PhysicalOperator &node_child, PhysicalOperator &edge_child,
+					   idx_t node_cardinality, idx_t edge_cardinality, BoundPredictInfo bound_predict_p);
 
 	ModelType model_type;
 	string model_path;

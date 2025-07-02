@@ -487,11 +487,11 @@ void OperatorProfiler::Flush(const PhysicalOperator &phys_op) {
 }
 
 void OperatorProfiler::Flush(const PhysicalOperator &phys_op, std::map<std::string, long> &stats_map) {
-	auto entry = timings.find(phys_op);
-	if (entry == timings.end()) {
+	auto entry = operator_infos.find(phys_op);
+	if (entry == operator_infos.end()) {
 		return;
 	}
-	auto &operator_timing = timings.find(phys_op)->second;
+	auto &operator_timing = operator_infos.find(phys_op)->second;
 	operator_timing.append_extra_info = "";
 	for (const auto &x : stats_map) {
 		operator_timing.append_extra_info += "|" + x.first + ":" + std::to_string(x.second);
