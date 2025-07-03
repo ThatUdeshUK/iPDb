@@ -61,19 +61,26 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 	this->model_path = model_path;
 	std::cout << "Model Path: " << model_path << std::endl;
 
-	// init model
-	llama_model_params model_params = llama_model_default_params();
+	this->is_api = !(model_path.find(".gguf") != std::string::npos);
+	std::cout << "Is API Model: " << this->is_api << std::endl;
 
-	this->model = llama_model_load_from_file(model_path.c_str(), model_params);
-	if (this->model == NULL) {
-		throw InternalException("Unable to load model: " + model_path);
-	}
-
-	// init vocabulary
-	this->vocab = llama_model_get_vocab(model);
-
-	GenerateGrammar();
-	InitializeSampler();
+	if (this->is_api) {
+		openai::start();
+	} else {
+		// init model
+		llama_model_params model_params = llama_model_default_params();
+	
+		this->model = llama_model_load_from_file(model_path.c_str(), model_params);
+		if (this->model == NULL) {
+			throw InternalException("Unable to load model: " + model_path);
+		}
+	
+		// init vocabulary
+		this->vocab = llama_model_get_vocab(model);
+	
+		GenerateGrammar();
+		InitializeSampler();
+	} 
 
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -82,15 +89,6 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 }
 
 void LlamaCppPredictor::GenerateGrammar() {
-	// std::string value = "/scratch1/ukumaras/projects/duckml/third_party/predictors/llama_cpp/grammar.gbnf";
-	// std::ifstream file(value);
-	// if (!file) {
-	// 	throw std::runtime_error("error: failed to open file: " + value);
-	// }
-	// std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(),
-	//           std::back_inserter(this->grammar));
-    // static const std::regex re(R"(^\{[sn]:\w+\}$)");
-
 	static const std::regex re(R"(\{[sd]:\w+\})");
 	auto words_begin = std::sregex_iterator(this->prompt.begin(), this->prompt.end(), re);
     auto words_end = std::sregex_iterator();
@@ -353,14 +351,6 @@ void LlamaCppPredictor::PredictChunk(DataChunk &input, DataChunk &output, int ro
 		int lrow = std::min(frow + batch_size, rows); // Offset of last row
 		int num_rows = lrow - frow;                   // Number of rows in the batch
 
-		// std::array<int64_t, 2> input_shape_ {num_rows, (long long)input_mask.size()};
-		// std::array<int64_t, 2> output_shape_ {num_rows, output_size};
-
-		// TODO: Change to accomodate input and output of the LLM call.
-		// Currently, vectors of columns are converted to a single row-major vector.
-		// The following initialize (float) vectors for input and output
-		// Populate the input vector with tuple data (of projected feature columns)
-		// from the `input` chunk.
 		int cols = input_mask.size();
 
 #if OPT_TIMING
@@ -371,20 +361,29 @@ void LlamaCppPredictor::PredictChunk(DataChunk &input, DataChunk &output, int ro
 #endif
 
 		// TODO: Make the LLM API call, here.
-		// Update the `output_data` vector.
 		for (int i = frow; i < lrow; ++i) {
 			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
-			// std::string rewritten = StringUtil::Format("%s. Give the result in a formatted output as follows:
-			// [location='result', role='result']. Set location to nan if not found. Input=\"%s\"", this->prompt,
-			// input_str); std::string rewritten = StringUtil::Format("%s. Description=\"%s\"", this->prompt,
-			// input_str);
+			
 			std::string rewritten = StringUtil::Format("%s input=\"%s\"", this->prompt, input_str);
 			// std::string rewritten = StringUtil::Format("<s>[INST] %s input=\"%s\" [/INST]", this->prompt, input_str);
-			auto response = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
-			output.SetValue(0, i, Value(response));
 
-			llama_sampler_reset(this->grmr);
-			llama_sampler_reset(this->chain);
+			if (this->is_api) {
+				auto request = R"({
+					"model": ")" + this->model_name + R"(",
+					"prompt": ")" + rewritten + R"(",
+					"max_tokens": 64,
+					"temperature": 0
+				})"_json;
+				auto completion = openai::completion().create();
+				std::cout << "Response is:\n" << completion.dump(2) << '\n'; 
+				output.SetValue(0, i, Value(completion.dump(2)));
+			} else {
+				auto response = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
+				output.SetValue(0, i, Value(response));
+
+				llama_sampler_reset(this->grmr);
+				llama_sampler_reset(this->chain);
+			}
 		}
 
 #if OPT_TIMING
