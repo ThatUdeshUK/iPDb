@@ -59,7 +59,7 @@ public:
 	                            int output_size, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols,
 	                           int output_size) {};
-	virtual void PredictChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
+	virtual void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
 	                          int output_size, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 	                        unique_ptr<PredictStats> &stats) {};

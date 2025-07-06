@@ -43,7 +43,7 @@ void TorchPredictor::PredictVector(std::vector<float> &input, std::vector<float>
     output.insert(output.end(), out.data_ptr<float>(), out.data_ptr<float>() + out.numel());
 }
 
-void TorchPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows, std::vector<int> &input_mask,
+void TorchPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, std::vector<int> &input_mask,
                                   int output_size, PredictStats &stats) {
 #if OPT_TIMING
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

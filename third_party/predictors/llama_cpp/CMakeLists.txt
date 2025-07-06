@@ -16,8 +16,9 @@ message(STATUS "UTF8LIB Libs: ${UTF8PROC_LIB}")
 find_library(LIBLLAMA_LIB llama HINTS "$ENV{LIBLLAMA_INSTALL_PREFIX}/bin")
 message(STATUS "LLAMA_LIB Libs: ${LIBLLAMA_LIB}")
 
-include_directories(include)
-add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp)
+include_directories(include ${DUCKDB_MODULE_BASE_DIR}/third_party/httplib)
+
+add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp https_client.cpp)
 
 target_link_libraries(duckdb_llama_cpp PUBLIC ${UTF8PROC_LIB} ${LIBLLAMA_LIB})
 target_include_directories(duckdb_llama_cpp PUBLIC ${UTF8PROC_INCLUDE_DIRS})

@@ -8,7 +8,7 @@ You can get an up and running instance of `duckml` with either **Building from t
 
 ### From the source
 
-#### Step 1 - Setup ONNX
+#### Step 1.1 - Prerequisite (Setup ONNX)
 
 > This step is optional if you are only inferencing with LLMs (via API or local models).
 
@@ -22,7 +22,7 @@ Detailed instructions are available here [https://onnxruntime.ai/docs/build/infe
 
 Download and extract a compatible release for your development platform from the `onnxruntime` GitHub [releases](https://github.com/microsoft/onnxruntime/releases/tag/v1.19.2).  
 
-> Above link directs to the version `1.19.2` instead of the latest version as this is the version test to work (on `linux-amd64`).
+> Above link directs to the version `1.19.2` instead of the latest version as this is the version tested to work (on `linux-amd64`).
 
 For both of the above options, set the ONNX runtime installed path as a env variable.
 
@@ -30,24 +30,59 @@ For both of the above options, set the ONNX runtime installed path as a env vari
 export ONNX_INSTALL_PREFIX=<onnx_runtime_installed_path>
 ```
 
+#### Step 1.2 - Prerequisite (llama.cpp)
+
+> This step is optional if you are only inferencing with pre-trained ONNX models.
+
+First, fetch and build the `llama.cpp` library which we'll use for inferencing local large language models. You have multiple options to get an up and running instance of the `llama.cpp` library.
+
+##### Build from stratch
+
+Clone the `llama.cpp` repository.
+
+```bash
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+```
+
+Build for the project using CMake (CPU build).
+
+```bash
+cmake -B build
+cmake --build build --config Release -j 8
+```
+
+> `Release` builds prefered to achive the best inference performance.
+
+Please refer to the detailed building guide [here](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md) in the `llama.cpp` repository for other backend (i.e. GPU), debug builds and trobleshooting.
+
+Set the `llama.cpp` installed path as a env variable.
+
+```bash
+export LIBLLAMA_INSTALL_PREFIX="<llama_cpp_repo>/build"
+```
+
 #### Step 2 - Build our duckml instance
 
 `duckdb` use a `make` script for the builds. We have extended that with additional parameters to configure `duckml`.
 
 ```
-make debug GEN=ninja -j12 ENABLE_PREDICT=1 PREDICTOR_IMPL=onnx DISABLE_SANITIZER=1
+make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IMPL=onnx DISABLE_SANITIZER=1
 ```
 
 ##### Build Options
 
 - `GEN=ninja -j12` (optional, drop if don't have ninja setup) use the ninja for build parallelization (w/ -j12 for 12 workers).
+- `CORE_EXTENSIONS='httpfs'` enable the `httpfs` extension used for `https` communitation for API LLM calls.
 - `ENABLE_PREDICT=1` enables the ML extension.
 - `PREDICTOR_IMPL=onnx` choose the internal ML platform. Available options,
-  -  `onnx` - Use ONNX Runtime to infer pre-trained `.onnx` models.
+  -  `onnx` - Use ONNX Runtime to infer pre-trained `.onnx` models (Step 1.1 required).
+  -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format or use OpenAI models via the network (Step 1.2 required).
   -  `torchscript` - Use TorchScript to infer pre-trained `pytorch` models exported with TorchScript.
-  -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format.
 
 ### With Docker
+
+> Currently Docker script is written build only for ONNX model support. Please build from scratch to build for LLM inference.
 
 Make sure Docker is set up correctly.
 

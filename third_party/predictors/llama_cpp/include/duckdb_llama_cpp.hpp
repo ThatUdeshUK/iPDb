@@ -9,7 +9,6 @@
 #include "duckdb/common/string_util.hpp"
 
 #include "llama.h"
-#include "openai.hpp"
 
 #define OPT_TIMING 1
 
@@ -31,15 +30,17 @@ public:
 public:
     LlamaCppPredictor(std::string prompt);
     ~LlamaCppPredictor() {
-        llama_sampler_free(grmr);
-        llama_sampler_free(chain);
-        llama_model_free(model);
+        if (!is_api) {
+            llama_sampler_free(grmr);
+            llama_sampler_free(chain);
+            llama_model_free(model);
+        }
     }
 
 public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
-    void PredictChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
 
 private:
     void GenerateGrammar();

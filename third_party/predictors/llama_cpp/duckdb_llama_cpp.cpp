@@ -1,6 +1,8 @@
 #include "duckdb_llama_cpp.hpp"
 
+#include "duckdb/main/extension_helper.hpp"
 #include "PerfEvent.hpp"
+#include "openai.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -64,9 +66,7 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 	this->is_api = !(model_path.find(".gguf") != std::string::npos);
 	std::cout << "Is API Model: " << this->is_api << std::endl;
 
-	if (this->is_api) {
-		openai::start();
-	} else {
+	if (!this->is_api) {
 		// init model
 		llama_model_params model_params = llama_model_default_params();
 	
@@ -332,7 +332,7 @@ std::string generate(llama_model *model, const llama_vocab *vocab, llama_sampler
  * @param output_size number of prediction columns.
  * @param stats statistics for profiling. Method should update `predict` with the time this method use.
  */
-void LlamaCppPredictor::PredictChunk(DataChunk &input, DataChunk &output, int rows,
+void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows,
                                      const std::vector<idx_t> &input_mask, int output_size,
                                      unique_ptr<PredictStats> &stats) {
 	// Implemented to support mini-batches (i.e., batch_size < vector_size).
@@ -364,19 +364,31 @@ void LlamaCppPredictor::PredictChunk(DataChunk &input, DataChunk &output, int ro
 		for (int i = frow; i < lrow; ++i) {
 			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
 			
-			std::string rewritten = StringUtil::Format("%s input=\"%s\"", this->prompt, input_str);
+			std::string rewritten = StringUtil::Format("%s input=%s", this->prompt, input_str);
 			// std::string rewritten = StringUtil::Format("<s>[INST] %s input=\"%s\" [/INST]", this->prompt, input_str);
 
 			if (this->is_api) {
-				auto request = R"({
-					"model": ")" + this->model_name + R"(",
-					"prompt": ")" + rewritten + R"(",
-					"max_tokens": 64,
-					"temperature": 0
-				})"_json;
-				auto completion = openai::completion().create();
-				std::cout << "Response is:\n" << completion.dump(2) << '\n'; 
-				output.SetValue(0, i, Value(completion.dump(2)));
+				nlohmann::json request;
+
+				request["model"] = this->model_path;
+				request["input"] = rewritten;
+				// request["max_tokens"] = 64;
+				// request["temperature"] = 0;
+
+				// std::cout << request.dump(2) << std::endl;
+
+				auto &db = DatabaseInstance::GetDatabase(context.client);
+
+				auto &api = openai::start(db);
+				auto completion = api.post("responses", request);
+				std::string llm_out{};
+				for (auto &msg: completion["output"]) {
+					if (msg["type"] == "message") {
+						llm_out = msg["content"][0]["text"].dump();
+						// std::cout << "Output: " << llm_out << '\n'; 
+					}
+				}
+				output.SetValue(0, i, Value(llm_out));
 			} else {
 				auto response = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
 				output.SetValue(0, i, Value(response));

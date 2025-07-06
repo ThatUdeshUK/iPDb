@@ -36,7 +36,7 @@ public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
     void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) override;
-    void PredictChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
     void PredictLM(std::string &input, std::vector<float> &output, int output_size) override;
     void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
     void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,

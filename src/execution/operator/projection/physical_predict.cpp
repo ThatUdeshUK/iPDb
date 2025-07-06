@@ -89,13 +89,13 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	auto &predictor = *state.predictor.get();
 #if CHUNK_PRED
 	if (predictor.task == PREDICT_TABULAR_TASK) {
-		predictor.PredictChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                       state.stats);
 	} else if (predictor.task == PREDICT_LM_TASK) {
 		predictor.PredictLMChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                         state.stats);
 	} else if (predictor.task == PREDICT_LLM_TASK) {
-		predictor.PredictChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                       state.stats);
 	}
 #elif VEC_PRED
