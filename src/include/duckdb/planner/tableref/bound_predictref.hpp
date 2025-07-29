@@ -21,6 +21,8 @@ struct BoundPredictInfo {
 	string model_path;
 	//! The prompt for llm tasks
 	string prompt;
+	//! The base api for online LLM API
+	string base_api;
 	//! The set of types
 	vector<LogicalType> types;
 	//! Input mask for feature column

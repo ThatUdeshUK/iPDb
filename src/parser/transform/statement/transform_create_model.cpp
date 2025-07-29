@@ -17,14 +17,29 @@ public:
 	vector<string> opt_set_names;
 	vector<string> exclude_opt_set_names;
 
+	vector<string> out_names;
+	vector<LogicalType> out_types;
+	case_insensitive_map_t<Value> options;
+
 	bool on_prompt;
+	string base_api;
 };
 
 unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModelOn &stmt) {
 	auto n = make_uniq<ModelOnInfo>();
 
+	if (stmt.options) {
+		for (auto c = stmt.options->head; c != nullptr; c = lnext(c)) {
+			auto nadef = PGPointerCast<duckdb_libpgquery::PGNamedArgExpr>(c->data.ptr_value);
+			auto naentry = TransformNamedArg(*nadef)->Cast<ConstantExpression>();
+
+			n->options.insert({std::move(naentry.alias), std::move(naentry.value)});
+		}
+	}
+
 	if (stmt.on_prompt) {
 		n->on_prompt = stmt.on_prompt;
+		n->base_api = stmt.base_api;
 		return n;
 	}
 
@@ -61,6 +76,16 @@ unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModel
 		}
 	}
 
+	for (auto c = stmt.result_set->head; c != nullptr; c = lnext(c)) {
+		auto cdef = PGPointerCast<duckdb_libpgquery::PGColumnDef>(c->data.ptr_value);
+		auto centry = TransformColumnDefinition(*cdef);
+		if (cdef->constraints) {
+			throw ParserException("Result set must not contain constraints!");
+		}
+		n->out_names.push_back(centry.GetName());
+		n->out_types.push_back(centry.GetType());
+	}
+
 	return n;
 }
 
@@ -77,31 +102,22 @@ unique_ptr<CreateStatement> Transformer::TransformCreateModel(duckdb_libpgquery:
 	info->model_path = stmt.model_path;
 
 	auto model_on = TransformModelOn(PGCast<duckdb_libpgquery::PGModelOn>(*stmt.model_on));
-	info->rel_name = model_on->rname.name;
-	info->input_set_names = std::move(model_on->input_set_names);
-	info->exclude_set_names = std::move(model_on->exclude_set_names);
-	info->opt_rel_name = model_on->oname.name;
-	info->opt_set_names = std::move(model_on->opt_set_names);
-	info->exclude_opt_set_names = std::move(model_on->exclude_opt_set_names);
+	if (model_on->on_prompt) {
+		info->on_prompt = true;
+		info->base_api = std::move(model_on->base_api);
+	} else {
+		info->rel_name = model_on->rname.name;
+		info->input_set_names = std::move(model_on->input_set_names);
+		info->exclude_set_names = std::move(model_on->exclude_set_names);
+		info->opt_rel_name = model_on->oname.name;
+		info->opt_set_names = std::move(model_on->opt_set_names);
+		info->exclude_opt_set_names = std::move(model_on->exclude_opt_set_names);
 
-	for (auto c = stmt.result_set->head; c != nullptr; c = lnext(c)) {
-		auto cdef = PGPointerCast<duckdb_libpgquery::PGColumnDef>(c->data.ptr_value);
-		auto centry = TransformColumnDefinition(*cdef);
-		if (cdef->constraints) {
-			throw ParserException("Result set must not contain constraints!");
-		}
-		info->out_names.push_back(centry.GetName());
-		info->out_types.push_back(centry.GetType());
+		info->out_names = std::move(model_on->out_names);
+		info->out_types = std::move(model_on->out_types);
+		info->on_prompt = false;
 	}
-
-	if (stmt.options) {
-		for (auto c = stmt.options->head; c != nullptr; c = lnext(c)) {
-			auto nadef = PGPointerCast<duckdb_libpgquery::PGNamedArgExpr>(c->data.ptr_value);
-			auto naentry = TransformNamedArg(*nadef)->Cast<ConstantExpression>();
-
-			info->options.insert({std::move(naentry.alias), std::move(naentry.value)});
-		}
-	}
+	info->options = std::move(model_on->options);
 
 	info->temporary = !stmt.model->relpersistence;
 	info->on_conflict = TransformOnConflict(stmt.onconflict);

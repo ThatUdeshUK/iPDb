@@ -242,7 +242,7 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 }
 
 void ONNXPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
-								 int output_size, unique_ptr<PredictStats> &stats) {
+								 const std::vector<std::string>& output_names, int output_size, unique_ptr<PredictStats> &stats) {
  	int rounds = rows / batch_size;
 	if (rows % batch_size != 0)
 		rounds++;

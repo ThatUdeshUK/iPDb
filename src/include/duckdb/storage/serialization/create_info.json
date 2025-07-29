@@ -370,6 +370,16 @@
         "id": 211,
         "name": "options",
         "type": "case_insensitive_map_t<Value>"
+      },
+      {
+        "id": 212,
+        "name": "on_prompt",
+        "type": "bool"
+      },
+      {
+        "id": 213,
+        "name": "base_api",
+        "type": "string"
       }
     ]
   }

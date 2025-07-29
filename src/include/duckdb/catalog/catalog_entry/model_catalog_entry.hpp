@@ -25,6 +25,10 @@ struct ModelData {
 	string model_path;
 	//! The model type
 	ModelType model_type;
+	//! Is model use a prompt for binding
+	bool on_prompt;
+	//! Base API url for online LLMs
+	string base_api;
 	//! The attached relation
 	string rel_name;
 	//! Input set names

@@ -1798,7 +1798,10 @@ typedef struct PGModelOn {
     PGRangeVar *opt_name;  /* the optional source subtree */
     PGNode *rel_feat;  /* The input set required by the model */
     PGNode *opt_feat;  /* The input set required by the model */
-    bool *on_prompt;  /* The input set required by the model */
+	PGList *result_set;  /* The result set produced by the model */
+	PGList *options;	/* The map of options */
+    bool on_prompt;  /* The input set required by the model */
+	char *base_api; /* the path to the model */
 } PGModelOn;
 
 typedef struct PGCreateModelStmt {
@@ -1807,8 +1810,6 @@ typedef struct PGCreateModelStmt {
 	int model_type; /* the model to create */
 	char *model_path; /* the path to the model */
 	PGNode *model_on; /* entity model attached to */
-	PGList *result_set;  /* The result set produced by the model */
-	PGList *options;	/* The map of options */
 	PGOid ownerId; /* ID of owner, or InvalidOid for default */
 	bool for_identity;
 	PGOnCreateConflict onconflict;        /* what to do on create conflict */

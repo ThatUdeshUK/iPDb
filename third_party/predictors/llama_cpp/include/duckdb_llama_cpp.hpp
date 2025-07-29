@@ -18,17 +18,19 @@ public:
     int n_gl;
     int n_predict;
     std::string prompt;
+    std::string base_api;
     std::string grammar;
     bool is_api;
 
     llama_model * model;
+
     const llama_vocab * vocab;
 
     struct llama_sampler * grmr;
     struct llama_sampler * chain;
 
 public:
-    LlamaCppPredictor(std::string prompt);
+    LlamaCppPredictor(std::string prompt, std::string base_api);
     ~LlamaCppPredictor() {
         if (!is_api) {
             llama_sampler_free(grmr);
@@ -40,7 +42,7 @@ public:
 public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
-    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, const std::vector<std::string>& output_names, const std::vector<LogicalType> &output_types, int output_size, unique_ptr<PredictStats> &stats) override;
 
 private:
     void GenerateGrammar();

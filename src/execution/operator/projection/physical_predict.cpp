@@ -48,7 +48,9 @@ PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, PhysicalOperator &
 	model_type = bound_predict_p.model_type;
 	model_path = std::move(bound_predict_p.model_path);
 	prompt = std::move(bound_predict_p.prompt);
+	base_api = std::move(bound_predict_p.base_api);
 	input_mask = std::move(bound_predict_p.input_mask);
+	result_set_names = std::move(bound_predict_p.result_set_names);
 	result_set_types = std::move(bound_predict_p.result_set_types);
 	options = std::move(bound_predict_p.options);
 }
@@ -59,7 +61,7 @@ unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
-	return make_uniq<LlamaCppPredictor>(prompt);
+	return make_uniq<LlamaCppPredictor>(prompt, base_api);
 #else
 	return nullptr;
 #endif
@@ -89,13 +91,13 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	auto &predictor = *state.predictor.get();
 #if CHUNK_PRED
 	if (predictor.task == PREDICT_TABULAR_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, result_set_names, result_set_types, (int)result_set_types.size(),
 		                       state.stats);
 	} else if (predictor.task == PREDICT_LM_TASK) {
 		predictor.PredictLMChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
 		                         state.stats);
 	} else if (predictor.task == PREDICT_LLM_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, result_set_names, result_set_types, (int)result_set_types.size(),
 		                       state.stats);
 	}
 #elif VEC_PRED

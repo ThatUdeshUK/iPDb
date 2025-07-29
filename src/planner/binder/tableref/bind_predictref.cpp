@@ -6,6 +6,8 @@
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 
+#include <regex>
+
 namespace duckdb {
 
 struct BindModelData {
@@ -39,6 +41,48 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 	result->bound_predict.model_type = stored_model_data.model_type;
 	result->bound_predict.model_path = stored_model_data.model_path;
 	result->bound_predict.options = stored_model_data.options;
+	if (stored_model_data.on_prompt) {
+		result->bound_predict.base_api = stored_model_data.base_api;
+
+		// Infer input output columns from the PROMPT
+		static const std::regex out_re(R"(\{[sd]:\w+\})");
+		auto words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), out_re);
+		auto words_end = std::sregex_iterator();
+
+		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+			std::smatch match = *i;
+			std::string match_str = match.str();
+			auto attr = match_str.substr(3, match_str.size() - 4);
+			auto type = match_str[1];
+			
+			stored_model_data.out_names.push_back(attr);
+			
+			LogicalType out_type;
+			switch (type) {
+				case 's':
+					out_type = LogicalType(LogicalTypeId::VARCHAR);
+					break;
+					case 'd':
+					out_type = LogicalType(LogicalTypeId::INTEGER);
+					break;
+				default:
+					throw BinderException("Unsupported output column type!");
+			}
+			stored_model_data.out_types.push_back(out_type);
+		}
+
+		static const std::regex in_re(R"(\{[^:]+\})");
+		words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), in_re);
+		words_end = std::sregex_iterator();
+
+		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+			std::smatch match = *i;
+			std::string match_str = match.str();
+			auto attr = match_str.substr(1, match_str.size() - 2);
+			
+			stored_model_data.input_set_names.push_back(attr);
+		}
+	}
 
 	result->bind_index = GenerateTableIndex();
 	result->child_binder = Binder::CreateBinder(context, this);

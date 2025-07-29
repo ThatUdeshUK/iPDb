@@ -25,6 +25,11 @@ struct CreateModelInfo : public CreateInfo {
 	//! The path of the stored model
 	string model_path;
 
+	//! Is model use a prompt for binding
+	bool on_prompt;
+	//! Base API url for online LLMs
+	string base_api;
+
 	//! The relation attached to
 	string rel_name;
 	//! Input set names

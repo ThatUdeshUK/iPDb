@@ -52,7 +52,7 @@ using Json = nlohmann::json;
 // OpenAI
 class OpenAI {
 private:
-    duckdb::HTTPSUtil        http_util_ = duckdb::HTTPSUtil();
+    duckdb::HTTPSUtil       http_util_ = duckdb::HTTPSUtil();
     duckdb::HTTPHeaders     headers_;
     std::unique_ptr<duckdb::HTTPParams> params_;
     std::string             token_;
@@ -72,7 +72,7 @@ public:
                     base_url = std::string{env_p} + "/";
                 }
                 else {
-                    base_url = "https://api.openai.com/v1/";
+                    base_url = api_base_url;
                 }
             }
             else {
@@ -192,9 +192,10 @@ inline std::string bool_to_string(const bool b) {
     return ss.str();
 }
 
-inline OpenAI& start(duckdb::DatabaseInstance &db, const std::string& organization = "", bool throw_exception = true, const std::string& api_base_url = "")  {
+inline OpenAI& start(duckdb::DatabaseInstance &db, const std::string& api_base_url = "", const std::string& organization = "", bool throw_exception = true)  {
     std::string token;
     static OpenAI instance{db, token, organization, throw_exception, api_base_url};
+    instance.setBaseUrl(api_base_url);
     return instance;
 }
 

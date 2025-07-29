@@ -439,6 +439,7 @@ option(DISABLE_BUILTIN_EXTENSIONS "Disable linking extensions." FALSE)
 option(GENERATE_EXTENSION_ENTRIES "Build for generating extension_entries.hpp" FALSE)
 option(ENABLE_PREDICT "Build the ML Operator with DuckDB" FALSE)
 option(PREDICTOR_IMPL "Build the ML Operator with DuckDB using specified predictor (torchscript, onnx, llama_cpp)" "")
+option(ENABLE_LLM_API "Build with support for LLM calling via API (requires `httpfs` to be built together)" FALSE)
 option(BUILD_PYTHON "Build the DuckDB Python extension" FALSE)
 option(USER_SPACE "Build the DuckDB Python in the user space" FALSE)
 option(FORCE_QUERY_LOG "If enabled, all queries will be logged to the specified path" OFF)
@@ -1510,6 +1511,7 @@ if(BUILD_PYTHON)
   if(USER_SPACE)
     set(PIP_COMMAND ${PIP_COMMAND} --user)
   endif()
+  message(STATUS "pip command: ${PIP_COMMAND}")
   add_custom_target(
     duckdb_python ALL
     COMMAND ${PIP_COMMAND}

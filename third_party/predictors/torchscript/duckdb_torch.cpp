@@ -44,7 +44,7 @@ void TorchPredictor::PredictVector(std::vector<float> &input, std::vector<float>
 }
 
 void TorchPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, std::vector<int> &input_mask,
-                                  int output_size, PredictStats &stats) {
+                                  const std::vector<std::string>& output_names, int output_size, PredictStats &stats) {
 #if OPT_TIMING
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 #endif

@@ -67,7 +67,7 @@ export LIBLLAMA_INSTALL_PREFIX="<llama_cpp_repo>/build"
 `duckdb` use a `make` script for the builds. We have extended that with additional parameters to configure `duckml`.
 
 ```
-make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IMPL=onnx DISABLE_SANITIZER=1
+make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IMPL=llama_cpp ENABLE_LLM_API=True DISABLE_SANITIZER=1
 ```
 
 ##### Build Options
@@ -79,6 +79,17 @@ make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IM
   -  `onnx` - Use ONNX Runtime to infer pre-trained `.onnx` models (Step 1.1 required).
   -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format or use OpenAI models via the network (Step 1.2 required).
   -  `torchscript` - Use TorchScript to infer pre-trained `pytorch` models exported with TorchScript.
+- `ENABLE_LLM_API=1` Enable LLM calling with OpenAI API compatible APIs.
+
+##### API LLM Calling
+
+Majority of publicly available remote LLMs requires an API key from the respective developer to use it's capabilities. Please, aqquire the respective key and set in the `env` variable as follows so that `DuckML` can indentify it before inference.
+
+```bash
+export OPENAI_API_KEY="<api_key>"
+```
+
+> Add the above in shell config file, i.e., `.bashrc` for permenant availability.
 
 ### With Docker
 
@@ -115,7 +126,9 @@ Run duckdb:
 
 ## Getting Started
 
-Once you have a working DuckML instance, you can experiment with SQL queries that are cable of in-database inference.
+Once you have a working DuckML instance, you can experiment with SQL queries that are capable of in-database inference.
+
+### Simple Example
 
 Within the duckdb shell,
 
@@ -126,12 +139,44 @@ Within the duckdb shell,
 	 ```
 -  Run a prediction query.
 	```
-	SELECT * FROM iris PREDICT iris_cls AS p WHERE p.class = 2;
+	SELECT * FROM PREDICT(iris_cls, iris) AS p WHERE p.class = 2;
 	```
 
 Syntax tree and examples of both `CREATE MODEL` and `PREDICT` statements are available [here](https://drive.google.com/file/d/1j1qS_mJbFlXFbnh4ZLTtmB_KPRfZKG3u/view?usp=sharing) (opened via draw.io). 
 
 Refer to additional examples and experiments in this [repository](https://github.com/ThatUdeshUK/mldb).
+
+### Semantive Predicate with Remote LLM
+
+Make sure you have build `DuckML` with options that enable remote LLM calling,
+
+- `CORE_EXTENSIONS='httpfs'`
+- `ENABLE_PREDICT=1`
+- `PREDICTOR_IMPL=llama_cpp`
+- `ENABLE_LLM_API=1`
+
+Additionally, make sure `OPENAI_API_KEY` environment variable is set with the LLMs API key correctly.
+
+Within the duckdb shell,
+
+- Create and populate tables with data (say, a `job` table with `description` column containing a job listing document).
+-  Upload the model to the database via the `CREATE MODEL` statement.
+	 ```sql
+	 CREATE LLM MODEL o4_mini PATH 'o4-mini' ON PROMPT API 'https://api.openai.com'; 
+	 ```
+	 
+Notice that, `PATH` accepts the model name accepted by the API (e.g., `o4-mini`, `gpt-4.1`).
+
+Furthermore, the model is uploaded as `ON PROMPT`, this results in the the query execution pipeline infering the input/output columns to the LLM from the prompt during the query execution.
+
+Additionally, user should set `API` to the base url of the respective LLM. 
+
+-  Run a prediction query.
+	```sql
+	SELECT * FROM PREDICT(o4_mini, PROMPT 'extract the {s:location} and {d:salary} for job {description}', job);
+	```
+
+Here, notice that we have an additional `PROMPT` clause within the `PREDICT` statement. Inside the prompt, user can define input columns by mentioning each column with braces, i.e., `{column}` (e.g., `{descrtiption}` in the above query). Similarly, user can define the output columns with braces in the format, `{data_type:column_name}` (e.g., `{s:location}` returns a `VARCHAR` column with location and `{d:salary}` returns a `INTEGER` column with salary).
 
 ## Additional Resources
 

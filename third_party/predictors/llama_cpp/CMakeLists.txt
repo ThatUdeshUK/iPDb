@@ -7,21 +7,24 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_path(UTF8PROC_INCLUDE_DIRS utf8proc.h HINTS "$ENV{UTF8PROC_INSTALL_PREFIX}/include")
-message(STATUS "UTF8LIB Include Libs: ${UTF8PROC_INCLUDE_DIRS}")
-
-find_library(UTF8PROC_LIB utf8proc HINTS "$ENV{UTF8PROC_INSTALL_PREFIX}/lib")
-message(STATUS "UTF8LIB Libs: ${UTF8PROC_LIB}")
-
 find_library(LIBLLAMA_LIB llama HINTS "$ENV{LIBLLAMA_INSTALL_PREFIX}/bin")
 message(STATUS "LLAMA_LIB Libs: ${LIBLLAMA_LIB}")
 
 include_directories(include ${DUCKDB_MODULE_BASE_DIR}/third_party/httplib)
 
-add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp https_client.cpp)
+if (ENABLE_LLM_API)
+    add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp https_client.cpp)
+    target_compile_definitions(duckdb_llama_cpp PRIVATE $<$<BOOL:${ENABLE_LLM_API}>:ENABLE_LLM_API>)
+else()    
+    add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp)
+endif()
 
-target_link_libraries(duckdb_llama_cpp PUBLIC ${UTF8PROC_LIB} ${LIBLLAMA_LIB})
-target_include_directories(duckdb_llama_cpp PUBLIC ${UTF8PROC_INCLUDE_DIRS})
+
+target_link_libraries(duckdb_llama_cpp PUBLIC ${LIBLLAMA_LIB})
+
+target_include_directories(
+  duckdb_llama_cpp
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set_target_properties(duckdb_llama_cpp PROPERTIES EXPORT_NAME duckdb_llama_cpp)
 

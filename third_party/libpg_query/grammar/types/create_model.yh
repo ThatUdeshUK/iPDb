@@ -4,3 +4,4 @@
 %type <node> opt_feat_col_list
 %type <node> feat_col_list
 %type <list> opt_option
+%type <str> opt_api
