@@ -22,6 +22,9 @@ bool LimitPushdown::CanOptimize(duckdb::LogicalOperator &op) {
 			// restrict the limit value to be small so that remaining operations run fast without parallelization.
 			return true;
 		}
+	} else if (op.type == LogicalOperatorType::LOGICAL_LIMIT &&
+	    op.children[0]->type == LogicalOperatorType::LOGICAL_PREDICT) {
+			return true;
 	}
 	return false;
 }
