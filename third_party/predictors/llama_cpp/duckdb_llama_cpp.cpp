@@ -391,7 +391,7 @@ std::string generate(llama_model *model, const llama_vocab *vocab, llama_sampler
 	return response;
 };
 
-int extract_longest_integer(const std::string& input) {
+Value extract_longest_integer(const std::string& input) {
     std::regex re("\\d+");
     std::sregex_iterator it(input.begin(), input.end(), re);
     std::sregex_iterator end;
@@ -402,7 +402,9 @@ int extract_longest_integer(const std::string& input) {
             longest = it->str();
         }
     }
-    return std::stoi(longest);
+	if (!longest.empty())
+    	return Value(std::stoi(longest));
+	return Value(LogicalTypeId::INTEGER);
 }
 
 /**
@@ -486,10 +488,13 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 						std::string value = out_json[col_name].get<std::string>();
 						output.SetValue(j, i, Value(value));
 					} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
-						int value = extract_longest_integer(out_json[col_name].get<std::string>());
+						auto value = extract_longest_integer(out_json[col_name].get<std::string>());
+						output.SetValue(j, i, value);
+					} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
+						int value = out_json[col_name].get<int>();
 						output.SetValue(j, i, Value(value));
 					} else {
-						output.SetValue(j, i, Value(""));
+						output.SetValue(j, i, Value(output_type));
 					}
 				}
 #endif

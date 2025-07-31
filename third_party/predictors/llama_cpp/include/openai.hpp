@@ -56,27 +56,26 @@ private:
     duckdb::HTTPHeaders     headers_;
     std::unique_ptr<duckdb::HTTPParams> params_;
     std::string             token_;
+    std::string base_url_;
     std::string             organization_;
     bool                    throw_exception_;
 
 public:
     OpenAI(duckdb::DatabaseInstance &db, const std::string& token = "", const std::string& organization = "", bool throw_exception = true, const std::string& api_base_url = "", const std::string& beta = "") 
-        : token_{token}, organization_{organization}, throw_exception_{throw_exception} {
+        : token_{token}, base_url_{api_base_url}, organization_{organization}, throw_exception_{throw_exception} {
             if (token.empty()) {
                 if(const char* env_p = std::getenv("OPENAI_API_KEY")) {
                     token_ = std::string{env_p};
                 }
             }
+
             if (api_base_url.empty()) {
                 if(const char* env_p = std::getenv("OPENAI_API_BASE")) {
-                    base_url = std::string{env_p} + "/";
+                    base_url_ = std::string{env_p} + "/";
                 }
                 else {
-                    base_url = api_base_url;
+                    base_url_ = api_base_url;
                 }
-            }
-            else {
-                base_url = api_base_url;
             }
 
             headers_ = duckdb::HTTPHeaders(db);
@@ -84,7 +83,7 @@ public:
 
             duckdb::DatabaseFileOpener opener{db};
             duckdb::FileOpenerInfo info;
-            info.file_path = base_url;
+            info.file_path = base_url_;
             params_ = http_util_.InitializeParameters(&opener, &info);
         }
     
@@ -103,7 +102,7 @@ public:
         params_->follow_location = false;
         params_->keep_alive = false;
 
-        auto url = base_url + suffix;
+        auto url = base_url_ + suffix;
         #if OPENAI_VERBOSE_OUTPUT
             std::cout << "<< request: "<< url << "  " << data << '\n';
         #endif
@@ -143,16 +142,14 @@ public:
     void debug() const { std::cout << token_ << '\n'; }
 
     void setBaseUrl(const std::string &url) {
-        base_url = url;
+        base_url_ = url;
     }
 
     std::string getBaseUrl() const {
-        return base_url;
+        return base_url_;
     }
 
 private:
-    std::string base_url;
-
     void checkResponse(const Json& json) {
         if (json.count("error")) {
             auto reason = json["error"].dump();
