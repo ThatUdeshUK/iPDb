@@ -71,7 +71,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 			stored_model_data.out_types.push_back(out_type);
 		}
 
-		static const std::regex in_re(R"(\{[^:]+\})");
+		static const std::regex in_re(R"(\{[^:}]+\})");
 		words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), in_re);
 		words_end = std::sregex_iterator();
 
@@ -187,6 +187,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 	             std::make_move_iterator(result_types.end()));
 
 	result->bound_predict.types = types;
+	result->bound_predict.input_set_names = std::move(stored_model_data.input_set_names);
 	result->bound_predict.input_set_types = std::move(input_types);
 	result->bound_predict.result_set_names = std::move(stored_model_data.out_names);
 	result->bound_predict.result_set_types = std::move(stored_model_data.out_types);

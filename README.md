@@ -78,8 +78,9 @@ make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IM
 - `PREDICTOR_IMPL=onnx` choose the internal ML platform. Available options,
   -  `onnx` - Use ONNX Runtime to infer pre-trained `.onnx` models (Step 1.1 required).
   -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format or use OpenAI models via the network (Step 1.2 required).
-  -  `torchscript` - Use TorchScript to infer pre-trained `pytorch` models exported with TorchScript.
 - `ENABLE_LLM_API=1` Enable LLM calling with OpenAI API compatible APIs.
+
+> Previously available `torchscript` to infer pre-trained `pytorch` models exported with TorchScript is \[DEPRECATED\] and is not supported. 
 
 ##### API LLM Calling
 
@@ -194,7 +195,6 @@ Native relational prediction operator is realized using following systems and fr
 - DuckDB (1.3.0)- Relational Database [https://duckdb.org](https://duckdb.org/)
 - ONNX Runtime (1.19) - Efficient generalizable deep learning runtime [https://onnx.ai](https://onnx.ai/)
 - llama.cpp (latest) - Local LLM inference  [https://github.com/ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
-- LibTorch (latest) - C++ version PyTorch (library + runtime) [https://pytorch.org/cppdocs](https://pytorch.org/cppdocs)
 
 ## DuckDB
 

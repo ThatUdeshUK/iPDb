@@ -415,13 +415,11 @@ Value extract_longest_integer(const std::string& input) {
  * @param input chunk containing the output of child operator.
  * @param output chunk we should produce (predicted columns vectors).
  * @param rows number of rows in the input chunk (= output chunk).
- * @param input_mask vector of ids (of feature columns) which are use by the model.
- * @param output_size number of prediction columns.
+ * @param info BoundPredictInfo struct with model and operator metadata
  * @param stats statistics for profiling. Method should update `predict` with the time this method use.
  */
 void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows,
-                                     const std::vector<idx_t> &input_mask, const std::vector<std::string> &output_names,
-                                     const std::vector<LogicalType> &output_types, int output_size, unique_ptr<PredictStats> &stats) {
+                                     const PredictInfo &info, unique_ptr<PredictStats> &stats) {
 	// Implemented to support mini-batches (i.e., batch_size < vector_size).
 	// However, unless changed, batch_size == vector_size by default.
 	// Check `ml_batch_size` in ClientConfig at `src/include/duckdb/main/client_config.hpp`
@@ -438,7 +436,7 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 		int lrow = std::min(frow + batch_size, rows); // Offset of last row
 		int num_rows = lrow - frow;                   // Number of rows in the batch
 
-		int cols = input_mask.size();
+		int cols = info.input_mask.size();
 
 #if OPT_TIMING
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -448,11 +446,18 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 #endif
 
 		for (int i = frow; i < lrow; ++i) {
-			auto input_str = StringValue::Get(input.GetValue(input_mask[0], i));
-
-			std::string rewritten = StringUtil::Format("%s input=%s", this->prompt, input_str);
+			std::stringstream ss;
+			ss << this->prompt << ";\n";
+			idx_t col_i = 0;
+			for (auto mask_i : info.input_mask) {
+				ss << info.input_set_names[col_i] << " = `";
+				col_i++;
+				ss <<  input.GetValue(mask_i, i).ToSQLString() << "`;\n";
+			}
+			std::string rewritten = ss.str();
 			// std::string rewritten = StringUtil::Format("<s>[INST] %s input=\"%s\" [/INST]", this->prompt, input_str);
 
+			std::string llm_out {};
 			if (this->is_api) {
 #ifdef ENABLE_LLM_API
 				nlohmann::json request;
@@ -473,37 +478,35 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 
 				auto &api = openai::start(db, base_api);
 				auto completion = api.post("/v1/chat/completions", request);
-				std::string llm_out {};
 				for (auto &msg : completion["choices"]) {
 					llm_out = msg["message"]["content"].get<std::string>();
 				}
 				// llm_out = llm_out.substr(1, llm_out.size() - 2);
-
-				std::cout << llm_out << "||" << std::endl;
-				auto out_json = nlohmann::json::parse(llm_out);
-				for (size_t j = 0; j < output_names.size(); j++) {
-					auto output_type = output_types[j];
-					auto col_name = output_names[j];
-					if (output_type == LogicalTypeId::VARCHAR && out_json[col_name].is_string()) {
-						std::string value = out_json[col_name].get<std::string>();
-						output.SetValue(j, i, Value(value));
-					} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
-						auto value = extract_longest_integer(out_json[col_name].get<std::string>());
-						output.SetValue(j, i, value);
-					} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
-						int value = out_json[col_name].get<int>();
-						output.SetValue(j, i, Value(value));
-					} else {
-						output.SetValue(j, i, Value(output_type));
-					}
-				}
 #endif
 			} else {
-				auto response = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
-				output.SetValue(0, i, Value(response));
+				llm_out = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
 
 				llama_sampler_reset(this->grmr);
 				llama_sampler_reset(this->chain);
+			}
+			
+			std::cout << llm_out << "||" << std::endl;
+			auto out_json = nlohmann::json::parse(llm_out);
+			for (size_t j = 0; j < info.result_set_names.size(); j++) {
+				auto output_type = info.result_set_types[j];
+				auto col_name = info.result_set_names[j];
+				if (output_type == LogicalTypeId::VARCHAR && out_json[col_name].is_string()) {
+					std::string value = out_json[col_name].get<std::string>();
+					output.SetValue(j, i, Value(value));
+				} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
+					auto value = extract_longest_integer(out_json[col_name].get<std::string>());
+					output.SetValue(j, i, value);
+				} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
+					int value = out_json[col_name].get<int>();
+					output.SetValue(j, i, Value(value));
+				} else {
+					output.SetValue(j, i, Value(output_type));
+				}
 			}
 		}
 

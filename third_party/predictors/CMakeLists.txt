@@ -1,7 +1,9 @@
 if (ENABLE_PREDICT)
-  if (${PREDICTOR_IMPL} STREQUAL "torchscript")
-    add_subdirectory(torchscript)
-  elseif (${PREDICTOR_IMPL} STREQUAL "onnx")
+  # ### DEPRECATED ###
+  # if (${PREDICTOR_IMPL} STREQUAL "torchscript")
+  #   add_subdirectory(torchscript)
+  # else
+  if (${PREDICTOR_IMPL} STREQUAL "onnx")
     add_subdirectory(onnx)
   elseif (${PREDICTOR_IMPL} STREQUAL "llama_cpp")
     add_subdirectory(llama_cpp)

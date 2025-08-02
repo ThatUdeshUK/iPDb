@@ -1184,31 +1184,10 @@ table_ref:	relation_expr opt_alias_clause opt_at_clause opt_tablesample_clause
 					n->location = @2;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' qualified_name ',' table_ref ')' opt_alias_clause
+			| predict_table opt_alias_clause
 				{
-					PGPredictExpr *n = makeNode(PGPredictExpr);
-					n->source = $5;
-					n->model_name = $3;
-					n->alias = $7;
-					$$ = (PGNode *) n;
-				}
-			| PREDICT '(' qualified_name ',' PROMPT SCONST ',' table_ref ')' opt_alias_clause
-				{
-					PGPredictExpr *n = makeNode(PGPredictExpr);
-					n->source = $8;
-					n->model_name = $3;
-					n->prompt = $6;
-					n->alias = $10;
-					$$ = (PGNode *) n;
-				}
-			| PREDICT '(' qualified_name ',' table_ref ',' table_ref ')' opt_alias_clause
-				{
-					PGPredictExpr *n = makeNode(PGPredictExpr);
-					n->source = $5;
-					n->model_name = $3;
-					n->opt_source = $7;
-					n->has_opt = 1;
-					n->alias = $9;
+					PGPredictExpr *n = (PGPredictExpr *) $1;
+					n->alias = $2;
 					$$ = (PGNode *) n;
 				}
 		;
@@ -2910,6 +2889,7 @@ indirection_expr:
 			| struct_expr
 			| map_expr
 			| func_expr
+			| predict_expr
 			| case_expr
 			| list_expr
 			| list_comprehension
@@ -2969,7 +2949,59 @@ map_expr:  MAP '{' opt_map_arguments_opt_comma '}'
                     $$ = (PGNode *) f;
                 }
 
+predict_expr:
+			TABULAR qualified_name '(' table_ref ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $2;
+					n->source = $4;
+					$$ = (PGNode *) n;
+				}
+			| PREDICT '(' qualified_name ',' table_ref ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $3;
+					n->source = $5;
+					$$ = (PGNode *) n;
+				}
+			| LLM qualified_name '(' PROMPT SCONST ',' table_ref ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $2;
+					n->prompt = $5;
+					n->source = $7;
+					$$ = (PGNode *) n;
+				}
+			| PREDICT '(' qualified_name ',' PROMPT SCONST ',' table_ref ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $3;
+					n->prompt = $6;
+					n->source = $8;
+					$$ = (PGNode *) n;
+				}
+			| LLM qualified_name '(' PROMPT SCONST ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $2;
+					n->prompt = $5;
+					$$ = (PGNode *) n;
+				}
+			| GNN '(' qualified_name ',' table_ref ',' table_ref ')'
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->source = $5;
+					n->model_name = $3;
+					n->opt_source = $7;
+					n->has_opt = 1;
+					$$ = (PGNode *) n;
+				}
+		;
 
+predict_table:	
+			predict_expr
+				{ $$ = $1; }
+		;
 
 func_application:       func_name '(' ')'
 				{

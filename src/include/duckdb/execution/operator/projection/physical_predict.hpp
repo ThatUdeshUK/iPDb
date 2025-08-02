@@ -35,6 +35,21 @@ struct PredictStats {
 	long total;
 };
 
+struct PredictInfo {
+	ModelType model_type;
+	string model_name;
+	string model_path;
+	string prompt;
+	string base_api;
+
+	
+	vector<idx_t> input_mask;
+	vector<string> input_set_names;
+	vector<string> result_set_names;
+	vector<LogicalType> result_set_types;
+	case_insensitive_map_t<Value> options;
+};
+
 class Predictor {
 public:
 	Predictor() : success(false), error_message("") {};
@@ -54,12 +69,9 @@ public:
 	virtual void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {};
 	virtual void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) {};
 	virtual void PredictLM(std::string &input, std::vector<float> &output, int output_size) {};
-	virtual void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
-	                            int output_size, unique_ptr<PredictStats> &stats) {};
-	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols,
-	                           int output_size) {};
-	virtual void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask,
-	                          const std::vector<std::string>& output_names, const std::vector<LogicalType> &output_types, int output_size, unique_ptr<PredictStats> &stats) {};
+	virtual void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
+	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols, int output_size) {};
+	virtual void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 	                        unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output, int64_t num_nodes,
@@ -71,16 +83,8 @@ public:
 class PhysicalPredict : public PhysicalOperator {
 public:
 	PhysicalPredict(vector<LogicalType> types, PhysicalOperator &child, BoundPredictInfo bound_predict_p);
-
-	ModelType model_type;
-	string model_path;
-	string prompt;
-	string base_api;
-
-	std::vector<idx_t> input_mask;
-	std::vector<std::string> result_set_names;
-	std::vector<LogicalType> result_set_types;
-	case_insensitive_map_t<Value> options;
+	
+	PredictInfo predict_info;
 
 public:
 	string GetName() const override;

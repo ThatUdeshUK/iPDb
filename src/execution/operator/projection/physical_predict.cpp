@@ -45,14 +45,15 @@ PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, PhysicalOperator &
     : PhysicalOperator(PhysicalOperatorType::PREDICT, std::move(types_p), child.estimated_cardinality) {
 	children.push_back(child);
 
-	model_type = bound_predict_p.model_type;
-	model_path = std::move(bound_predict_p.model_path);
-	prompt = std::move(bound_predict_p.prompt);
-	base_api = std::move(bound_predict_p.base_api);
-	input_mask = std::move(bound_predict_p.input_mask);
-	result_set_names = std::move(bound_predict_p.result_set_names);
-	result_set_types = std::move(bound_predict_p.result_set_types);
-	options = std::move(bound_predict_p.options);
+	predict_info.model_type = bound_predict_p.model_type;
+	predict_info.model_path = std::move(bound_predict_p.model_path);
+	predict_info.prompt = std::move(bound_predict_p.prompt);
+	predict_info.base_api = std::move(bound_predict_p.base_api);
+	predict_info.input_mask = std::move(bound_predict_p.input_mask);
+	predict_info.result_set_names = std::move(bound_predict_p.result_set_names);
+	predict_info.input_set_names = std::move(bound_predict_p.input_set_names);
+	predict_info.result_set_types = std::move(bound_predict_p.result_set_types);
+	predict_info.options = std::move(bound_predict_p.options);
 }
 
 unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
@@ -61,7 +62,7 @@ unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
-	return make_uniq<LlamaCppPredictor>(prompt, base_api);
+	return make_uniq<LlamaCppPredictor>(predict_info.prompt, predict_info.base_api);
 #else
 	return nullptr;
 #endif
@@ -72,9 +73,9 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
 
 	auto stats = make_uniq<PredictStats>();
 	auto p = InitPredictor();
-	p->task = static_cast<PredictorTask>(model_type);
-	p->Config(client_config, options);
-	p->Load(model_path, stats);
+	p->task = static_cast<PredictorTask>(predict_info.model_type);
+	p->Config(client_config, predict_info.options);
+	p->Load(predict_info.model_path, stats);
 	return make_uniq<PredictState>(context, std::move(p), std::move(stats));
 }
 
@@ -91,14 +92,11 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	auto &predictor = *state.predictor.get();
 #if CHUNK_PRED
 	if (predictor.task == PREDICT_TABULAR_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, result_set_names, result_set_types, (int)result_set_types.size(),
-		                       state.stats);
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), predict_info, state.stats);
 	} else if (predictor.task == PREDICT_LM_TASK) {
-		predictor.PredictLMChunk(input, predictions, (int)input.size(), this->input_mask, (int)result_set_types.size(),
-		                         state.stats);
+		predictor.PredictLMChunk(input, predictions, (int)input.size(), predict_info, state.stats);
 	} else if (predictor.task == PREDICT_LLM_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), this->input_mask, result_set_names, result_set_types, (int)result_set_types.size(),
-		                       state.stats);
+		predictor.PredictChunk(context, input, predictions, (int)input.size(), predict_info, state.stats);
 	}
 #elif VEC_PRED
 	std::vector<float> inputs;
@@ -167,10 +165,10 @@ string PhysicalPredict::GetName() const {
 
 InsertionOrderPreservingMap<string> PhysicalPredict::ParamsToString() const {
 	InsertionOrderPreservingMap<string> result;
-	result["Type"] = EnumUtil::ToChars<ModelType>(model_type);
-	result["Model Path"] = model_path;
+	result["Type"] = EnumUtil::ToChars<ModelType>(predict_info.model_type);
+	result["Model Path"] = predict_info.model_path;
 
-	for (const auto &item : options) {
+	for (const auto &item : predict_info.options) {
 		stringstream ss;
 		ss << item.second;
 		result[item.first] = ss.str();

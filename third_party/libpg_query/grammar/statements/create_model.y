@@ -41,13 +41,52 @@ CreateModelStmt:
 					n->onconflict = PG_REPLACE_ON_CONFLICT;
 					$$ = (PGNode *)n;
 				}
+			| llm_model { $$ = $1; }
+		;
+
+llm_model:
+			CREATE_P OptTemp LLM MODEL qualified_name PATH SCONST model_on_prompt
+				{
+					PGCreateModelStmt *n = makeNode(PGCreateModelStmt);
+					$5->relpersistence = $2;
+					n->model = $5;
+					n->model_type = 3;
+					n->model_path = $7;
+					n->model_on = $8;
+					n->ownerId = InvalidOid;
+					n->onconflict = PG_ERROR_ON_CONFLICT;
+					$$ = (PGNode *)n;
+				}
+			| CREATE_P OptTemp LLM MODEL IF_P NOT EXISTS qualified_name PATH SCONST model_on_prompt
+				{
+					PGCreateModelStmt *n = makeNode(PGCreateModelStmt);
+					$8->relpersistence = $2;
+					n->model = $8;
+					n->model_type = 3;
+					n->model_path = $10;
+					n->model_on = $11;
+					n->ownerId = InvalidOid;
+					n->onconflict = PG_IGNORE_ON_CONFLICT;
+					$$ = (PGNode *)n;
+				}
+			| CREATE_P OR REPLACE OptTemp LLM MODEL qualified_name PATH SCONST model_on_prompt
+				{
+					PGCreateModelStmt *n = makeNode(PGCreateModelStmt);
+					$7->relpersistence = $4;
+					n->model = $7;
+					n->model_type = 3;
+					n->model_path = $9;
+					n->model_on = $10;
+					n->ownerId = InvalidOid;
+					n->onconflict = PG_REPLACE_ON_CONFLICT;
+					$$ = (PGNode *)n;
+				}
 		;
 		
 model_type_value:
 			TABULAR 							{ $$ = 0; }
 			| LM 								{ $$ = 1; }
 			| GNN 								{ $$ = 2; }
-			| LLM 							{ $$ = 3; }
 		;
 
 model_on:
@@ -79,7 +118,10 @@ model_on:
 					n->options = $12;
 					$$ = (PGNode *)n;
 				}
-			| ON PROMPT opt_api opt_option
+		;
+
+model_on_prompt:
+ 			ON PROMPT opt_api opt_option
 				{
 					PGModelOn *n = makeNode(PGModelOn);
 					n->on_prompt = true;

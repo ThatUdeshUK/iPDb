@@ -29,6 +29,8 @@ struct BoundPredictInfo {
 	vector<idx_t> input_mask;
 	//! Input mask for (optional) edges columns for GNN
 	vector<idx_t> opt_mask;
+	//! Input set names
+	vector<string> input_set_names;
 	//! Result set names
 	vector<string> result_set_names;
 	//! Input set types

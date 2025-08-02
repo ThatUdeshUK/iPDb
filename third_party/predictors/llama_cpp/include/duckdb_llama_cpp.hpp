@@ -42,7 +42,7 @@ public:
 public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
-    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, const std::vector<std::string>& output_names, const std::vector<LogicalType> &output_types, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) override;
 
 private:
     void GenerateGrammar();

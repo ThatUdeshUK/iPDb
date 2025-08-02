@@ -36,9 +36,9 @@ public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
     void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) override;
-    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, const std::vector<std::string>& output_names, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) override;
     void PredictLM(std::string &input, std::vector<float> &output, int output_size) override;
-    void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const std::vector<idx_t> &input_mask, int output_size, unique_ptr<PredictStats> &stats) override;
+    void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) override;
     void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 					int64_t num_nodes, int64_t num_edges, int64_t feature_size, int64_t edge_size,
 					int64_t output_size, unique_ptr<PredictStats> &stats) override;

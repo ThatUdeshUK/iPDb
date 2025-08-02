@@ -39,7 +39,8 @@ unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModel
 
 	if (stmt.on_prompt) {
 		n->on_prompt = stmt.on_prompt;
-		n->base_api = stmt.base_api;
+		if (stmt.base_api)
+			n->base_api = stmt.base_api;
 		return n;
 	}
 
