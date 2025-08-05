@@ -1,7 +1,7 @@
 //===----------------------------------------------------------------------===//
 //                         DuckDB
 //
-// duckdb/parser/tableref/predictref.hpp
+// duckdb/parser/tableref/TablePredictRef.hpp
 //
 //
 //===----------------------------------------------------------------------===//
@@ -14,12 +14,12 @@
 namespace duckdb {
 
 //! Represents a PREDICT expression
-class PredictRef : public TableRef {
+class TablePredictRef : public TableRef {
 public:
 	static constexpr const TableReferenceType TYPE = TableReferenceType::PREDICT;
 
 public:
-	explicit PredictRef() : TableRef(TableReferenceType::PREDICT) {
+	explicit TablePredictRef() : TableRef(TableReferenceType::PREDICT) {
 	}
 
 	//! The source table of the predict
@@ -39,7 +39,7 @@ public:
 
 	unique_ptr<TableRef> Copy() override;
 
-	//! Deserializes a blob back into a PredictRef
+	//! Deserializes a blob back into a TablePredictRef
 	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<TableRef> Deserialize(Deserializer &source);
 };

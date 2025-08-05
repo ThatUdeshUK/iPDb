@@ -1,4 +1,4 @@
-#include "duckdb/parser/tableref/predictref.hpp"
+#include "duckdb/parser/tableref/table_predict_ref.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/tableref/bound_predictref.hpp"
 #include "duckdb/parser/tableref/subqueryref.hpp"
@@ -14,7 +14,7 @@ struct BindModelData {
 	vector<reference<ModelCatalogEntry>> entries;
 };
 
-unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
+unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 	auto result = make_uniq<BoundPredictRef>();
 	result->bound_predict.model_name = std::move(ref.model_name);
 	
@@ -198,7 +198,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(PredictRef &ref) {
 	return std::move(result);
 }
 
-unique_ptr<BoundTableRef> Binder::Bind(PredictRef &ref) {
+unique_ptr<BoundTableRef> Binder::Bind(TablePredictRef &ref) {
 	if (!ref.source) {
 		throw InternalException("Predict without a source!?");
 	}

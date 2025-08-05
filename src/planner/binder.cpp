@@ -418,7 +418,7 @@ unique_ptr<BoundTableRef> Binder::Bind(TableRef &ref) {
 		result = Bind(ref.Cast<PivotRef>());
 		break;
 	case TableReferenceType::PREDICT:
-		result = Bind(ref.Cast<PredictRef>());
+		result = Bind(ref.Cast<TablePredictRef>());
 		break;
 	case TableReferenceType::SHOW_REF:
 		result = Bind(ref.Cast<ShowRef>());

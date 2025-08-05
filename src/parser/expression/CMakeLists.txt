@@ -11,6 +11,7 @@ add_library_unity(
   constant_expression.cpp
   default_expression.cpp
   function_expression.cpp
+  predict_expression.cpp
   lambda_expression.cpp
   lambdaref_expression.cpp
   operator_expression.cpp

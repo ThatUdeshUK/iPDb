@@ -242,7 +242,7 @@ void ONNXPredictor::PredictLMChunk(DataChunk &input, DataChunk &output, int rows
 	}
 }
 
-void ONNXPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {
+void ONNXPredictor::PredictChunk(const ExjecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {
  	int output_size = (int) info.result_set_types.size();
 	int rounds = rows / batch_size;
 	if (rows % batch_size != 0)

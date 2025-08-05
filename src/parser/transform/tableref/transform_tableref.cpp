@@ -19,7 +19,7 @@ unique_ptr<TableRef> Transformer::TransformTableRefNode(duckdb_libpgquery::PGNod
 	case duckdb_libpgquery::T_PGPivotExpr:
 		return TransformPivot(PGCast<duckdb_libpgquery::PGPivotExpr>(n));
 	case duckdb_libpgquery::T_PGPredictExpr:
-		return TransformPredict(PGCast<duckdb_libpgquery::PGPredictExpr>(n));
+		return TransformTablePredict(PGCast<duckdb_libpgquery::PGPredictExpr>(n));
 	default:
 		throw NotImplementedException("From Type %d not supported", n.type);
 	}

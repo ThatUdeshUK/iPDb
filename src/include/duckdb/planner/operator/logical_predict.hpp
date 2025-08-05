@@ -11,7 +11,7 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
 #include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/parser/tableref/predictref.hpp"
+#include "duckdb/parser/tableref/table_predict_ref.hpp"
 #include "duckdb/planner/tableref/bound_predictref.hpp"
 
 namespace duckdb {

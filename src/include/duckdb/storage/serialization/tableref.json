@@ -233,7 +233,7 @@
     ]
   },
   {
-    "class": "PredictRef",
+    "class": "TablePredictRef",
     "base": "TableRef",
     "enum": "PREDICT",
     "members": [

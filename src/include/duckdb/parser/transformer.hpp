@@ -239,6 +239,8 @@ private:
 	unique_ptr<ParsedExpression> TransformExpression(duckdb_libpgquery::PGNode &node);
 	//! Transform a Postgres function call into an Expression
 	unique_ptr<ParsedExpression> TransformFuncCall(duckdb_libpgquery::PGFuncCall &root);
+	//! Transform a predict call into an Expression
+	unique_ptr<ParsedExpression> TransformPredict(duckdb_libpgquery::PGPredictExpr &root);
 	//! Transform a Postgres boolean expression into an Expression
 	unique_ptr<ParsedExpression> TransformInterval(duckdb_libpgquery::PGIntervalConstant &root);
 	//! Transform a LAMBDA node (e.g., lambda x, y: x + y) into a lambda expression.
@@ -324,7 +326,7 @@ private:
 	//! Transform a Postgres pivot node into a TableRef
 	unique_ptr<TableRef> TransformPivot(duckdb_libpgquery::PGPivotExpr &root);
 	//! Transform a predict node into a TableRef
-	unique_ptr<TableRef> TransformPredict(duckdb_libpgquery::PGPredictExpr &root);
+	unique_ptr<TableRef> TransformTablePredict(duckdb_libpgquery::PGPredictExpr &root);
 	//! Transform a table producing subquery into a TableRef
 	unique_ptr<TableRef> TransformRangeSubselect(duckdb_libpgquery::PGRangeSubselect &root);
 	//! Transform a VALUES list into a set of expressions

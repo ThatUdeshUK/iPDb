@@ -1,23 +1,23 @@
-#include "duckdb/parser/tableref/predictref.hpp"
+#include "duckdb/parser/tableref/table_predict_ref.hpp"
 #include "duckdb/common/limits.hpp"
 
 namespace duckdb {
 
 //===--------------------------------------------------------------------===//
-// PredictRef
+// TablePredictRef
 //===--------------------------------------------------------------------===//
-string PredictRef::ToString() const {
+string TablePredictRef::ToString() const {
 	string result;
 	result = source->ToString();
 	result += " PREDICT USING " + model_name;
 	return result;
 }
 
-bool PredictRef::Equals(const TableRef &other_p) const {
+bool TablePredictRef::Equals(const TableRef &other_p) const {
 	if (!TableRef::Equals(other_p)) {
 		return false;
 	}
-	auto &other = other_p.Cast<PredictRef>();
+	auto &other = other_p.Cast<TablePredictRef>();
 	if (!source->Equals(*other.source)) {
 		return false;
 	}
@@ -30,8 +30,8 @@ bool PredictRef::Equals(const TableRef &other_p) const {
 	return true;
 }
 
-unique_ptr<TableRef> PredictRef::Copy() {
-	auto copy = make_uniq<PredictRef>();
+unique_ptr<TableRef> TablePredictRef::Copy() {
+	auto copy = make_uniq<TablePredictRef>();
 	copy->source = source->Copy();
 	if (opt_source) {
 		copy->opt_source = opt_source->Copy();

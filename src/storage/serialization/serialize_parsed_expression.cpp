@@ -69,6 +69,9 @@ unique_ptr<ParsedExpression> ParsedExpression::Deserialize(Deserializer &deseria
 	case ExpressionClass::POSITIONAL_REFERENCE:
 		result = PositionalReferenceExpression::Deserialize(deserializer);
 		break;
+	case ExpressionClass::PREDICT:
+		result = PredictExpression::Deserialize(deserializer);
+		break;
 	case ExpressionClass::STAR:
 		result = StarExpression::Deserialize(deserializer);
 		break;
@@ -286,6 +289,21 @@ void PositionalReferenceExpression::Serialize(Serializer &serializer) const {
 unique_ptr<ParsedExpression> PositionalReferenceExpression::Deserialize(Deserializer &deserializer) {
 	auto result = duckdb::unique_ptr<PositionalReferenceExpression>(new PositionalReferenceExpression());
 	deserializer.ReadPropertyWithDefault<idx_t>(200, "index", result->index);
+	return std::move(result);
+}
+
+void PredictExpression::Serialize(Serializer &serializer) const {
+	ParsedExpression::Serialize(serializer);
+	serializer.WritePropertyWithDefault<unique_ptr<TableRef>>(200, "source", source);
+	serializer.WritePropertyWithDefault<string>(201, "model_name", model_name);
+	serializer.WritePropertyWithDefault<string>(202, "prompt", prompt);
+}
+
+unique_ptr<ParsedExpression> PredictExpression::Deserialize(Deserializer &deserializer) {
+	auto result = duckdb::unique_ptr<PredictExpression>(new PredictExpression());
+	deserializer.ReadPropertyWithDefault<unique_ptr<TableRef>>(200, "source", result->source);
+	deserializer.ReadPropertyWithDefault<string>(201, "model_name", result->model_name);
+	deserializer.ReadPropertyWithDefault<string>(202, "prompt", result->prompt);
 	return std::move(result);
 }
 

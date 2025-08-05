@@ -37,6 +37,8 @@ unique_ptr<ParsedExpression> Transformer::TransformExpression(duckdb_libpgquery:
 		return TransformAExpr(PGCast<duckdb_libpgquery::PGAExpr>(node));
 	case duckdb_libpgquery::T_PGFuncCall:
 		return TransformFuncCall(PGCast<duckdb_libpgquery::PGFuncCall>(node));
+	case duckdb_libpgquery::T_PGPredictExpr:
+		return TransformPredict(PGCast<duckdb_libpgquery::PGPredictExpr>(node));
 	case duckdb_libpgquery::T_PGBoolExpr:
 		return TransformBoolExpr(PGCast<duckdb_libpgquery::PGBoolExpr>(node));
 	case duckdb_libpgquery::T_PGTypeCast:

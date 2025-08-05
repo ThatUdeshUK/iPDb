@@ -9,7 +9,7 @@ add_library_unity(
   column_data_ref.cpp
   joinref.cpp
   pivotref.cpp
-  predictref.cpp
+  table_predict_ref.cpp
   showref.cpp
   subqueryref.cpp
   table_function.cpp)
