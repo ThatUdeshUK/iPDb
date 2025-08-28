@@ -2964,7 +2964,7 @@ predict_expr:
 					n->source = $5;
 					$$ = (PGNode *) n;
 				}
-			| LLM qualified_name '(' PROMPT SCONST ',' table_ref ')'
+			| LLM qualified_name '(' PROMPT sprompt ',' table_ref ')'
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
 					n->model_name = $2;
@@ -2972,7 +2972,7 @@ predict_expr:
 					n->source = $7;
 					$$ = (PGNode *) n;
 				}
-			| PREDICT '(' qualified_name ',' PROMPT SCONST ',' table_ref ')'
+			| PREDICT '(' qualified_name ',' PROMPT sprompt ',' table_ref ')'
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
 					n->model_name = $3;
@@ -2980,7 +2980,7 @@ predict_expr:
 					n->source = $8;
 					$$ = (PGNode *) n;
 				}
-			| LLM qualified_name '(' PROMPT SCONST ')'
+			| LLM qualified_name '(' PROMPT sprompt ')'
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);
 					n->model_name = $2;
@@ -3000,6 +3000,11 @@ predict_expr:
 
 predict_table:	
 			predict_expr
+				{ $$ = $1; }
+		;
+
+sprompt:
+			SCONST
 				{ $$ = $1; }
 		;
 

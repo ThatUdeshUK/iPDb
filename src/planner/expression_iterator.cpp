@@ -79,6 +79,13 @@ void ExpressionIterator::EnumerateChildren(Expression &expr,
 		}
 		break;
 	}
+	case ExpressionClass::PREDICT: {
+		auto &aggr_expr = expr.Cast<BoundPredictExpression>();
+		for (auto &child : aggr_expr.children) {
+			callback(child);
+		}
+		break;
+	}
 	case ExpressionClass::BOUND_OPERATOR: {
 		auto &op_expr = expr.Cast<BoundOperatorExpression>();
 		for (auto &child : op_expr.children) {

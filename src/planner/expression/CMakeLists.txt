@@ -12,6 +12,7 @@ add_library_unity(
   bound_constant_expression.cpp
   bound_expanded_expression.cpp
   bound_function_expression.cpp
+  bound_predict_expression.cpp
   bound_lambda_expression.cpp
   bound_lambdaref_expression.cpp
   bound_operator_expression.cpp

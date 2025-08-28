@@ -54,6 +54,9 @@ unique_ptr<Expression> Expression::Deserialize(Deserializer &deserializer) {
 	case ExpressionClass::BOUND_FUNCTION:
 		result = BoundFunctionExpression::Deserialize(deserializer);
 		break;
+	case ExpressionClass::PREDICT:
+		result = BoundPredictExpression::Deserialize(deserializer);
+		break;
 	case ExpressionClass::BOUND_LAMBDA:
 		result = BoundLambdaExpression::Deserialize(deserializer);
 		break;

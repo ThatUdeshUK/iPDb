@@ -9,39 +9,23 @@
 #include "duckdb/common/string_util.hpp"
 #include "../../common/common.hpp"
 
-#include "llama.h"
+#include "openai.hpp"
 
 #define OPT_TIMING 1
 
 namespace duckdb {
-class LlamaCppPredictor: public Predictor {
+class LlmApiPredictor: public Predictor {
 public:
-    int n_gl;
     int n_predict;
     std::string prompt;
     std::string base_api;
     std::string grammar;
-    bool is_api;
-
-    llama_model * model;
-
-    const llama_vocab * vocab;
-
-    struct llama_sampler * grmr;
-    struct llama_sampler * chain;
     
 private:
     PromptUtil prompt_util;
 
 public:
-    LlamaCppPredictor(std::string prompt);
-    ~LlamaCppPredictor() {
-        if (!is_api) {
-            llama_sampler_free(grmr);
-            llama_sampler_free(chain);
-            llama_model_free(model);
-        }
-    }
+    LlmApiPredictor(std::string prompt, std::string base_api);
 
 public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
@@ -50,6 +34,5 @@ public:
 
 private:
     void GenerateGrammar();
-    void InitializeSampler();
 };
 } // namespace duckdb

@@ -10,15 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_library(LIBLLAMA_LIB llama HINTS "$ENV{LIBLLAMA_INSTALL_PREFIX}/bin")
 message(STATUS "LLAMA_LIB Libs: ${LIBLLAMA_LIB}")
 
-include_directories(include ${DUCKDB_MODULE_BASE_DIR}/third_party/httplib)
-
-if (ENABLE_LLM_API)
-    add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp https_client.cpp)
-    target_compile_definitions(duckdb_llama_cpp PRIVATE $<$<BOOL:${ENABLE_LLM_API}>:ENABLE_LLM_API>)
-else()    
-    add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp)
-endif()
-
+add_library(duckdb_llama_cpp STATIC duckdb_llama_cpp.cpp)
 
 target_link_libraries(duckdb_llama_cpp PUBLIC ${LIBLLAMA_LIB})
 

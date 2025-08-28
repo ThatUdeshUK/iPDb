@@ -294,14 +294,14 @@ unique_ptr<ParsedExpression> PositionalReferenceExpression::Deserialize(Deserial
 
 void PredictExpression::Serialize(Serializer &serializer) const {
 	ParsedExpression::Serialize(serializer);
-	serializer.WritePropertyWithDefault<unique_ptr<TableRef>>(200, "source", source);
+	serializer.WritePropertyWithDefault<vector<unique_ptr<ParsedExpression>>>(200, "children", children);
 	serializer.WritePropertyWithDefault<string>(201, "model_name", model_name);
 	serializer.WritePropertyWithDefault<string>(202, "prompt", prompt);
 }
 
 unique_ptr<ParsedExpression> PredictExpression::Deserialize(Deserializer &deserializer) {
 	auto result = duckdb::unique_ptr<PredictExpression>(new PredictExpression());
-	deserializer.ReadPropertyWithDefault<unique_ptr<TableRef>>(200, "source", result->source);
+	deserializer.ReadPropertyWithDefault<vector<unique_ptr<ParsedExpression>>>(200, "children", result->children);
 	deserializer.ReadPropertyWithDefault<string>(201, "model_name", result->model_name);
 	deserializer.ReadPropertyWithDefault<string>(202, "prompt", result->prompt);
 	return std::move(result);

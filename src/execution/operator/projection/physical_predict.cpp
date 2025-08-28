@@ -11,6 +11,10 @@
 #include "duckdb_llama_cpp.hpp"
 #endif
 
+#if defined(ENABLE_PREDICT) && defined(ENABLE_LLM_API)
+#include "duckdb_llm_api.hpp"
+#endif
+
 #define CHUNK_PRED 1
 // #define VEC_PRED 0
 
@@ -56,13 +60,27 @@ PhysicalPredict::PhysicalPredict(vector<LogicalType> types_p, PhysicalOperator &
 	predict_info.options = std::move(bound_predict_p.options);
 }
 
-unique_ptr<Predictor> PhysicalPredict::InitPredictor() const {
+unique_ptr<Predictor> PhysicalPredict::InitPredictor(const PredictInfo &info) {
 #if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 1
 	return make_uniq<TorchPredictor>();
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 	return make_uniq<ONNXPredictor>();
-#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
-	return make_uniq<LlamaCppPredictor>(predict_info.prompt, predict_info.base_api);
+#elif defined(ENABLE_PREDICT) && (PREDICTOR_IMPL == 3 || defined(ENABLE_LLM_API))
+	bool is_api = !(info.model_path.find(".gguf") != std::string::npos);
+	std::cout << "Is API Model: " << is_api << std::endl;
+	if (is_api) {
+#if defined(ENABLE_LLM_API)
+		return make_uniq<LlmApiPredictor>(info.prompt, info.base_api);
+#else
+		throw InternalException("Unable to infer LLM API model without `ENABLE_LLM_API` build option.");
+#endif
+	} else {
+#if (PREDICTOR_IMPL == 3)
+		return make_uniq<LlamaCppPredictor>(info.prompt);
+#else
+		throw InternalException("Unable to infer local LLMs without `PREDICTOR_IMPL='llama_cpp'` build option.");
+#endif
+	}
 #else
 	return nullptr;
 #endif
@@ -72,7 +90,7 @@ unique_ptr<OperatorState> PhysicalPredict::GetOperatorState(ExecutionContext &co
 	auto &client_config = ClientConfig::GetConfig(context.client);
 
 	auto stats = make_uniq<PredictStats>();
-	auto p = InitPredictor();
+	auto p = InitPredictor(predict_info);
 	p->task = static_cast<PredictorTask>(predict_info.model_type);
 	p->Config(client_config, predict_info.options);
 	p->Load(predict_info.model_path, stats);
@@ -92,11 +110,11 @@ OperatorResultType PhysicalPredict::Execute(ExecutionContext &context, DataChunk
 	auto &predictor = *state.predictor.get();
 #if CHUNK_PRED
 	if (predictor.task == PREDICT_TABULAR_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), predict_info, state.stats);
+		predictor.PredictChunk(context.client, input, predictions, (int)input.size(), predict_info, state.stats);
 	} else if (predictor.task == PREDICT_LM_TASK) {
 		predictor.PredictLMChunk(input, predictions, (int)input.size(), predict_info, state.stats);
 	} else if (predictor.task == PREDICT_LLM_TASK) {
-		predictor.PredictChunk(context, input, predictions, (int)input.size(), predict_info, state.stats);
+		predictor.PredictChunk(context.client, input, predictions, (int)input.size(), predict_info, state.stats);
 	}
 #elif VEC_PRED
 	std::vector<float> inputs;

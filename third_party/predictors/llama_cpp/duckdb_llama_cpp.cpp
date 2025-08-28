@@ -3,10 +3,6 @@
 #include "duckdb/main/extension_helper.hpp"
 #include "PerfEvent.hpp"
 
-#ifdef ENABLE_LLM_API
-#include "openai.hpp"
-#endif
-
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -15,11 +11,10 @@
 #include <cmath>
 #include <string>
 #include <utility>
-#include <regex>
 
 namespace duckdb {
-LlamaCppPredictor::LlamaCppPredictor(std::string prompt, std::string base_api)
-    : Predictor(), prompt(std::move(prompt)), base_api(std::move(base_api)) {
+LlamaCppPredictor::LlamaCppPredictor(std::string prompt)
+    : Predictor(), prompt(std::move(prompt)) {
 }
 
 /**
@@ -68,31 +63,23 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 	this->model_path = model_path;
 	std::cout << "Model Path: " << model_path << std::endl;
 
-	this->is_api = !(model_path.find(".gguf") != std::string::npos);
-	std::cout << "Is API Model: " << this->is_api << std::endl;
+	this->n_gl = 99;
+	this->n_predict = 64;
 
-	std::cout << "Base API: " << this->base_api << std::endl;
+	// init model
+	llama_model_params model_params = llama_model_default_params();
+	model_params.vocab_only = false;
 
-	if (!this->is_api) {
-		// init model
-		llama_model_params model_params = llama_model_default_params();
-
-		this->model = llama_model_load_from_file(model_path.c_str(), model_params);
-		if (this->model == NULL) {
-			throw InternalException("Unable to load model: " + model_path);
-		}
-
-		// init vocabulary
-		this->vocab = llama_model_get_vocab(model);
-
-		GenerateGrammar();
-		InitializeSampler();
-	} else {
-#ifndef ENABLE_LLM_API
-		throw InternalException("Unable to infer LLM API model without `ENABLE_LLM_API` build option.");
-#endif
-		GenerateGrammar();
+	this->model = llama_model_load_from_file(model_path.c_str(), model_params);
+	if (this->model == NULL) {
+		throw InternalException("Unable to load model: " + model_path);
 	}
+
+	// init vocabulary
+	this->vocab = llama_model_get_vocab(model);
+
+	GenerateGrammar();
+	InitializeSampler();
 
 #if OPT_TIMING
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -101,104 +88,40 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 }
 
 void LlamaCppPredictor::GenerateGrammar() {
-	std::vector<std::pair<std::string, char>> attrs {};
-	std::string replacement;
-	if (this->is_api) {
-		static const std::regex in_re(R"(\{[^:]+\})");
-		auto words_begin = std::sregex_iterator(this->prompt.begin(), this->prompt.end(), in_re);
-		auto words_end = std::sregex_iterator();
+	std::vector<std::pair<std::string, LogicalTypeId>> attrs {};
+	prompt_util.process_prompt_and_extract_types(attrs, this->prompt);
 
-		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-			std::smatch match = *i;
-			std::string match_str = match.str();
-			auto pos = this->prompt.find(match_str);
-			this->prompt.replace(pos, match_str.size(), R"()");
+	std::string rule_base_prefix = R"(ws "\")";
+	std::string rule_base_str = R"(\":" ws string )";
+	std::string rule_base_number = R"(\":" ws number )";
+
+	std::stringstream ss;
+	bool first = true;
+	for (auto attr : attrs) {
+		if (!first) {
+			ss << R"("," )";
+		} else {
+			first = false;
 		}
 
-		static const std::regex out_re(R"(\{[sd]:\w+\})");
-		words_begin = std::sregex_iterator(this->prompt.begin(), this->prompt.end(), out_re);
-		words_end = std::sregex_iterator();
-
-		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-			std::smatch match = *i;
-			std::string match_str = match.str();
-			auto attr = match_str.substr(3, match_str.size() - 4);
-			auto pos = this->prompt.find(match_str);
-			this->prompt.replace(pos, match_str.size(), R"({)" + attr + R"(})");
-			attrs.push_back(std::make_pair(attr, match_str[1]));
+		ss << R"( ws "\")" << attr.first;
+		switch (attr.second) {
+		case LogicalTypeId::VARCHAR:
+			ss << rule_base_str;
+			break;
+		case LogicalTypeId::INTEGER:
+			ss << rule_base_number;
+			break;
+		default:
+			throw InternalException("Unsupported result type");
 		}
+	}
+	std::string replacement = ss.str();
 
-		std::stringstream ss;
-		ss << "{";
-		bool first = true;
-		for (auto attr : attrs) {
-			if (!first) {
-				ss << R"(, )";
-			} else {
-				first = false;
-			}
-
-			ss << R"("<)" << attr.first << R"(>" : )";
-			switch (attr.second) {
-			case 's':
-				ss << R"("<string>")";
-				break;
-			case 'd':
-				ss << R"("<integer>")";
-				break;
-			default:
-				throw InternalException("Unsupported result type");
-			}
-		}
-		ss << "}";
-		replacement = ss.str();
-
-		this->grammar = replacement;
-	} else {
-		static const std::regex re(R"(\{[sd]:\w+\})");
-		auto words_begin = std::sregex_iterator(this->prompt.begin(), this->prompt.end(), re);
-		auto words_end = std::sregex_iterator();
-
-		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-			std::smatch match = *i;
-			std::string match_str = match.str();
-			auto attr = match_str.substr(3, match_str.size() - 4);
-			auto pos = this->prompt.find(match_str);
-			this->prompt.replace(pos, match_str.size(), attr);
-			attrs.push_back(std::make_pair(attr, match_str[1]));
-		}
-
-		std::string rule_base_prefix = R"(ws "\")";
-		std::string rule_base_str = R"(\":" ws string )";
-		std::string rule_base_number = R"(\":" ws number )";
-
-		std::stringstream ss;
-		bool first = true;
-		for (auto attr : attrs) {
-			if (!first) {
-				ss << R"("," )";
-			} else {
-				first = false;
-			}
-
-			ss << R"( ws "\")" << attr.first;
-			switch (attr.second) {
-			case 's':
-				ss << rule_base_str;
-				break;
-			case 'd':
-				ss << rule_base_number;
-				break;
-			default:
-				throw InternalException("Unsupported result type");
-			}
-		}
-		replacement = ss.str();
-
-		std::string grammar_prefix = R"(root ::= DuckMLGE
+	std::string grammar_prefix = R"(root ::= DuckMLGE
 DuckMLGE ::= "{"   )";
 
-		std::string grammar_suffix = R"(   "}"
+	std::string grammar_suffix = R"(   "}"
 DuckMLGElist ::= "[]" | "["   ws   DuckMLGE   (","   ws   DuckMLGE)*   "]"
 string ::= "\""   ([^"]*)   "\""
 boolean ::= "true" | "false"
@@ -208,8 +131,7 @@ stringlist ::= "["   ws   "]" | "["   ws   string   (","   ws   string)*   ws   
 numberlist ::= "["   ws   "]" | "["   ws   string   (","   ws   number)*   ws   "]"
 )";
 
-		this->grammar = grammar_prefix + replacement + grammar_suffix;
-	}
+	this->grammar = grammar_prefix + replacement + grammar_suffix;
 
 	std::cout << "Prompt: " << this->prompt << std::endl;
 	std::cout << "Grammer:" << this->grammar << std::endl;
@@ -391,22 +313,6 @@ std::string generate(llama_model *model, const llama_vocab *vocab, llama_sampler
 	return response;
 };
 
-Value extract_longest_integer(const std::string& input) {
-    std::regex re("\\d+");
-    std::sregex_iterator it(input.begin(), input.end(), re);
-    std::sregex_iterator end;
-
-    std::string longest;
-    for (; it != end; ++it) {
-        if (it->str().size() > longest.size()) {
-            longest = it->str();
-        }
-    }
-	if (!longest.empty())
-    	return Value(std::stoi(longest));
-	return Value(LogicalTypeId::INTEGER);
-}
-
 /**
  * Infer the models for a chunk (column vectors containing tupes).
  *
@@ -418,7 +324,7 @@ Value extract_longest_integer(const std::string& input) {
  * @param info BoundPredictInfo struct with model and operator metadata
  * @param stats statistics for profiling. Method should update `predict` with the time this method use.
  */
-void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows,
+void LlamaCppPredictor::PredictChunk(ClientContext &client, DataChunk &input, DataChunk &output, int rows,
                                      const PredictInfo &info, unique_ptr<PredictStats> &stats) {
 	// Implemented to support mini-batches (i.e., batch_size < vector_size).
 	// However, unless changed, batch_size == vector_size by default.
@@ -446,68 +352,17 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 #endif
 
 		for (int i = frow; i < lrow; ++i) {
-			std::stringstream ss;
-			ss << this->prompt << ";\n";
-			idx_t col_i = 0;
-			for (auto mask_i : info.input_mask) {
-				ss << info.input_set_names[col_i] << " = `";
-				col_i++;
-				ss <<  input.GetValue(mask_i, i).ToSQLString() << "`;\n";
-			}
-			std::string rewritten = ss.str();
+			std::string rewritten = prompt_util.embed_prompt(this->prompt, i, input, info);
 			// std::string rewritten = StringUtil::Format("<s>[INST] %s input=\"%s\" [/INST]", this->prompt, input_str);
 
 			std::string llm_out {};
-			if (this->is_api) {
-#ifdef ENABLE_LLM_API
-				nlohmann::json request;
+			llm_out = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
 
-				request["model"] = this->model_path;
-				request["messages"] = {
-				    {{"content",
-				      (R"(You are a helpful assistant. Always respond **only** with valid JSON object (i.e. not an array) in format )" + this->grammar +
-				          R"(. Do not include any extra text or explanations, produce {<key>: <single value>} for JSON objects. The JSON must be parsable by a standard parser.)")},
-				     {"role", "system"}},
-				    {{"content", rewritten}, {"role", "user"}}};
-				// request["max_tokens"] = 64;
-				// request["temperature"] = 0;
-
-				// std::cout << request.dump(2) << std::endl;
-
-				auto &db = DatabaseInstance::GetDatabase(context.client);
-
-				auto &api = openai::start(db, base_api);
-				auto completion = api.post("/v1/chat/completions", request);
-				for (auto &msg : completion["choices"]) {
-					llm_out = msg["message"]["content"].get<std::string>();
-				}
-				// llm_out = llm_out.substr(1, llm_out.size() - 2);
-#endif
-			} else {
-				llm_out = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
-
-				llama_sampler_reset(this->grmr);
-				llama_sampler_reset(this->chain);
-			}
+			llama_sampler_reset(this->grmr);
+			llama_sampler_reset(this->chain);
 			
 			std::cout << llm_out << "||" << std::endl;
-			auto out_json = nlohmann::json::parse(llm_out);
-			for (size_t j = 0; j < info.result_set_names.size(); j++) {
-				auto output_type = info.result_set_types[j];
-				auto col_name = info.result_set_names[j];
-				if (output_type == LogicalTypeId::VARCHAR && out_json[col_name].is_string()) {
-					std::string value = out_json[col_name].get<std::string>();
-					output.SetValue(j, i, Value(value));
-				} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
-					auto value = extract_longest_integer(out_json[col_name].get<std::string>());
-					output.SetValue(j, i, value);
-				} else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
-					int value = out_json[col_name].get<int>();
-					output.SetValue(j, i, Value(value));
-				} else {
-					output.SetValue(j, i, Value(output_type));
-				}
-			}
+			prompt_util.extract_data(llm_out, i, output, info);
 		}
 
 #if OPT_TIMING
@@ -529,3 +384,4 @@ void LlamaCppPredictor::PredictChunk(const ExecutionContext &context, DataChunk 
 }
 
 } // namespace duckdb
+ 

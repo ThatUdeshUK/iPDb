@@ -62,6 +62,7 @@ public:
 	int llm_max_tokens; // LLM specific
 
 	bool success;
+	bool is_loaded = false;
 	std::string error_message;
 
 public:
@@ -71,7 +72,7 @@ public:
 	virtual void PredictLM(std::string &input, std::vector<float> &output, int output_size) {};
 	virtual void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols, int output_size) {};
-	virtual void PredictChunk(const ExecutionContext &context, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
+	virtual void PredictChunk(ClientContext &client, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 	                        unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output, int64_t num_nodes,
@@ -99,8 +100,8 @@ public:
 		return false;
 	}
 
-private:
-	unique_ptr<Predictor> InitPredictor() const;
+public:
+	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info);
 };
 
 //! PhysicalGNNPredict implements the source/sink physical PREDICT operation

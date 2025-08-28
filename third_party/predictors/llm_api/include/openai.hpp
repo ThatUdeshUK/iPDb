@@ -40,7 +40,7 @@
 #include <cstdlib>
 #include <map>
 
-#include <nlohmann/json.hpp>  // nlohmann/json
+#include "../../common/nlohmann/json.hpp"  // nlohmann/json
 
 namespace openai {
 

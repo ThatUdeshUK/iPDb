@@ -1350,6 +1350,10 @@ if (ENABLE_PREDICT)
   endif()
 endif()
 
+if (ENABLE_LLM_API)
+  add_definitions(-DENABLE_LLM_API)
+endif()
+
 # Load base extension config
 include(${CMAKE_CURRENT_SOURCE_DIR}/extension/extension_config.cmake)
 

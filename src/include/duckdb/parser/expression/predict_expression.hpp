@@ -19,13 +19,21 @@ public:
 
 public:
 	DUCKDB_API PredictExpression();
+	DUCKDB_API PredictExpression(const string &model_name, const string &prompt, 
+								 vector<unique_ptr<ParsedExpression>> children);
 
-	//! The source table of the predict
-	unique_ptr<TableRef> source;
+	//! List of arguments to the function
+	vector<unique_ptr<ParsedExpression>> children;
 	//! The model name for the predict
 	string model_name;
 	//! The prompt for llm tasks
 	string prompt;
+	//! input column names
+	vector<string> input_col_names;
+	//! output column names
+	string out_col_name;
+	//! output column types
+	LogicalType out_col_type;
 
 public:
 	string ToString() const override;

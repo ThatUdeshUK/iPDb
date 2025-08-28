@@ -152,6 +152,7 @@ void ParsedExpressionIterator::EnumerateChildren(
 	case ExpressionClass::DEFAULT:
 	case ExpressionClass::PARAMETER:
 	case ExpressionClass::POSITIONAL_REFERENCE:
+	case ExpressionClass::PREDICT:
 		// these node types have no children
 		break;
 	default:

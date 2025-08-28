@@ -7,6 +7,7 @@
 #include "duckdb/catalog/catalog_entry/model_catalog_entry.hpp"
 
 #include <regex>
+#include <iostream>
 
 namespace duckdb {
 
@@ -45,41 +46,35 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 		result->bound_predict.base_api = stored_model_data.base_api;
 
 		// Infer input output columns from the PROMPT
-		static const std::regex out_re(R"(\{[sd]:\w+\})");
+		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR))", std::regex_constants::icase);
 		auto words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), out_re);
 		auto words_end = std::sregex_iterator();
 
 		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
 			std::smatch match = *i;
-			std::string match_str = match.str();
-			auto attr = match_str.substr(3, match_str.size() - 4);
-			auto type = match_str[1];
+			stored_model_data.out_names.push_back(match[1]);
 			
-			stored_model_data.out_names.push_back(attr);
-			
-			LogicalType out_type;
-			switch (type) {
-				case 's':
-					out_type = LogicalType(LogicalTypeId::VARCHAR);
-					break;
-					case 'd':
-					out_type = LogicalType(LogicalTypeId::INTEGER);
-					break;
-				default:
-					throw BinderException("Unsupported output column type!");
+			std::string type = match[2].str();
+			LogicalTypeId id;
+			if (type == "VARCHAR") {
+				id = LogicalTypeId::VARCHAR;
+			} else if (type == "INTEGER") {
+				id = LogicalTypeId::INTEGER;
+			} else {
+				throw InternalException("Unsupported column type");
 			}
+			LogicalType out_type = LogicalType(id);
 			stored_model_data.out_types.push_back(out_type);
 		}
 
-		static const std::regex in_re(R"(\{[^:}]+\})");
+		static const std::regex in_re(R"(\{\{\w+\}\})");
 		words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), in_re);
 		words_end = std::sregex_iterator();
 
 		for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
 			std::smatch match = *i;
 			std::string match_str = match.str();
-			auto attr = match_str.substr(1, match_str.size() - 2);
-			
+			auto attr = match_str.substr(2, match_str.size() - 4);			
 			stored_model_data.input_set_names.push_back(attr);
 		}
 	}

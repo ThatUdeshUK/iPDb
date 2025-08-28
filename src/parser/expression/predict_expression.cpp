@@ -13,11 +13,24 @@ namespace duckdb {
 PredictExpression::PredictExpression() : ParsedExpression(ExpressionType::PREDICT, ExpressionClass::PREDICT) {
 }
 
+PredictExpression::PredictExpression(const string &model_name, const string &prompt, vector<unique_ptr<ParsedExpression>> children_p)
+    : ParsedExpression(ExpressionType::PREDICT, ExpressionClass::PREDICT), model_name(model_name), 
+	  prompt(prompt), children(std::move(children_p)) {
+}
+
 string PredictExpression::ToString() const {
-	return "PredictExpression";
+	return out_col_name;
 }
 
 bool PredictExpression::Equal(const PredictExpression &a, const PredictExpression &b) {
+	if (b.children.size() != a.children.size()) {
+		return false;
+	}
+	for (idx_t i = 0; i < a.children.size(); i++) {
+		if (!a.children[i]->Equals(*b.children[i])) {
+			return false;
+		}
+	}
 	if (a.model_name != b.model_name || a.prompt != b.prompt) {
 		return false;
 	}
@@ -32,11 +45,12 @@ hash_t PredictExpression::Hash() const {
 }
 
 unique_ptr<ParsedExpression> PredictExpression::Copy() const {
-	unique_ptr<TableRef> source_copy;
-	if (source) {
-		source_copy = source->Copy();
+	vector<unique_ptr<ParsedExpression>> copy_children;
+	copy_children.reserve(children.size());
+	for (auto &child : children) {
+		copy_children.push_back(child->Copy());
 	}
-	auto copy = make_uniq<PredictExpression>();
+	auto copy = make_uniq<PredictExpression>(model_name, prompt, std::move(copy_children));
 	copy->CopyProperties(*this);
 	return std::move(copy);
 }

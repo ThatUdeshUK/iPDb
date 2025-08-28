@@ -1,4 +1,4 @@
-if(ENABLE_PREDICT)
+if(PREDICTOR_IMPL)
   if (PREDICTOR_IMPL STREQUAL "torchscript")
     message(
       STATUS "Added TorchScript include directories")
@@ -16,6 +16,11 @@ if(ENABLE_PREDICT)
       STATUS "Added LLaMa.cpp include directories")
     include_directories(../../third_party/predictors/llama_cpp/include)
   endif()
+endif()
+
+if(ENABLE_LLM_API)
+  message(STATUS "Added LLM API include directories")
+  include_directories(../../third_party/predictors/llm_api/include)
 endif()
 
 add_subdirectory(expression_executor)

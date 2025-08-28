@@ -32,7 +32,7 @@ export ONNX_INSTALL_PREFIX=<onnx_runtime_installed_path>
 
 #### Step 1.2 - Prerequisite (llama.cpp)
 
-> This step is optional if you are only inferencing with pre-trained ONNX models.
+> This step is optional if you are only inferencing with LLM APIs or pre-trained ONNX models.
 
 First, fetch and build the `llama.cpp` library which we'll use for inferencing local large language models. You have multiple options to get an up and running instance of the `llama.cpp` library.
 
@@ -77,8 +77,8 @@ make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IM
 - `ENABLE_PREDICT=1` enables the ML extension.
 - `PREDICTOR_IMPL=onnx` choose the internal ML platform. Available options,
   -  `onnx` - Use ONNX Runtime to infer pre-trained `.onnx` models (Step 1.1 required).
-  -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format or use OpenAI models via the network (Step 1.2 required).
-- `ENABLE_LLM_API=1` Enable LLM calling with OpenAI API compatible APIs.
+  -  `llama_cpp` - Use llama.cpp to infer LLMs in `GGUF` format.
+- `ENABLE_LLM_API=1` Enable LLM calling with OpenAI API compatible APIs via the network (sets the `CORE_EXTENSIONS='httpfs'` option automatically).
 
 > Previously available `torchscript` to infer pre-trained `pytorch` models exported with TorchScript is \[DEPRECATED\] and is not supported. 
 
@@ -145,18 +145,14 @@ Within the duckdb shell,
 
 Syntax tree and examples of both `CREATE MODEL` and `PREDICT` statements are available [here](https://drive.google.com/file/d/1j1qS_mJbFlXFbnh4ZLTtmB_KPRfZKG3u/view?usp=sharing) (opened via draw.io). 
 
-Refer to additional examples and experiments in this [repository](https://github.com/ThatUdeshUK/mldb).
-
 ### Semantive Predicate with Remote LLM
 
 Make sure you have build `DuckML` with options that enable remote LLM calling,
 
-- `CORE_EXTENSIONS='httpfs'`
 - `ENABLE_PREDICT=1`
-- `PREDICTOR_IMPL=llama_cpp`
 - `ENABLE_LLM_API=1`
 
-Additionally, make sure `OPENAI_API_KEY` environment variable is set with the LLMs API key correctly.
+Additionally, make sure `OPENAI_API_KEY` environment variable is set with the OpenAI API key correctly.
 
 Within the duckdb shell,
 
@@ -174,7 +170,7 @@ Additionally, user should set `API` to the base url of the respective LLM.
 
 -  Run a prediction query.
 	```sql
-	SELECT * FROM PREDICT(o4_mini, PROMPT 'extract the {s:location} and {d:salary} for job {description}', job);
+	SELECT * FROM LLM o4_mini (PROMPT 'extract the {s:location} and {d:salary} for job {description}', job);
 	```
 
 Here, notice that we have an additional `PROMPT` clause within the `PREDICT` statement. Inside the prompt, user can define input columns by mentioning each column with braces, i.e., `{column}` (e.g., `{descrtiption}` in the above query). Similarly, user can define the output columns with braces in the format, `{data_type:column_name}` (e.g., `{s:location}` returns a `VARCHAR` column with location and `{d:salary}` returns a `INTEGER` column with salary).
