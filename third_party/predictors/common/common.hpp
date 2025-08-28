@@ -31,13 +31,15 @@ public:
             return LogicalTypeId::VARCHAR;
         } else if (type == "INTEGER") {
             return LogicalTypeId::INTEGER;
-        } else {
+        } else if (type == "BOOLEAN" || type == "BOOL") {
+            return LogicalTypeId::BOOLEAN;
+        }  else {
             throw InternalException("Unsupported column type");
         }   
     }
 
     void process_prompt_and_extract_types(std::vector<std::pair<std::string, LogicalTypeId>> &attrs, std::string &prompt) {
-		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR))", std::regex_constants::icase);
+		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
         auto words_begin = std::sregex_iterator(prompt.begin(), prompt.end(), out_re);
         auto words_end = std::sregex_iterator();
 
@@ -78,7 +80,10 @@ public:
             } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
                 int value = out_json[col_name].get<int>();
                 output.SetValue(j, row, Value(value));
-            } else {
+            } else if (output_type == LogicalTypeId::BOOLEAN && out_json[col_name].is_boolean()) {
+				bool value = out_json[col_name].get<bool>();
+                output.SetValue(j, row, Value(value));
+			}  else {
                 output.SetValue(j, row, Value(output_type));
             }
         }

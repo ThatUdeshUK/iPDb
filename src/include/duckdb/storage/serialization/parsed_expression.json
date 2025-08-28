@@ -487,18 +487,18 @@
     "members": [
       {
         "id": 200,
-        "name": "source",
-        "type": "TableRef*"
-      },
-      {
-        "id": 201,
         "name": "model_name",
         "type": "string"
       },
       {
-        "id": 202,
+        "id": 201,
         "name": "prompt",
         "type": "string"
+      },
+      {
+        "id": 202,
+        "name": "children",
+        "type": "vector<ParsedExpression*>"
       }
     ]
   }

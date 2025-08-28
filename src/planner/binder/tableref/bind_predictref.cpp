@@ -46,7 +46,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 		result->bound_predict.base_api = stored_model_data.base_api;
 
 		// Infer input output columns from the PROMPT
-		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR))", std::regex_constants::icase);
+		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
 		auto words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), out_re);
 		auto words_end = std::sregex_iterator();
 
@@ -60,6 +60,8 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 				id = LogicalTypeId::VARCHAR;
 			} else if (type == "INTEGER") {
 				id = LogicalTypeId::INTEGER;
+			} else if (type == "BOOLEAN" || type == "BOOL") {
+				id = LogicalTypeId::BOOLEAN;
 			} else {
 				throw InternalException("Unsupported column type");
 			}
@@ -67,7 +69,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 			stored_model_data.out_types.push_back(out_type);
 		}
 
-		static const std::regex in_re(R"(\{\{\w+\}\})");
+		static const std::regex in_re(R"(\{\{[A-Za-z_][A-Za-z0-9_]*\}\})");
 		words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), in_re);
 		words_end = std::sregex_iterator();
 

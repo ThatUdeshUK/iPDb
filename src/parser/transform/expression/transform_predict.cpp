@@ -4,6 +4,7 @@
 #include "duckdb/parser/transformer.hpp"
 
 #include <regex>
+#include <iostream>
 
 namespace duckdb {
 
@@ -11,10 +12,23 @@ static duckdb_libpgquery::PGColumnRef *MakePGColumnRef(const std::string &col_na
     // Allocate the node
     auto *colref = (duckdb_libpgquery::PGColumnRef *) duckdb_libpgquery::newNode(sizeof(duckdb_libpgquery::PGColumnRef), duckdb_libpgquery::T_PGColumnRef);
 
-    // The field name(s) are stored as a list of `PGValue` nodes
-    auto *pgval = duckdb_libpgquery::makeString(col_name.c_str());
+	size_t ref = col_name.find('.');
+    if (ref != std::string::npos) {
+		auto table_name = col_name.substr(0, ref);
+		auto column_name = col_name.substr(ref + 1);
 
-    colref->fields = duckdb_libpgquery::lcons(pgval, (duckdb_libpgquery::PGList *) NULL);  // one-element list for column name
+		std::cout << table_name << "." << column_name << std::endl;
+
+        auto *table = duckdb_libpgquery::makeString(strdup(table_name.c_str()));
+        auto *col = duckdb_libpgquery::makeString(strdup(column_name.c_str()));
+
+		auto temp = duckdb_libpgquery::lcons(col, (duckdb_libpgquery::PGList *) NULL);
+		colref->fields = duckdb_libpgquery::lcons(table, temp);
+    } else {
+		auto *pgval = duckdb_libpgquery::makeString(strdup(col_name.c_str()));
+		colref->fields = duckdb_libpgquery::lcons(pgval, (duckdb_libpgquery::PGList *) NULL);  // one-element list for column name
+    }
+
     colref->location = -1;               // usually -1 if no SQL text position
 
     return colref;
@@ -29,11 +43,15 @@ unique_ptr<ParsedExpression> Transformer::TransformPredict(duckdb_libpgquery::PG
 	if (root.prompt != nullptr)
 		result->prompt = root.prompt;
 
-	static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR))", std::regex_constants::icase);
+	static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
 	auto words_begin = std::sregex_iterator(result->prompt.begin(), result->prompt.end(), out_re);
 	auto words_end = std::sregex_iterator();
 
+	idx_t n_cols = 0;
 	for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+		if (n_cols > 0)
+			throw ParserException("Scalar predict clause only support one output column. At model \"%s\" with \"%s\"", result->model_name.c_str(), result->prompt.c_str());
+
 		std::smatch match = *i;
 		result->out_col_name = match[1];
 		
@@ -43,13 +61,16 @@ unique_ptr<ParsedExpression> Transformer::TransformPredict(duckdb_libpgquery::PG
 			id = LogicalTypeId::VARCHAR;
 		} else if (type == "INTEGER") {
 			id = LogicalTypeId::INTEGER;
-		} else {
-			throw InternalException("Unsupported column type");
+		} else if (type == "BOOLEAN" || type == "BOOL") {
+			id = LogicalTypeId::BOOLEAN;
+		}  else {
+			throw ParserException("Unsupported output column type. At model \"%s\" with \"%s\"", result->model_name.c_str(), result->prompt.c_str());
 		}
 		result->out_col_type = LogicalType(id);
+		n_cols++;
 	}
 
-	static const std::regex in_re(R"(\{\{\w+\}\})");
+	static const std::regex in_re(R"(\{\{([A-Za-z_][A-Za-z0-9_]*)(\.[A-Za-z_][A-Za-z0-9_]*)?\}\})");
 	words_begin = std::sregex_iterator(result->prompt.begin(), result->prompt.end(), in_re);
 	words_end = std::sregex_iterator();
 

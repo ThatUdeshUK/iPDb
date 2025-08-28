@@ -62,7 +62,6 @@ public:
 	int llm_max_tokens; // LLM specific
 
 	bool success;
-	bool is_loaded = false;
 	std::string error_message;
 
 public:

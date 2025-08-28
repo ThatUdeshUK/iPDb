@@ -94,6 +94,7 @@ void LlamaCppPredictor::GenerateGrammar() {
 	std::string rule_base_prefix = R"(ws "\")";
 	std::string rule_base_str = R"(\":" ws string )";
 	std::string rule_base_number = R"(\":" ws number )";
+	std::string rule_base_bool = R"(\":" ws boolean )";
 
 	std::stringstream ss;
 	bool first = true;
@@ -111,6 +112,9 @@ void LlamaCppPredictor::GenerateGrammar() {
 			break;
 		case LogicalTypeId::INTEGER:
 			ss << rule_base_number;
+			break;
+		case LogicalTypeId::BOOLEAN:
+			ss << rule_base_bool;
 			break;
 		default:
 			throw InternalException("Unsupported result type");

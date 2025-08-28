@@ -67,19 +67,6 @@ void LlmApiPredictor::Load(const std::string &model_path, unique_ptr<PredictStat
 void LlmApiPredictor::GenerateGrammar() {
 	std::vector<std::pair<std::string, LogicalTypeId>> attrs {};
 	
-	// static const std::regex in_re(R"(\{\{\w+\}\})");
-	// auto words_begin = std::sregex_iterator(this->prompt.begin(), this->prompt.end(), in_re);
-	// auto words_end = std::sregex_iterator();
-
-	// for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-	// 	std::smatch match = *i;
-	// 	std::string match_str = match.str();
-	// 	auto pos = this->prompt.find(match_str);
-	// 	this->prompt.replace(pos, match_str.size(), R"()");
-	// 	std::cout << match_str << std::endl;
-	// }
-	// std::cout << this->prompt << std::endl;
-
 	prompt_util.process_prompt_and_extract_types(attrs, this->prompt);
 
 	std::stringstream ss;
@@ -99,6 +86,9 @@ void LlmApiPredictor::GenerateGrammar() {
 			break;
 		case LogicalTypeId::INTEGER:
 			ss << R"("<integer>")";
+			break;
+		case LogicalTypeId::BOOLEAN:
+			ss << R"("<boolean>")";
 			break;
 		default:
 			throw InternalException("Unsupported result type");

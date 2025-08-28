@@ -25,6 +25,7 @@ public:
 	PredictInfo predict_info;
 	unique_ptr<Predictor> predictor;
 	unique_ptr<PredictStats> stats;
+	bool is_loaded = false;
 };
 
 unique_ptr<ExpressionState> ExpressionExecutor::InitializeState(const BoundPredictExpression &expr,
@@ -86,11 +87,12 @@ void ExpressionExecutor::Execute(const BoundPredictExpression &expr, ExpressionS
 
 	
 	auto &pstate = state->Cast<ExecutePredictState>();
-	if (!pstate.predictor->is_loaded) {
+	if (!pstate.is_loaded) {
 		auto &client_config = ClientConfig::GetConfig(*context);
 
 		pstate.predictor->Config(client_config, pstate.predict_info.options);
 		pstate.predictor->Load(pstate.predict_info.model_path, pstate.stats);
+		pstate.is_loaded = true;
 	}
 
 	DataChunk predictions;

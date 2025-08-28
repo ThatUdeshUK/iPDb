@@ -59,8 +59,8 @@ BindResult ExpressionBinder::BindPredict(PredictExpression &predict, idx_t depth
 	};
 
 	if (entries.empty()) {
-		throw InternalException("Catalog Error: Model with name `" + result->bound_predict->model_name +
-		                        "` does not exist!");
+		throw BinderException("Model with name \"%s\" does not exist in calatog!",
+				    		   result->bound_predict->model_name.c_str());
 	}
 
 	auto &stored_model = entries[0].get();

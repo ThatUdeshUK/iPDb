@@ -2964,6 +2964,13 @@ predict_expr:
 					n->source = $5;
 					$$ = (PGNode *) n;
 				}
+			| LLM qualified_name PROMPT sprompt
+				{
+					PGPredictExpr *n = makeNode(PGPredictExpr);
+					n->model_name = $2;
+					n->prompt = $4;
+					$$ = (PGNode *) n;
+				}
 			| LLM qualified_name '(' PROMPT sprompt ',' table_ref ')'
 				{
 					PGPredictExpr *n = makeNode(PGPredictExpr);

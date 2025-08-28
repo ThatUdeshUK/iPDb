@@ -331,6 +331,12 @@
     "custom_implementation": true
   },
   {
+    "class": "BoundPredictExpression",
+    "base": "Expression",
+    "enum": "PREDICT",
+    "custom_implementation": true
+  },
+  {
     "class": "BoundAggregateExpression",
     "base": "Expression",
     "enum": "BOUND_AGGREGATE",
