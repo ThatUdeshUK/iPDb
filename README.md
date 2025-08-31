@@ -1,10 +1,10 @@
-# DuckML
+# iPDb
 
-Experimental in-database LLM and deep-learning inference via native relational prediction operator. Built on top of a high-performance analytical database system, DuckDB. 
+Experimental in-database LLM and deep-learning inference via native relational prediction operator. Built on top of a high-performance analytical database system, [DuckDB](https://github.com/duckdb/duckdb). 
 
 ##  Building the Platform
 
-You can get an up and running instance of `duckml` with either **Building from the source** or **Building with Docker**. 
+You can get an up and running instance of `iPDb` with either **Building from the source** or **Building with Docker**. 
 
 ### From the source
 
@@ -62,9 +62,9 @@ Set the `llama.cpp` installed path as a env variable.
 export LIBLLAMA_INSTALL_PREFIX="<llama_cpp_repo>/build"
 ```
 
-#### Step 2 - Build our duckml instance
+#### Step 2 - Build our iPDb instance
 
-`duckdb` use a `make` script for the builds. We have extended that with additional parameters to configure `duckml`.
+`duckdb` use a `make` script for the builds. We have extended that with additional parameters to configure `iPDb`.
 
 ```
 make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IMPL=llama_cpp ENABLE_LLM_API=True DISABLE_SANITIZER=1
@@ -84,7 +84,7 @@ make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IM
 
 ##### API LLM Calling
 
-Majority of publicly available remote LLMs requires an API key from the respective developer to use it's capabilities. Please, aqquire the respective key and set in the `env` variable as follows so that `DuckML` can indentify it before inference.
+Majority of publicly available remote LLMs requires an API key from the respective developer to use it's capabilities. Please, aqquire the respective key and set in the `env` variable as follows so that `iPDb` can indentify it before inference.
 
 ```bash
 export OPENAI_API_KEY="<api_key>"
@@ -98,40 +98,40 @@ export OPENAI_API_KEY="<api_key>"
 
 Make sure Docker is set up correctly.
 
-Clone the `duckml` repository. It should include a `Dockerfile` and a `.dockerignore`.
+Clone the `iPDb` repository. It should include a `Dockerfile` and a `.dockerignore`.
 
-Build the Docker image by running (we'll create a image named `duckml`).
+Build the Docker image by running (we'll create a image named `iPDb`).
 
 ```bash
-docker build -t duckml
+docker build -t iPDb
 ```
 
 Run the Docker image:
 
 ```bash
-docker run -it -v <absolute_path_to_data_repo>:/data --name=”duckml_container” duckml /bin/bash
+docker run -it -v <absolute_path_to_data_repo>:/data --name=”iPDb_container” iPDb /bin/bash
 ```
 
 For subsequent runs, you can just spin up the stopped container using the name of the container.
 
 ```bash
-docker start -ai duckml_container
+docker start -ai iPDb_container
 ```
 
-> Both of the above commands will open an interactive shell in the Docker container. Here, we mount a data directory where we will be storing the pre-trained models. If you want just to see if the DuckML works, run the about command without `-v <absolute_path_to_mldb_repo>:/data`.
+> Both of the above commands will open an interactive shell in the Docker container. Here, we mount a data directory where we will be storing the pre-trained models. If you want just to see if the iPDb works, run the about command without `-v <absolute_path_to_mldb_repo>:/data`.
 
-Run duckdb:
+Run iPDb:
 ```bash
-./build/debug/duckdb <your_database>
+./build/debug/iPDb <your_database>
 ```
 
 ## Getting Started
 
-Once you have a working DuckML instance, you can experiment with SQL queries that are capable of in-database inference.
+Once you have a working iPDb instance, you can experiment with SQL queries that are capable of in-database inference.
 
 ### Simple Example
 
-Within the duckdb shell,
+Within the iPDb shell,
 
 - Create and populate tables with feature data (say, iris data).
 -  Upload the model to the database via the `CREATE MODEL` statement.
@@ -147,14 +147,14 @@ Syntax tree and examples of both `CREATE MODEL` and `PREDICT` statements are ava
 
 ### Semantive Predicate with Remote LLM
 
-Make sure you have build `DuckML` with options that enable remote LLM calling,
+Make sure you have build `iPDb` with options that enable remote LLM calling,
 
 - `ENABLE_PREDICT=1`
 - `ENABLE_LLM_API=1`
 
 Additionally, make sure `OPENAI_API_KEY` environment variable is set with the OpenAI API key correctly.
 
-Within the duckdb shell,
+Within the iPDb shell,
 
 - Create and populate tables with data (say, a `job` table with `description` column containing a job listing document).
 -  Upload the model to the database via the `CREATE MODEL` statement.
@@ -180,9 +180,9 @@ Here, notice that we have an additional `PROMPT` clause within the `PREDICT` sta
 - More details on building DuckDB from source is [here](https://duckdb.org/docs/stable/dev/building/overview).
 - Follow the LibTorch tutorial on native model inference.
 	- If you are new to deep-learning inference, start with beginner-friendly Python-based training and inference examples [here](https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html).
-	- Introduction to native C++ model exporting and inference with TorchScript is available [here](https://pytorch.org/tutorials/advanced/cpp_export.html). The most feature-rich version of DuckML is implemented via the ONNX runtime instead of LibTorch, but this guide is far better than any ONNX examples can offer (the concepts are the same).
+	- Introduction to native C++ model exporting and inference with TorchScript is available [here](https://pytorch.org/tutorials/advanced/cpp_export.html). The most feature-rich version of iPDb is implemented via the ONNX runtime instead of LibTorch, but this guide is far better than any ONNX examples can offer (the concepts are the same).
 - The high-level duckdb execution model is explained [in the official documentation](https://duckdb.org/docs/internals/overview) and these [slides](https://15721.courses.cs.cmu.edu/spring2023/slides/22-duckdb.pdf).
-- Read the source for the implementation of DuckML. **Extensive documentation of this extension is WIP.**
+- Read the source for the implementation of iPDb. **Extensive documentation of this extension is WIP.**
 
 ## Data Platforms and Runtimes
 
