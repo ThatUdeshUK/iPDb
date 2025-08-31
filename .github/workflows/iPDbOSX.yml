@@ -1,0 +1,144 @@
+name: iPDbOSX
+on:
+  workflow_call:
+    inputs:
+      override_git_describe:
+        type: string
+      git_ref:
+        type: string
+      skip_tests:
+        type: string
+      run_all:
+        type: string
+  workflow_dispatch:
+    inputs:
+      override_git_describe:
+        type: string
+      git_ref:
+        type: string
+      skip_tests:
+        type: string
+      run_all:
+        type: string
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: osx-${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/main' || github.sha }}-${{ inputs.override_git_describe }}
+  cancel-in-progress: true
+
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  OVERRIDE_GIT_DESCRIBE: ${{ inputs.override_git_describe }}
+
+jobs:
+  xcode-release:
+    # Builds binaries for osx_arm64 and osx_amd64
+    name: OSX Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-15-large
+            arch: x86_64
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+            artifact_name: ipdb-macos-x86_64
+          - os: macos-15-xlarge
+            arch: arm64
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+            artifact_name: ipdb-macos-arm64
+    env:
+      EXTENSION_CONFIGS: '${GITHUB_WORKSPACE}/.github/config/bundled_extensions.cmake'
+      ENABLE_EXTENSION_AUTOLOADING: 1
+      ENABLE_EXTENSION_AUTOINSTALL: 1
+      GEN: ninja
+      ENABLE_LLM_API: 1
+      CMAKE_VARS: ${{ matrix.cmake_args }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.git_ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Ninja
+        run: brew install ninja
+
+      - name: Install OpenSSL
+        run: brew install openssl
+
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ${{ github.job }}
+          save: ${{ github.ref == 'refs/heads/main' || github.repository != 'duckdb/ipdb' }}
+
+      - name: Install pytest
+        run: |
+          python -m pip install pytest
+
+      - name: Build
+        shell: bash
+        run: |
+          OPENSSL_PREFIX=$(brew --prefix openssl@3)
+          export LDFLAGS="-L${OPENSSL_PREFIX}/lib"
+          export CPPFLAGS="-I${OPENSSL_PREFIX}/include"
+          export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig"
+          echo $CMAKE_VARS
+          make
+
+      - name: Print platform
+        shell: bash
+        run: ./build/release/ipdb -c "PRAGMA platform;"
+
+        #     from https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      # - name: Sign Binaries
+      #   shell: bash
+      #   env:
+      #     BUILD_CERTIFICATE_BASE64: ${{ secrets.OSX_CODESIGN_BUILD_CERTIFICATE_BASE64 }}
+      #     P12_PASSWORD: ${{ secrets.OSX_CODESIGN_P12_PASSWORD }}
+      #     KEYCHAIN_PASSWORD: ${{ secrets.OSX_CODESIGN_KEYCHAIN_PASSWORD }}
+      #   run: |
+      #     if [[ "$GITHUB_REPOSITORY" = "duckdb/duckdb" ]] ; then
+      #       . scripts/osx_import_codesign_certificate.sh
+
+      #       codesign --all-architectures --force --sign "Developer ID Application: Stichting DuckDB Foundation" build/release/duckdb
+      #       codesign --all-architectures --force --sign "Developer ID Application: Stichting DuckDB Foundation" build/release/src/libduckdb*.dylib
+      #     fi
+
+      - name: Deploy
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_DUCKDB_STAGING_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
+        run: |
+          python scripts/amalgamation.py
+          zip -j ${{ matrix.artifact_name }}.zip build/release/ipdb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ${{ matrix.artifact_name }}.zip
+
+  release:
+    needs: xcode-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  

@@ -7,7 +7,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(include ${DUCKDB_MODULE_BASE_DIR}/third_party/httplib)
+find_package(OpenSSL REQUIRED)
+
+include_directories(include ${DUCKDB_MODULE_BASE_DIR}/third_party/httplib ${OPENSSL_INCLUDE_DIR})
 
 if (ENABLE_LLM_API)
     add_library(duckdb_llm_api STATIC duckdb_llm_api.cpp https_client.cpp)

@@ -3,9 +3,7 @@
 #include <iostream>
 #include <map>
 
-#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 1
-#include "duckdb_torch.hpp"
-#elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
+#if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 2
 #include "duckdb_onnx.hpp"
 #elif defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
 #include "duckdb_llama_cpp.hpp"
