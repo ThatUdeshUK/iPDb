@@ -17,11 +17,11 @@
 
 namespace duckdb {
 
-typedef enum PredictorTask { 
-	PREDICT_TABULAR_TASK = 0, 
-	PREDICT_LM_TASK = 1, 
-	PREDICT_GNN_TASK = 2, 
-	PREDICT_LLM_TASK = 3 
+typedef enum PredictorTask {
+	PREDICT_TABULAR_TASK = 0,
+	PREDICT_LM_TASK = 1,
+	PREDICT_GNN_TASK = 2,
+	PREDICT_LLM_TASK = 3
 } PredictorTask;
 
 struct PredictStats {
@@ -42,7 +42,6 @@ struct PredictInfo {
 	string prompt;
 	string base_api;
 
-	
 	vector<idx_t> input_mask;
 	vector<string> input_set_names;
 	vector<string> result_set_names;
@@ -69,21 +68,26 @@ public:
 	virtual void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) {};
 	virtual void Predict(std::vector<float> &input, std::vector<float> &output, int output_size) {};
 	virtual void PredictLM(std::string &input, std::vector<float> &output, int output_size) {};
-	virtual void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
-	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols, int output_size) {};
-	virtual void PredictChunk(ClientContext &client, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
+	virtual void PredictLMChunk(DataChunk &input, DataChunk &output, int rows, const PredictInfo &info,
+	                            unique_ptr<PredictStats> &stats) {};
+	virtual void PredictVector(std::vector<float> &input, std::vector<float> &output, int rows, int cols,
+	                           int output_size) {};
+	virtual void PredictChunk(ClientContext &client, DataChunk &input, DataChunk &output, int rows,
+	                          const PredictInfo &info, unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output,
 	                        unique_ptr<PredictStats> &stats) {};
 	virtual void PredictGNN(vector<float> &nodes, vector<int64_t> &edges, vector<float> &output, int64_t num_nodes,
 	                        int64_t num_edges, int64_t feature_size, int64_t edge_size, int64_t output_size,
 	                        unique_ptr<PredictStats> &stats) {};
+	virtual void ScanChunk(ClientContext &client, DataChunk &output, const PredictInfo &info,
+	                       unique_ptr<PredictStats> &stats) {};
 };
 
 //! PhysicalPredict implements the operator physical PREDICT operation
 class PhysicalPredict : public PhysicalOperator {
 public:
 	PhysicalPredict(vector<LogicalType> types, PhysicalOperator &child, BoundPredictInfo bound_predict_p);
-	
+
 	PredictInfo predict_info;
 
 public:
@@ -103,6 +107,37 @@ public:
 	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info);
 };
 
+//! PhysicalPredict implements the operator physical PREDICT operation
+class PhysicalPredictScan : public PhysicalOperator {
+public:
+	PhysicalPredictScan(vector<LogicalType> types, BoundPredictInfo bound_predict_p);
+
+	PredictInfo predict_info;
+
+public:
+	string GetName() const override;
+	InsertionOrderPreservingMap<string> ParamsToString() const override;
+
+public:
+	unique_ptr<LocalSourceState> GetLocalSourceState(ExecutionContext &context,
+	                                                 GlobalSourceState &gstate) const override;
+	unique_ptr<GlobalSourceState> GetGlobalSourceState(ClientContext &context) const override;
+	SourceResultType GetData(ExecutionContext &context, DataChunk &chunk, OperatorSourceInput &input) const override;
+
+	bool IsSource() const override {
+		return true;
+	}
+
+	bool ParallelSource() const override {
+		return false;
+	}
+
+	ProgressData GetProgress(ClientContext &context, GlobalSourceState &gstate) const override;
+
+public:
+	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info);
+};
+
 //! PhysicalGNNPredict implements the source/sink physical PREDICT operation
 class PhysicalGNNPredict : public PhysicalOperator {
 public:
@@ -110,7 +145,7 @@ public:
 
 public:
 	PhysicalGNNPredict(vector<LogicalType> types, PhysicalOperator &node_child, PhysicalOperator &edge_child,
-					   idx_t node_cardinality, idx_t edge_cardinality, BoundPredictInfo bound_predict_p);
+	                   idx_t node_cardinality, idx_t edge_cardinality, BoundPredictInfo bound_predict_p);
 
 	ModelType model_type;
 	string model_path;

@@ -1,4 +1,5 @@
 #include "duckdb/parser/tableref/table_predict_ref.hpp"
+#include "duckdb/common/prompt.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/tableref/bound_predictref.hpp"
 #include "duckdb/parser/tableref/subqueryref.hpp"
@@ -46,7 +47,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 		result->bound_predict.base_api = stored_model_data.base_api;
 
 		// Infer input output columns from the PROMPT
-		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
+		static const std::regex out_re(Prompt::OUT_REGEX, std::regex_constants::icase);
 		auto words_begin = std::sregex_iterator(result->bound_predict.prompt.begin(), result->bound_predict.prompt.end(), out_re);
 		auto words_end = std::sregex_iterator();
 
@@ -55,17 +56,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 			stored_model_data.out_names.push_back(match[1]);
 			
 			std::string type = match[2].str();
-			LogicalTypeId id;
-			if (type == "VARCHAR") {
-				id = LogicalTypeId::VARCHAR;
-			} else if (type == "INTEGER") {
-				id = LogicalTypeId::INTEGER;
-			} else if (type == "BOOLEAN" || type == "BOOL") {
-				id = LogicalTypeId::BOOLEAN;
-			} else {
-				throw InternalException("Unsupported column type");
-			}
-			LogicalType out_type = LogicalType(id);
+			LogicalType out_type = Prompt::type_to_logical_type(type);
 			stored_model_data.out_types.push_back(out_type);
 		}
 
@@ -82,68 +73,25 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 	}
 
 	result->bind_index = GenerateTableIndex();
-	result->child_binder = Binder::CreateBinder(context, this);
-	result->children.push_back(result->child_binder->Bind(*ref.source));
 
 	vector<string> names;
 	vector<LogicalType> input_types;
-	result->child_binder->bind_context.GetTypesAndNames(names, input_types);
-	vector<LogicalType> types(input_types);
+	vector<LogicalType> types;
+	if (ref.source) {
+		result->child_binder = Binder::CreateBinder(context, this);
+		result->children.push_back(result->child_binder->Bind(*ref.source));
 
-	vector<idx_t> input_mask;
-	if (!stored_model_data.input_set_names.empty()) {
-		for (const std::string &input_col : stored_model_data.input_set_names) {
-			bool feature_found = false;
-			for (auto it = names.begin(); it != names.end(); ++it) {
-				auto index = static_cast<idx_t>(std::distance(names.begin(), it));
-				if (input_col == *it) {
-					input_mask.push_back(index);
-					feature_found = true;
-					break;
-				}
-			}
-			if (!feature_found) {
-				throw BinderException("Input table should contain the BY feature columns");
-			}
-		}
-	} else if (!stored_model_data.exclude_set_names.empty()) {
-		for (auto it = names.begin(); it != names.end(); ++it) {
-			bool exclude_found = false;
-			for (const std::string &exclude_col : stored_model_data.exclude_set_names) {
-				if (exclude_col == *it) {
-					exclude_found = true;
-					break;
-				}
-			}
-			if (exclude_found) {
-				continue;
-			}
-			auto index = static_cast<idx_t>(std::distance(names.begin(), it));
-			input_mask.push_back(index);
-		}
-	} else {
-		for (size_t i = 0; i < names.size(); i++) {
-			input_mask.push_back(i);
-		}
-	}
-	result->bound_predict.input_mask = std::move(input_mask);
+		result->child_binder->bind_context.GetTypesAndNames(names, input_types);
+		types.insert(types.end(), input_types.begin(), input_types.end());
 
-	if (result->bound_predict.model_type == ModelType::GNN) {
-		vector<string> opt_names;
-		vector<LogicalType> opt_types;
-		result->opt_binder = Binder::CreateBinder(context, this);
-		result->children.push_back(result->opt_binder->Bind(*ref.opt_source));
-
-		result->opt_binder->bind_context.GetTypesAndNames(opt_names, opt_types);
-
-		vector<idx_t> opt_mask;
-		if (!stored_model_data.opt_set_names.empty()) {
-			for (const std::string &input_col : stored_model_data.opt_set_names) {
+		vector<idx_t> input_mask;
+		if (!stored_model_data.input_set_names.empty()) {
+			for (const std::string &input_col : stored_model_data.input_set_names) {
 				bool feature_found = false;
-				for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
-					auto index = static_cast<idx_t>(std::distance(opt_names.begin(), it));
+				for (auto it = names.begin(); it != names.end(); ++it) {
+					auto index = static_cast<idx_t>(std::distance(names.begin(), it));
 					if (input_col == *it) {
-						opt_mask.push_back(index);
+						input_mask.push_back(index);
 						feature_found = true;
 						break;
 					}
@@ -152,10 +100,10 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 					throw BinderException("Input table should contain the BY feature columns");
 				}
 			}
-		} else if (!stored_model_data.exclude_opt_set_names.empty()) {
-			for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
+		} else if (!stored_model_data.exclude_set_names.empty()) {
+			for (auto it = names.begin(); it != names.end(); ++it) {
 				bool exclude_found = false;
-				for (const std::string &exclude_col : stored_model_data.exclude_opt_set_names) {
+				for (const std::string &exclude_col : stored_model_data.exclude_set_names) {
 					if (exclude_col == *it) {
 						exclude_found = true;
 						break;
@@ -164,15 +112,62 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 				if (exclude_found) {
 					continue;
 				}
-				auto index = static_cast<idx_t>(std::distance(opt_names.begin(), it));
-				opt_mask.push_back(index);
+				auto index = static_cast<idx_t>(std::distance(names.begin(), it));
+				input_mask.push_back(index);
 			}
 		} else {
-			for (size_t i = 0; i < opt_names.size(); i++) {
-				opt_mask.push_back(i);
+			for (size_t i = 0; i < names.size(); i++) {
+				input_mask.push_back(i);
 			}
 		}
-		result->bound_predict.opt_mask = std::move(opt_mask);
+		result->bound_predict.input_mask = std::move(input_mask);
+
+		if (result->bound_predict.model_type == ModelType::GNN) {
+			vector<string> opt_names;
+			vector<LogicalType> opt_types;
+			result->opt_binder = Binder::CreateBinder(context, this);
+			result->children.push_back(result->opt_binder->Bind(*ref.opt_source));
+
+			result->opt_binder->bind_context.GetTypesAndNames(opt_names, opt_types);
+
+			vector<idx_t> opt_mask;
+			if (!stored_model_data.opt_set_names.empty()) {
+				for (const std::string &input_col : stored_model_data.opt_set_names) {
+					bool feature_found = false;
+					for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
+						auto index = static_cast<idx_t>(std::distance(opt_names.begin(), it));
+						if (input_col == *it) {
+							opt_mask.push_back(index);
+							feature_found = true;
+							break;
+						}
+					}
+					if (!feature_found) {
+						throw BinderException("Input table should contain the BY feature columns");
+					}
+				}
+			} else if (!stored_model_data.exclude_opt_set_names.empty()) {
+				for (auto it = opt_names.begin(); it != opt_names.end(); ++it) {
+					bool exclude_found = false;
+					for (const std::string &exclude_col : stored_model_data.exclude_opt_set_names) {
+						if (exclude_col == *it) {
+							exclude_found = true;
+							break;
+						}
+					}
+					if (exclude_found) {
+						continue;
+					}
+					auto index = static_cast<idx_t>(std::distance(opt_names.begin(), it));
+					opt_mask.push_back(index);
+				}
+			} else {
+				for (size_t i = 0; i < opt_names.size(); i++) {
+					opt_mask.push_back(i);
+				}
+			}
+			result->bound_predict.opt_mask = std::move(opt_mask);
+		}
 	}
 
 	vector<string> result_names = stored_model_data.out_names;
@@ -183,33 +178,36 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 	types.insert(types.end(), std::make_move_iterator(result_types.begin()),
 	             std::make_move_iterator(result_types.end()));
 
+	if (ref.source) {
+		result->bound_predict.input_set_names = std::move(stored_model_data.input_set_names);
+		result->bound_predict.input_set_types = std::move(input_types);
+	}
 	result->bound_predict.types = types;
-	result->bound_predict.input_set_names = std::move(stored_model_data.input_set_names);
-	result->bound_predict.input_set_types = std::move(input_types);
 	result->bound_predict.result_set_names = std::move(stored_model_data.out_names);
 	result->bound_predict.result_set_types = std::move(stored_model_data.out_types);
 
 	auto subquery_alias = ref.alias.empty() ? "__unnamed_predict" : ref.alias;
 	bind_context.AddGenericBinding(result->bind_index, subquery_alias, names, types);
-	MoveCorrelatedExpressions(*result->child_binder);
+	
+	if (ref.source) {
+		MoveCorrelatedExpressions(*result->child_binder);
+	}
 	return std::move(result);
 }
 
 unique_ptr<BoundTableRef> Binder::Bind(TablePredictRef &ref) {
-	if (!ref.source) {
-		throw InternalException("Predict without a source!?");
+	if (ref.source) {
+		// Wrap the source in a projection
+		auto subquery = make_uniq<SelectNode>();
+		subquery->select_list.push_back(make_uniq<StarExpression>());
+		subquery->from_table = std::move(ref.source);
+
+		auto subquery_select = make_uniq<SelectStatement>();
+		subquery_select->node = std::move(subquery);
+		auto subquery_ref = make_uniq<SubqueryRef>(std::move(subquery_select));
+
+		ref.source = std::move(subquery_ref);
 	}
-
-	// Wrap the source in a projection
-	auto subquery = make_uniq<SelectNode>();
-	subquery->select_list.push_back(make_uniq<StarExpression>());
-	subquery->from_table = std::move(ref.source);
-
-	auto subquery_select = make_uniq<SelectStatement>();
-	subquery_select->node = std::move(subquery);
-	auto subquery_ref = make_uniq<SubqueryRef>(std::move(subquery_select));
-
-	ref.source = std::move(subquery_ref);
 
 	return BindBoundPredict(ref);
 }

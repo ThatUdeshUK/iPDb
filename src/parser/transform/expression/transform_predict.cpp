@@ -1,5 +1,6 @@
 #include "duckdb/common/enum_util.hpp"
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/prompt.hpp"
 #include "duckdb/parser/expression/predict_expression.hpp"
 #include "duckdb/parser/transformer.hpp"
 
@@ -43,7 +44,7 @@ unique_ptr<ParsedExpression> Transformer::TransformPredict(duckdb_libpgquery::PG
 	if (root.prompt != nullptr)
 		result->prompt = root.prompt;
 
-	static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
+	static const std::regex out_re(Prompt::OUT_REGEX, std::regex_constants::icase);
 	auto words_begin = std::sregex_iterator(result->prompt.begin(), result->prompt.end(), out_re);
 	auto words_end = std::sregex_iterator();
 
@@ -56,17 +57,7 @@ unique_ptr<ParsedExpression> Transformer::TransformPredict(duckdb_libpgquery::PG
 		result->out_col_name = match[1];
 		
 		std::string type = match[2].str();
-		LogicalTypeId id;
-		if (type == "VARCHAR") {
-			id = LogicalTypeId::VARCHAR;
-		} else if (type == "INTEGER") {
-			id = LogicalTypeId::INTEGER;
-		} else if (type == "BOOLEAN" || type == "BOOL") {
-			id = LogicalTypeId::BOOLEAN;
-		}  else {
-			throw ParserException("Unsupported output column type. At model \"%s\" with \"%s\"", result->model_name.c_str(), result->prompt.c_str());
-		}
-		result->out_col_type = LogicalType(id);
+		result->out_col_type = Prompt::type_to_logical_type(type);
 		n_cols++;
 	}
 

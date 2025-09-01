@@ -69,6 +69,7 @@ unique_ptr<Expression> BoundPredictExpression::Copy() const {
 		copy_info->model_type = bound_predict->model_type;
 		copy_info->model_name = bound_predict->model_name;
 		copy_info->model_path = bound_predict->model_path;
+		copy_info->base_api = bound_predict->base_api;
 		copy_info->prompt = bound_predict->prompt;
 		copy_info->input_set_names = bound_predict->input_set_names;
 		copy_info->result_set_names = bound_predict->result_set_names;

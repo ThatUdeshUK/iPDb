@@ -1,6 +1,7 @@
 #pragma once
 
 #include "duckdb/common/types/vector.hpp"
+#include "duckdb/common/prompt.hpp"
 
 #include "nlohmann/json.hpp"  // nlohmann/json
 #include <regex>
@@ -26,20 +27,8 @@ public:
         return Value(LogicalTypeId::INTEGER);
     }
 
-    static LogicalTypeId type_to_logical_type(std::string type) {
-        if (type == "VARCHAR") {
-            return LogicalTypeId::VARCHAR;
-        } else if (type == "INTEGER") {
-            return LogicalTypeId::INTEGER;
-        } else if (type == "BOOLEAN" || type == "BOOL") {
-            return LogicalTypeId::BOOLEAN;
-        }  else {
-            throw InternalException("Unsupported column type");
-        }   
-    }
-
     void process_prompt_and_extract_types(std::vector<std::pair<std::string, LogicalTypeId>> &attrs, std::string &prompt) {
-		static const std::regex out_re(R"((\w+)\s+(INTEGER|VARCHAR|BOOLEAN|BOOL))", std::regex_constants::icase);
+		static const std::regex out_re(Prompt::OUT_REGEX, std::regex_constants::icase);
         auto words_begin = std::sregex_iterator(prompt.begin(), prompt.end(), out_re);
         auto words_end = std::sregex_iterator();
 
@@ -49,8 +38,7 @@ public:
             auto attr = match[1].str();
 			auto type = match[2].str();
             auto pos = prompt.find(match_str);
-            prompt.replace(pos, match_str.size(), attr);
-            attrs.push_back(std::make_pair(attr, type_to_logical_type(type)));
+            attrs.push_back(std::make_pair(attr, Prompt::type_to_logical_type(type)));
         }
     }
 
@@ -66,24 +54,54 @@ public:
         return ss.str();
     }
 
-    void extract_data(const std::string &llm_out, int row, DataChunk &output, const PredictInfo &info) {
+    void extract_array_data(const std::string &llm_out, DataChunk &output, const PredictInfo &info) {
         auto out_json = nlohmann::json::parse(llm_out);
+        if (out_json.is_array()) {
+            output.SetCardinality(out_json.size());
+            idx_t row = 0;
+            for (nlohmann::json::iterator it = out_json.begin(); it != out_json.end(); ++it) {
+                populate_row_data(*it, row, output, info);
+                row++;
+            }
+        }
+    }
+
+    void extract_row_data(const std::string &llm_out, int row, DataChunk &output, const PredictInfo &info) {
+        auto out_json = nlohmann::json::parse(llm_out);
+        populate_row_data(out_json, row, output, info);
+    }
+
+    void populate_row_data(const nlohmann::json &out_json, int row, DataChunk &output, const PredictInfo &info) {
         for (size_t j = 0; j < info.result_set_names.size(); j++) {
             auto output_type = info.result_set_types[j];
             auto col_name = info.result_set_names[j];
-            if (output_type == LogicalTypeId::VARCHAR && out_json[col_name].is_string()) {
-                std::string value = out_json[col_name].get<std::string>();
-                output.SetValue(j, row, Value(value));
-            } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
-                auto value = extract_longest_integer(out_json[col_name].get<std::string>());
-                output.SetValue(j, row, value);
-            } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
-                int value = out_json[col_name].get<int>();
-                output.SetValue(j, row, Value(value));
-            } else if (output_type == LogicalTypeId::BOOLEAN && out_json[col_name].is_boolean()) {
-				bool value = out_json[col_name].get<bool>();
-                output.SetValue(j, row, Value(value));
-			}  else {
+
+            try {
+                if (!out_json.contains(col_name)) {
+                    output.SetValue(j, row, Value(output_type));
+                    continue;
+                }
+
+                if (output_type == LogicalTypeId::VARCHAR && out_json[col_name].is_string()) {
+                    std::string value = out_json[col_name].get<std::string>();
+                    output.SetValue(j, row, Value(value));
+                } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_string()) {
+                    auto value = extract_longest_integer(out_json[col_name].get<std::string>());
+                    output.SetValue(j, row, value);
+                } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
+                    int value = out_json[col_name].get<int>();
+                    output.SetValue(j, row, Value(value));
+                } else if (output_type == LogicalTypeId::DOUBLE && out_json[col_name].is_number()) {
+                    int value = out_json[col_name].get<double>();
+                    output.SetValue(j, row, Value(value));
+                } else if (output_type == LogicalTypeId::BOOLEAN && out_json[col_name].is_boolean()) {
+                    bool value = out_json[col_name].get<bool>();
+                    output.SetValue(j, row, Value(value));
+                }  else {
+                    output.SetValue(j, row, Value(output_type));
+                }
+            } catch (const nlohmann::json::parse_error& e) {
+                std::cout << "JSON parse issue: " << e.what() << std::endl;
                 output.SetValue(j, row, Value(output_type));
             }
         }

@@ -42,7 +42,7 @@ void LlamaCppPredictor::Config(const ClientConfig &client_config, const case_ins
 
 	// TODO: Implement any configurations here.
 	this->n_gl = 99;
-	this->n_predict = 64;
+	this->n_predict = 256;
 }
 
 /**
@@ -62,9 +62,6 @@ void LlamaCppPredictor::Load(const std::string &model_path, unique_ptr<PredictSt
 	// This would be the specific model name or API URL.
 	this->model_path = model_path;
 	std::cout << "Model Path: " << model_path << std::endl;
-
-	this->n_gl = 99;
-	this->n_predict = 64;
 
 	// init model
 	llama_model_params model_params = llama_model_default_params();
@@ -93,7 +90,8 @@ void LlamaCppPredictor::GenerateGrammar() {
 
 	std::string rule_base_prefix = R"(ws "\")";
 	std::string rule_base_str = R"(\":" ws string )";
-	std::string rule_base_number = R"(\":" ws number )";
+	std::string rule_base_integer = R"(\":" ws integer )";
+	std::string rule_base_double = R"(\":" ws double )";
 	std::string rule_base_bool = R"(\":" ws boolean )";
 
 	std::stringstream ss;
@@ -111,7 +109,10 @@ void LlamaCppPredictor::GenerateGrammar() {
 			ss << rule_base_str;
 			break;
 		case LogicalTypeId::INTEGER:
-			ss << rule_base_number;
+			ss << rule_base_integer;
+			break;
+		case LogicalTypeId::DOUBLE:
+			ss << rule_base_double;
 			break;
 		case LogicalTypeId::BOOLEAN:
 			ss << rule_base_bool;
@@ -124,15 +125,19 @@ void LlamaCppPredictor::GenerateGrammar() {
 
 	std::string grammar_prefix = R"(root ::= DuckMLGE
 DuckMLGE ::= "{"   )";
+	if (is_source) {
+		grammar_prefix = R"(root ::= DuckMLGElist
+DuckMLGE ::= "{"   )";
+	}
 
 	std::string grammar_suffix = R"(   "}"
 DuckMLGElist ::= "[]" | "["   ws   DuckMLGE   (","   ws   DuckMLGE)*   "]"
 string ::= "\""   ([^"]*)   "\""
 boolean ::= "true" | "false"
 ws ::= [ ]*
-number ::= [0-9]+   "."?   [0-9]*
+integer ::= "-"? [0-9]+
+double  ::= "-"? [0-9]+ "." [0-9]+
 stringlist ::= "["   ws   "]" | "["   ws   string   (","   ws   string)*   ws   "]"
-numberlist ::= "["   ws   "]" | "["   ws   string   (","   ws   number)*   ws   "]"
 )";
 
 	this->grammar = grammar_prefix + replacement + grammar_suffix;
@@ -366,7 +371,7 @@ void LlamaCppPredictor::PredictChunk(ClientContext &client, DataChunk &input, Da
 			llama_sampler_reset(this->chain);
 			
 			std::cout << llm_out << "||" << std::endl;
-			prompt_util.extract_data(llm_out, i, output, info);
+			prompt_util.extract_row_data(llm_out, i, output, info);
 		}
 
 #if OPT_TIMING
@@ -385,6 +390,31 @@ void LlamaCppPredictor::PredictChunk(ClientContext &client, DataChunk &input, Da
 		// stats->correct += <no_of_positives>;
 		// stats->total += rows;
 	}
+}
+
+void LlamaCppPredictor::ScanChunk(ClientContext &client, DataChunk &output, const PredictInfo &info, unique_ptr<PredictStats> &stats) {
+#if OPT_TIMING
+	stats->move = 0;
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+#endif
+
+	std::string rewritten = this->prompt + ". Always produce a list.";
+
+	std::string llm_out {};
+	llm_out = generate(this->model, this->vocab, this->grmr, this->chain, rewritten, this->n_predict);
+
+	llama_sampler_reset(this->grmr);
+	llama_sampler_reset(this->chain);
+	
+	std::cout << llm_out << "||" << std::endl;
+	prompt_util.extract_array_data(llm_out, output, info);
+
+#if OPT_TIMING
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	stats->predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+	stats->move_rev = 0;
+#endif
 }
 
 } // namespace duckdb

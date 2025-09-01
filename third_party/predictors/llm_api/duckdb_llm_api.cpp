@@ -87,6 +87,9 @@ void LlmApiPredictor::GenerateGrammar() {
 		case LogicalTypeId::INTEGER:
 			ss << R"("<integer>")";
 			break;
+		case LogicalTypeId::DOUBLE:
+			ss << R"("<double>")";
+			break;
 		case LogicalTypeId::BOOLEAN:
 			ss << R"("<boolean>")";
 			break;
@@ -139,8 +142,7 @@ void LlmApiPredictor::PredictChunk(ClientContext &client, DataChunk &input, Data
 		stats->move += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
 		begin = std::chrono::steady_clock::now();
-#endif
-
+#endif 
 
 		auto &db = DatabaseInstance::GetDatabase(client);
 		auto &api = openai::start(db, base_api);
@@ -169,7 +171,7 @@ void LlmApiPredictor::PredictChunk(ClientContext &client, DataChunk &input, Data
 			// llm_out = llm_out.substr(1, llm_out.size() - 2);
 			
 			std::cout << llm_out << "||" << std::endl;
-			prompt_util.extract_data(llm_out, i, output, info);
+			prompt_util.extract_row_data(llm_out, i, output, info);
 		}
 
 #if OPT_TIMING
@@ -188,6 +190,49 @@ void LlmApiPredictor::PredictChunk(ClientContext &client, DataChunk &input, Data
 		// stats->correct += <no_of_positives>;
 		// stats->total += rows;
 	}
+}
+
+void LlmApiPredictor::ScanChunk(ClientContext &client, DataChunk &output, const PredictInfo &info, unique_ptr<PredictStats> &stats) {
+#if OPT_TIMING
+	stats->move = 0;
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+#endif
+
+	auto &db = DatabaseInstance::GetDatabase(client);
+	auto &api = openai::start(db, base_api);
+
+	std::string rewritten =this->prompt;
+
+	std::string llm_out {};
+	nlohmann::json request;
+
+	request["model"] = this->model_path;
+	request["messages"] = {
+		{{"content",
+			(R"(You are a helpful assistant. Always respond **only** with valid JSON array where each object is in format )" + this->grammar +
+				R"(. Do not include any extra text or explanations, produce {<key>: <single value>} for JSON objects. The JSON must be parsable by a standard parser.)")},
+			{"role", "system"}},
+		{{"content", rewritten}, {"role", "user"}}};
+	// request["max_tokens"] = 64;
+	// request["temperature"] = 0;
+
+	// std::cout << request.dump(2) << std::endl;
+
+	auto completion = api.post("/v1/chat/completions", request);
+	for (auto &msg : completion["choices"]) {
+		llm_out = msg["message"]["content"].get<std::string>();
+	}
+	// llm_out = llm_out.substr(1, llm_out.size() - 2);
+	
+	std::cout << llm_out << "||" << std::endl;
+	prompt_util.extract_array_data(llm_out, output, info);
+
+#if OPT_TIMING
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	stats->predict += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+	stats->move_rev = 0;
+#endif
 }
 
 } // namespace duckdb

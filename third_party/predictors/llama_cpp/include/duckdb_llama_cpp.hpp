@@ -22,6 +22,7 @@ public:
     std::string base_api;
     std::string grammar;
     bool is_api;
+    bool is_source = false;;
 
     llama_model * model;
 
@@ -47,6 +48,7 @@ public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;
     void Load(const std::string &model_path, unique_ptr<PredictStats> &stats) override;
     void PredictChunk(ClientContext &client, DataChunk &input, DataChunk &output, int rows, const PredictInfo &info, unique_ptr<PredictStats> &stats) override;
+    void ScanChunk(ClientContext &client, DataChunk &output, const PredictInfo &info, unique_ptr<PredictStats> &stats) override;
 
 private:
     void GenerateGrammar();

@@ -4002,7 +4002,7 @@ MetadataResult ToggleTimer(ShellState &state, const char **azArg, idx_t nArg) {
 }
 
 MetadataResult ShowVersion(ShellState &state, const char **azArg, idx_t nArg) {
-	utf8_printf(state.out, "DuckDB %s (%s) %s\n" /*extra-version-info*/, duckdb::DuckDB::LibraryVersion(),
+	utf8_printf(state.out, "iPDb %s (%s) %s\n" /*extra-version-info*/, duckdb::DuckDB::LibraryVersion(),
 	            duckdb::DuckDB::ReleaseCodename(), duckdb::DuckDB::SourceID());
 #define CTIMEOPT_VAL_(opt) #opt
 #define CTIMEOPT_VAL(opt)  CTIMEOPT_VAL_(opt)
@@ -4703,11 +4703,11 @@ static const char zOptions[] =
     "   -ui                  launches a web interface using the ui extension (configurable with .ui_command)\n"
     "   -unredacted          allow printing unredacted secrets\n"
     "   -unsigned            allow loading of unsigned extensions\n"
-    "   -version             show DuckDB version\n";
+    "   -version             show iPDb version\n";
 static void usage(int showDetail) {
 	utf8_printf(stderr,
 	            "Usage: %s [OPTIONS] FILENAME [SQL]\n"
-	            "FILENAME is the name of an DuckDB database. A new database is created\n"
+	            "FILENAME is the name of an iPDb database. A new database is created\n"
 	            "if the file does not previously exist.\n",
 	            program_name);
 	if (showDetail) {
@@ -5131,7 +5131,7 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv) {
 			char *zHome;
 			char *zHistory;
 			int nHistory;
-			printf("DuckDB %s (%s) %.19s\n" /*extra-version-info*/
+			printf("iPDb %s (%s) %.19s\n" /*extra-version-info*/
 			       "Enter \".help\" for usage hints.\n",
 			       duckdb::DuckDB::LibraryVersion(), duckdb::DuckDB::ReleaseCodename(), duckdb::DuckDB::SourceID());
 			if (warnInmemoryDb) {

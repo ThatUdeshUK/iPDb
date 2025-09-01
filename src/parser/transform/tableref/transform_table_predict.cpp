@@ -12,7 +12,10 @@ unique_ptr<TableRef> Transformer::TransformTablePredict(duckdb_libpgquery::PGPre
 	if (root.prompt != nullptr)
 		result->prompt = root.prompt;
 
-	result->source = TransformTableRefNode(*root.source);
+	if (root.source) {
+		result->source = TransformTableRefNode(*root.source);
+	}
+	
 	if (root.has_opt) {
 		result->opt_source = TransformTableRefNode(*root.opt_source);
 	}
