@@ -6,6 +6,7 @@
 #include "nlohmann/json.hpp"  // nlohmann/json
 #include <regex>
 #include <iostream>
+#include <sstream>
 
 namespace duckdb {
 
@@ -25,6 +26,18 @@ public:
         if (!longest.empty())
             return Value(std::stoi(longest));
         return Value(LogicalTypeId::INTEGER);
+    }
+
+    std::string strip_code_fences(const std::string& input) {
+        std::istringstream ss(input);
+        std::string line;
+        std::ostringstream out;
+        while (std::getline(ss, line)) {
+            // skip opening and closing ``` lines
+            if (line.rfind("```", 0) == 0) continue;
+            out << line << "\n";
+        }
+        return out.str();
     }
 
     void process_prompt_and_extract_types(std::vector<std::pair<std::string, LogicalTypeId>> &attrs, std::string &prompt) {
@@ -55,7 +68,7 @@ public:
     }
 
     void extract_array_data(const std::string &llm_out, DataChunk &output, const PredictInfo &info) {
-        auto out_json = nlohmann::json::parse(llm_out);
+        auto out_json = nlohmann::json::parse(strip_code_fences(llm_out));
         if (out_json.is_array()) {
             output.SetCardinality(out_json.size());
             idx_t row = 0;
@@ -67,8 +80,13 @@ public:
     }
 
     void extract_row_data(const std::string &llm_out, int row, DataChunk &output, const PredictInfo &info) {
-        auto out_json = nlohmann::json::parse(llm_out);
-        populate_row_data(out_json, row, output, info);
+        try {
+            auto out_json = nlohmann::json::parse(strip_code_fences(llm_out));
+            populate_row_data(out_json, row, output, info);
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cout << "JSON parse issue: " << e.what() << std::endl;
+            fill_null(row, output, info);
+        }
     }
 
     void populate_row_data(const nlohmann::json &out_json, int row, DataChunk &output, const PredictInfo &info) {
@@ -104,6 +122,15 @@ public:
                 std::cout << "JSON parse issue: " << e.what() << std::endl;
                 output.SetValue(j, row, Value(output_type));
             }
+        }
+    }
+
+    void fill_null(int row, DataChunk &output, const PredictInfo &info) {
+        for (size_t j = 0; j < info.result_set_names.size(); j++) {
+            auto output_type = info.result_set_types[j];
+            auto col_name = info.result_set_names[j];
+
+            output.SetValue(j, row, Value(output_type));
         }
     }
 };

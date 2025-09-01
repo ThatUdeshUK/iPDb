@@ -35,5 +35,6 @@ public:
 
 private:
     void GenerateGrammar();
+    std::string GenerateSystemMessage(bool is_array) const;
 };
 } // namespace duckdb

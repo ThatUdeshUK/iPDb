@@ -79,7 +79,7 @@ void LlmApiPredictor::GenerateGrammar() {
 			first = false;
 		}
 
-		ss << R"("<)" << attr.first << R"(>" : )";
+		ss << R"(")" << attr.first << R"(" : )";
 		switch (attr.second) {
 		case LogicalTypeId::VARCHAR:
 			ss << R"("<string>")";
@@ -104,6 +104,15 @@ void LlmApiPredictor::GenerateGrammar() {
 
 	std::cout << "Prompt: " << this->prompt << std::endl;
 	std::cout << "Grammer:" << this->grammar << std::endl;
+}
+
+
+std::string LlmApiPredictor::GenerateSystemMessage(bool is_array) const {
+	std::string suffix = R"(. Do not include any extra text, explanations, language specifier, produce {<key>: <single value>} for JSON objects. The JSON must be parsable by a standard parser.)";
+	if (is_array) {
+		return R"(You are a helpful assistant. Always respond **only** with valid JSON array where each object is in format )" + this->grammar + suffix;
+	}
+	return R"(You are a helpful assistant. Always respond **only** with valid JSON object (i.e. not an array) in format )" + this->grammar + suffix;
 }
 
 /**
@@ -154,17 +163,14 @@ void LlmApiPredictor::PredictChunk(ClientContext &client, DataChunk &input, Data
 
 			request["model"] = this->model_path;
 			request["messages"] = {
-				{{"content",
-					(R"(You are a helpful assistant. Always respond **only** with valid JSON object (i.e. not an array) in format )" + this->grammar +
-						R"(. Do not include any extra text or explanations, produce {<key>: <single value>} for JSON objects. The JSON must be parsable by a standard parser.)")},
-					{"role", "system"}},
+				{{"content", GenerateSystemMessage(false)}, {"role", "system"}},
 				{{"content", rewritten}, {"role", "user"}}};
 			// request["max_tokens"] = 64;
 			// request["temperature"] = 0;
 
 			// std::cout << request.dump(2) << std::endl;
 
-			auto completion = api.post("/v1/chat/completions", request);
+			auto completion = api.post("chat/completions", request);
 			for (auto &msg : completion["choices"]) {
 				llm_out = msg["message"]["content"].get<std::string>();
 			}
@@ -208,17 +214,14 @@ void LlmApiPredictor::ScanChunk(ClientContext &client, DataChunk &output, const 
 
 	request["model"] = this->model_path;
 	request["messages"] = {
-		{{"content",
-			(R"(You are a helpful assistant. Always respond **only** with valid JSON array where each object is in format )" + this->grammar +
-				R"(. Do not include any extra text or explanations, produce {<key>: <single value>} for JSON objects. The JSON must be parsable by a standard parser.)")},
-			{"role", "system"}},
+		{{"content", GenerateSystemMessage(true)}, {"role", "system"}},
 		{{"content", rewritten}, {"role", "user"}}};
 	// request["max_tokens"] = 64;
 	// request["temperature"] = 0;
 
 	// std::cout << request.dump(2) << std::endl;
 
-	auto completion = api.post("/v1/chat/completions", request);
+	auto completion = api.post("chat/completions", request);
 	for (auto &msg : completion["choices"]) {
 		llm_out = msg["message"]["content"].get<std::string>();
 	}
