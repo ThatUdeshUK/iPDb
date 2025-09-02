@@ -68,7 +68,8 @@ BindResult ExpressionBinder::BindPredict(PredictExpression &predict, idx_t depth
 	result->bound_predict->model_type = stored_model_data.model_type;
 	result->bound_predict->model_path = stored_model_data.model_path;
 	result->bound_predict->base_api = stored_model_data.base_api;
-
+	result->bound_predict->secret = stored_model_data.secret;
+	
 	if (!result) {
 		error.AddQueryLocation(predict);
 		error.Throw();

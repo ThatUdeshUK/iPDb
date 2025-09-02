@@ -380,6 +380,11 @@
         "id": 213,
         "name": "base_api",
         "type": "string"
+      },
+      {
+        "id": 214,
+        "name": "secret",
+        "type": "string"
       }
     ]
   }

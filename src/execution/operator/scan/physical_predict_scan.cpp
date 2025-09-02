@@ -1,5 +1,7 @@
 #include "duckdb/execution/operator/projection/physical_predict.hpp"
 
+#include "duckdb/main/secret/secret_manager.hpp"
+
 #include <iostream>
 #include <map>
 
@@ -36,6 +38,7 @@ PhysicalPredictScan::PhysicalPredictScan(vector<LogicalType> types_p, BoundPredi
 	predict_info.model_path = std::move(bound_predict_p.model_path);
 	predict_info.prompt = std::move(bound_predict_p.prompt);
 	predict_info.base_api = std::move(bound_predict_p.base_api);
+	predict_info.secret = std::move(bound_predict_p.secret);
 	predict_info.input_mask = std::move(bound_predict_p.input_mask);
 	predict_info.result_set_names = std::move(bound_predict_p.result_set_names);
 	predict_info.input_set_names = std::move(bound_predict_p.input_set_names);
@@ -43,13 +46,13 @@ PhysicalPredictScan::PhysicalPredictScan(vector<LogicalType> types_p, BoundPredi
 	predict_info.options = std::move(bound_predict_p.options);
 }
 
-unique_ptr<Predictor> PhysicalPredictScan::InitPredictor(const PredictInfo &info) {
+unique_ptr<Predictor> PhysicalPredictScan::InitPredictor(const PredictInfo &info, const std::string &api_key) {
 #if defined(ENABLE_PREDICT) && (PREDICTOR_IMPL == 3 || defined(ENABLE_LLM_API))
 	bool is_api = !(info.model_path.find(".gguf") != std::string::npos);
 	std::cout << "Is API Model: " << is_api << std::endl;
 	if (is_api) {
 #if defined(ENABLE_LLM_API)
-		return make_uniq<LlmApiPredictor>(info.prompt, info.base_api);
+		return make_uniq<LlmApiPredictor>(info.prompt, info.base_api, api_key);
 #else
 		throw InternalException("Unable to infer LLM API model without `ENABLE_LLM_API` build option.");
 #endif
@@ -75,8 +78,23 @@ unique_ptr<LocalSourceState> PhysicalPredictScan::GetLocalSourceState(ExecutionC
 unique_ptr<GlobalSourceState> PhysicalPredictScan::GetGlobalSourceState(ClientContext &context) const {
 	auto &client_config = ClientConfig::GetConfig(context);
 
+	std::string api_key;
+	if (!predict_info.secret.empty()) {
+		auto &secret_manager = SecretManager::Get(context);
+		auto transaction = CatalogTransaction::GetSystemCatalogTransaction(context);
+
+		auto secret_entry = secret_manager.GetSecretByName(transaction, predict_info.secret);
+
+		if (secret_entry) {
+			const auto &kv_secret = dynamic_cast<const KeyValueSecret &>(*secret_entry->secret);
+			api_key = kv_secret.TryGetValue("bearer_token").ToString();
+		} else {
+			throw CatalogException("Secret for the API is not found in the catalogs!");
+		}
+	}
+
 	auto stats = make_uniq<PredictStats>();
-	auto p = InitPredictor(predict_info);
+	auto p = InitPredictor(predict_info, api_key);
 	p->task = static_cast<PredictorTask>(predict_info.model_type);
 	p->Config(client_config, predict_info.options);
 	p->Load(predict_info.model_path, stats);

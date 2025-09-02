@@ -16,7 +16,7 @@ namespace duckdb {
 
 ModelData::ModelData(CreateModelInfo &info)
     : model_path(info.model_path), model_type(info.model_type), on_prompt(info.on_prompt), base_api(info.base_api),
-      rel_name(info.rel_name), input_set_names(info.input_set_names), exclude_set_names(info.exclude_set_names),
+      secret(info.secret), rel_name(info.rel_name), input_set_names(info.input_set_names), exclude_set_names(info.exclude_set_names),
       opt_rel_name(info.opt_rel_name), opt_set_names(info.opt_set_names),
       exclude_opt_set_names(info.exclude_opt_set_names), out_names(info.out_names), out_types(info.out_types),
       options(info.options) {
@@ -55,6 +55,7 @@ unique_ptr<CreateInfo> ModelCatalogEntry::GetInfo() const {
 	result->model_type = model_data.model_type;
 	result->on_prompt = model_data.on_prompt;
 	result->base_api = model_data.base_api;
+	result->secret = model_data.secret;
 	result->rel_name = model_data.rel_name;
 	result->input_set_names = model_data.input_set_names;
 	result->exclude_set_names = model_data.exclude_set_names;

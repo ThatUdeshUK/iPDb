@@ -45,6 +45,7 @@ unique_ptr<BoundTableRef> Binder::BindBoundPredict(TablePredictRef &ref) {
 	result->bound_predict.options = stored_model_data.options;
 	if (stored_model_data.on_prompt) {
 		result->bound_predict.base_api = stored_model_data.base_api;
+		result->bound_predict.secret = stored_model_data.secret;
 
 		// Infer input output columns from the PROMPT
 		static const std::regex out_re(Prompt::OUT_REGEX, std::regex_constants::icase);

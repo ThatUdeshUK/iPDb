@@ -1802,6 +1802,7 @@ typedef struct PGModelOn {
 	PGList *options;	/* The map of options */
     bool on_prompt;  /* The input set required by the model */
 	char *base_api; /* the path to the model */
+	PGRangeVar *secret; /* secret of the model */
 } PGModelOn;
 
 typedef struct PGCreateModelStmt {

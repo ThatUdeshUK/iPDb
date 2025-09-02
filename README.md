@@ -84,7 +84,14 @@ make debug GEN=ninja -j12 CORE_EXTENSIONS='httpfs' ENABLE_PREDICT=1 PREDICTOR_IM
 
 ##### API LLM Calling
 
-Majority of publicly available remote LLMs requires an API key from the respective developer to use it's capabilities. Please, aqquire the respective key and set in the `env` variable as follows so that `iPDb` can indentify it before inference.
+Majority of publicly available remote LLMs requires an API key from the respective developer to use it's capabilities. `iPDb` lets users define the LLM API using the `CREATE SECRET` statement, where user's can define either in-memory or persisted API keys that can be reused with different models. Please, aqquire the respective key and use the following SQL syntax for defining API keys.
+
+```sql
+CREATE PERSISTENT SECRET openai_key (TYPE http, bearer_token '<openai_api_key>');
+CREATE PERSISTENT SECRET google_key (TYPE http, bearer_token '<google_api_key>');
+```
+
+Alternatively, the API keys can be set in the `env` variable as follows so that `iPDb` can indentify it before inference. However, this limit the models to only one vendor as only one API is available.
 
 ```bash
 export OPENAI_API_KEY="<api_key>"
@@ -152,14 +159,14 @@ Make sure you have build `iPDb` with options that enable remote LLM calling,
 - `ENABLE_PREDICT=1`
 - `ENABLE_LLM_API=1`
 
-Additionally, make sure `OPENAI_API_KEY` environment variable is set with the OpenAI API key correctly.
+Additionally, make sure either `SECRET`s (refer to "API LLM Calling" section) or `OPENAI_API_KEY` environment variable is set with the OpenAI API key correctly.
 
 Within the iPDb shell,
 
 - Create and populate tables with data (say, a `job` table with `description` column containing a job listing document).
 -  Upload the model to the database via the `CREATE MODEL` statement.
 	 ```sql
-	 CREATE LLM MODEL o4_mini PATH 'o4-mini' ON PROMPT API 'https://api.openai.com'; 
+	 CREATE LLM MODEL o4_mini PATH 'o4-mini' ON PROMPT API 'https://api.openai.com' SECRET openai_key; 
 	 ```
 	 
 Notice that, `PATH` accepts the model name accepted by the API (e.g., `o4-mini`, `gpt-4.1`).

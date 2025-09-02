@@ -23,6 +23,8 @@ struct BoundPredictInfo {
 	string prompt;
 	//! The base api for online LLM API
 	string base_api;
+	//! The base api secret
+	string secret;
 	//! The set of types
 	vector<LogicalType> types;
 	//! Input mask for feature column

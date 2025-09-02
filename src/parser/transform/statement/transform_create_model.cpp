@@ -23,6 +23,7 @@ public:
 
 	bool on_prompt;
 	string base_api;
+	string secret;
 };
 
 unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModelOn &stmt) {
@@ -41,6 +42,8 @@ unique_ptr<ModelOnInfo> Transformer::TransformModelOn(duckdb_libpgquery::PGModel
 		n->on_prompt = stmt.on_prompt;
 		if (stmt.base_api)
 			n->base_api = stmt.base_api;
+		if (stmt.secret)
+			n->secret = TransformQualifiedName(*stmt.secret).name;
 		return n;
 	}
 
@@ -106,6 +109,7 @@ unique_ptr<CreateStatement> Transformer::TransformCreateModel(duckdb_libpgquery:
 	if (model_on->on_prompt) {
 		info->on_prompt = true;
 		info->base_api = std::move(model_on->base_api);
+		info->secret = std::move(model_on->secret);
 	} else {
 		info->rel_name = model_on->rname.name;
 		info->input_set_names = std::move(model_on->input_set_names);

@@ -1122,7 +1122,7 @@ void Vector::Flatten(idx_t count) {
 		break;
 	}
 	default:
-		throw InternalException("Unimplemented type for normalify");
+		throw InternalException("Unimplemented type for ");
 	}
 }
 
@@ -1587,7 +1587,8 @@ void Vector::Verify(Vector &vector_p, const SelectionVector &sel_p, idx_t count)
 			for (idx_t i = 0; i < count; i++) {
 				auto oidx = sel->get_index(i);
 				if (validity.RowIsValid(oidx)) {
-					strings[oidx].Verify();
+					auto s = strings[oidx];
+					s.Verify();
 				}
 			}
 			break;

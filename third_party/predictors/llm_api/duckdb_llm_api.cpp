@@ -13,8 +13,8 @@
 #include <utility>
 
 namespace duckdb {
-LlmApiPredictor::LlmApiPredictor(std::string prompt, std::string base_api)
-    : Predictor(), prompt(std::move(prompt)), base_api(std::move(base_api)) {
+LlmApiPredictor::LlmApiPredictor(std::string prompt, std::string base_api, std::string secret)
+    : Predictor(), prompt(std::move(prompt)), base_api(std::move(base_api)), secret(std::move(secret)) {
 }
 
 /**
@@ -154,7 +154,7 @@ void LlmApiPredictor::PredictChunk(ClientContext &client, DataChunk &input, Data
 #endif 
 
 		auto &db = DatabaseInstance::GetDatabase(client);
-		auto &api = openai::start(db, base_api);
+		auto &api = openai::start(db, base_api, secret);
 		for (int i = frow; i < lrow; ++i) {
 			std::string rewritten = prompt_util.embed_prompt(this->prompt, i, input, info);
 
@@ -205,7 +205,7 @@ void LlmApiPredictor::ScanChunk(ClientContext &client, DataChunk &output, const 
 #endif
 
 	auto &db = DatabaseInstance::GetDatabase(client);
-	auto &api = openai::start(db, base_api);
+	auto &api = openai::start(db, base_api, secret);
 
 	std::string rewritten =this->prompt;
 

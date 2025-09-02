@@ -121,12 +121,13 @@ model_on:
 		;
 
 model_on_prompt:
- 			ON PROMPT opt_api opt_option
+ 			ON PROMPT opt_api opt_secret opt_option
 				{
 					PGModelOn *n = makeNode(PGModelOn);
 					n->on_prompt = true;
 					n->base_api = $3;
-					n->options = $4;
+					n->secret = $4;
+					n->options = $5;
 					$$ = (PGNode *)n;
 				}
 		;
@@ -181,3 +182,7 @@ opt_api:
 			| /* empty */						{ $$ = NULL; }	
 		;
 
+opt_secret:
+			SECRET qualified_name				{ $$ = $2; }
+			| /* empty */						{ $$ = NULL; }	
+		;

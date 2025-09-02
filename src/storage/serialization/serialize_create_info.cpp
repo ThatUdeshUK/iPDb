@@ -150,6 +150,7 @@ void CreateModelInfo::Serialize(Serializer &serializer) const {
 	serializer.WritePropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", options);
 	serializer.WritePropertyWithDefault<bool>(212, "on_prompt", on_prompt);
 	serializer.WritePropertyWithDefault<string>(213, "base_api", base_api);
+	serializer.WritePropertyWithDefault<string>(214, "secret", secret);
 }
 
 unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) {
@@ -168,6 +169,7 @@ unique_ptr<CreateInfo> CreateModelInfo::Deserialize(Deserializer &deserializer) 
 	deserializer.ReadPropertyWithDefault<case_insensitive_map_t<Value>>(211, "options", result->options);
 	deserializer.ReadPropertyWithDefault<bool>(212, "on_prompt", result->on_prompt);
 	deserializer.ReadPropertyWithDefault<string>(213, "base_api", result->base_api);
+	deserializer.ReadPropertyWithDefault<string>(214, "secret", result->secret);
 	return std::move(result);
 }
 

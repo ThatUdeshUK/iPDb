@@ -26,7 +26,7 @@ HTTPHeaders::HTTPHeaders(DatabaseInstance &db) {
 }
 
 void HTTPHeaders::Insert(string key, string value) {
-	headers.insert(make_pair(std::move(key), std::move(value)));
+	headers[std::move(key)] = std::move(value);
 }
 
 bool HTTPHeaders::HasHeader(const string &key) const {

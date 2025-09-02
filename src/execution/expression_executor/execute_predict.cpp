@@ -1,6 +1,7 @@
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/planner/expression/bound_predict_expression.hpp"
 #include "duckdb/execution/operator/projection/physical_predict.hpp"
+#include "duckdb/main/secret/secret_manager.hpp"
 
 #if defined(ENABLE_PREDICT) && PREDICTOR_IMPL == 3
 #include "duckdb_llama_cpp.hpp"
@@ -42,12 +43,30 @@ unique_ptr<ExpressionState> ExpressionExecutor::InitializeState(const BoundPredi
 	result->predict_info.model_path = expr.bound_predict->model_path;
 	result->predict_info.prompt = expr.bound_predict->prompt;
 	result->predict_info.base_api = expr.bound_predict->base_api;
+	result->predict_info.secret = expr.bound_predict->secret;
 	result->predict_info.result_set_names = expr.bound_predict->result_set_names;
 	result->predict_info.input_set_names = expr.bound_predict->input_set_names;
 	result->predict_info.result_set_types = expr.bound_predict->result_set_types;
 	// result->predict_info.options = std::move(bound_predict_p.options);
 
-	auto predictor = PhysicalPredict::InitPredictor(result->predict_info);
+	std::string api_key;
+	if (!result->predict_info.secret.empty()) {
+		auto &context = result->GetContext();
+
+		auto &secret_manager = SecretManager::Get(context);
+		auto transaction = CatalogTransaction::GetSystemCatalogTransaction(context);
+
+		auto secret_entry = secret_manager.GetSecretByName(transaction, result->predict_info.secret);
+
+		if (secret_entry) {
+			const auto &kv_secret = dynamic_cast<const KeyValueSecret &>(*secret_entry->secret);
+			api_key = kv_secret.TryGetValue("bearer_token").ToString();
+		} else {
+			throw CatalogException("Secret for the API is not found in the catalogs!");
+		}
+	}
+
+	auto predictor = PhysicalPredict::InitPredictor(result->predict_info, api_key);
 	predictor->task = PredictorTask::PREDICT_LLM_TASK;
 	result->predictor = std::move(predictor);
 	
@@ -102,6 +121,14 @@ void ExpressionExecutor::Execute(const BoundPredictExpression &expr, ExpressionS
 
 	pstate.predictor->PredictChunk(*context, input, predictions, count, pstate.predict_info, pstate.stats);
 
+	auto strings = FlatVector::GetData<string_t>(result);
+	auto sel_i = FlatVector::IncrementalSelectionVector();
+	int s = 0;
+	for (idx_t i = 0; i < count; i++) {
+		auto oidx = sel_i->get_index(i);
+		auto temp = strings[oidx];
+		s++;
+	}
 	// for (idx_t i = 0; i < count ; i++) {
 	// 	result.SetValue(i, Value(((int) i) % 2));
 	// }
@@ -109,6 +136,9 @@ void ExpressionExecutor::Execute(const BoundPredictExpression &expr, ExpressionS
 	// // #ifdef DEBUG
 	// expr.function.function(arguments, *state, result);
 
+	predictions.data[0].Reference(nullptr);
+
+	result.Verify(count);
 	VerifyNullHandling(expr, arguments, result);
 	D_ASSERT(result.GetType() == expr.return_type);
 }

@@ -78,9 +78,6 @@ public:
                 }
             }
 
-            headers_ = duckdb::HTTPHeaders(db);
-            headers_.Insert("Authorization", duckdb::StringUtil::Format("Bearer %s", token_));
-
             duckdb::DatabaseFileOpener opener{db};
             duckdb::FileOpenerInfo info;
             info.file_path = base_url_;
@@ -92,7 +89,10 @@ public:
     OpenAI(OpenAI&&)                    = delete;
     OpenAI& operator=(OpenAI&&)         = delete;
 
-    void setToken(const std::string& token) { token_ = token; };
+    void setToken(const std::string& token) { 
+        token_ = token; 
+        headers_.Insert("Authorization", duckdb::StringUtil::Format("Bearer %s", token_));
+    };
 
     void setThrowException(bool throw_exception) { throw_exception_ = throw_exception; }
 
@@ -189,10 +189,10 @@ inline std::string bool_to_string(const bool b) {
     return ss.str();
 }
 
-inline OpenAI& start(duckdb::DatabaseInstance &db, const std::string& api_base_url = "", const std::string& organization = "", bool throw_exception = true)  {
-    std::string token;
+inline OpenAI& start(duckdb::DatabaseInstance &db, const std::string& api_base_url = "", const std::string& token = "", const std::string& organization = "", bool throw_exception = true)  {
     static OpenAI instance{db, token, organization, throw_exception, api_base_url};
     instance.setBaseUrl(api_base_url);
+    instance.setToken(token);
     return instance;
 }
 

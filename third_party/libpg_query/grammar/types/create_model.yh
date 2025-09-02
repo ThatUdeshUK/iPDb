@@ -7,3 +7,4 @@
 %type <node> feat_col_list
 %type <list> opt_option
 %type <str> opt_api
+%type <range> opt_secret

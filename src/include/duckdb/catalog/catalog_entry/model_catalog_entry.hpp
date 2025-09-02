@@ -29,6 +29,8 @@ struct ModelData {
 	bool on_prompt;
 	//! Base API url for online LLMs
 	string base_api;
+	//! Base API secret
+	string secret;
 	//! The attached relation
 	string rel_name;
 	//! Input set names

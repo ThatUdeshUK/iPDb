@@ -41,6 +41,7 @@ struct PredictInfo {
 	string model_path;
 	string prompt;
 	string base_api;
+	string secret;
 
 	vector<idx_t> input_mask;
 	vector<string> input_set_names;
@@ -104,7 +105,7 @@ public:
 	}
 
 public:
-	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info);
+	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info, const std::string &api_key="");
 };
 
 //! PhysicalPredict implements the operator physical PREDICT operation
@@ -135,7 +136,7 @@ public:
 	ProgressData GetProgress(ClientContext &context, GlobalSourceState &gstate) const override;
 
 public:
-	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info);
+	static unique_ptr<Predictor> InitPredictor(const PredictInfo &info, const std::string &api_key="");
 };
 
 //! PhysicalGNNPredict implements the source/sink physical PREDICT operation

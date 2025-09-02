@@ -19,13 +19,14 @@ public:
     int n_predict;
     std::string prompt;
     std::string base_api;
+    std::string secret;
     std::string grammar;
     
 private:
     PromptUtil prompt_util;
 
 public:
-    LlmApiPredictor(std::string prompt, std::string base_api);
+    LlmApiPredictor(std::string prompt, std::string base_api, std::string secret);
 
 public:
     void Config(const ClientConfig &config, const case_insensitive_map_t<Value> &options) override;

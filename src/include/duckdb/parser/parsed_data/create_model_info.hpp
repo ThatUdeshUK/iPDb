@@ -29,6 +29,8 @@ struct CreateModelInfo : public CreateInfo {
 	bool on_prompt;
 	//! Base API url for online LLMs
 	string base_api;
+	//! Base name of the
+	string secret;
 
 	//! The relation attached to
 	string rel_name;

@@ -18,6 +18,8 @@ unique_ptr<CreateInfo> CreateModelInfo::Copy() const {
 	result->schema = schema;
 	result->model_type = model_type;
 	result->model_path = model_path;
+	result->base_api = base_api;
+	result->secret = secret;
 	result->rel_name = rel_name;
 	result->input_set_names = input_set_names;
 	result->exclude_set_names = exclude_set_names;
