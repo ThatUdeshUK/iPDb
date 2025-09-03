@@ -28,6 +28,19 @@ public:
         return Value(LogicalTypeId::INTEGER);
     }
 
+    double extract_double(const nlohmann::json& value) {
+        if (value.is_number_float() || value.is_number_integer()) {
+            return value.get<double>();
+        } else if (value.is_string()) {
+            try {
+                return std::stod(value.get<std::string>());
+            } catch (...) {
+                throw std::runtime_error("Invalid number string");
+            }
+        }
+        throw std::runtime_error("Value is not a number or string");
+    }
+
     std::string strip_code_fences(const std::string& input) {
         std::istringstream ss(input);
         std::string line;
@@ -109,8 +122,8 @@ public:
                 } else if (output_type == LogicalTypeId::INTEGER && out_json[col_name].is_number()) {
                     int value = out_json[col_name].get<int>();
                     output.SetValue(j, row, Value(value));
-                } else if (output_type == LogicalTypeId::DOUBLE && out_json[col_name].is_number()) {
-                    int value = out_json[col_name].get<double>();
+                } else if (output_type == LogicalTypeId::DOUBLE) {
+                    double value = extract_double(out_json[col_name]);
                     output.SetValue(j, row, Value(value));
                 } else if (output_type == LogicalTypeId::BOOLEAN && out_json[col_name].is_boolean()) {
                     bool value = out_json[col_name].get<bool>();
@@ -120,6 +133,9 @@ public:
                 }
             } catch (const nlohmann::json::parse_error& e) {
                 std::cout << "JSON parse issue: " << e.what() << std::endl;
+                output.SetValue(j, row, Value(output_type));
+            } catch (const std::runtime_error& e) {
+                std::cout << "Conversion error: " << e.what() << std::endl;
                 output.SetValue(j, row, Value(output_type));
             }
         }
